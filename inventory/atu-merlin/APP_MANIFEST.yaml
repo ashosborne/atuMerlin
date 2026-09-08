@@ -733,7 +733,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
   repo_path: ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
-  status: candidate
+  status: accepted
   slice_id: vat-module
   notes: '*SRVPGM MODULE(VAT300); 4 exports; no VAT maintenance program exists'
   discovery_evidence:
@@ -743,7 +743,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/VAT300.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/VAT300.RPGLE
-  status: candidate
+  status: accepted
   slice_id: vat-module
   notes: '*MODULE nomain - GetVATRate, GetVATDesc, ClcVAT (half-adjust 2dp; unknown code -> 0), ExistVATRate'
   discovery_evidence:
@@ -4679,9 +4679,9 @@ behaviours:
 - behaviour_id: vat-module-c01
   surface_id: srvpgm:FVAT
   name: ClcVAT arithmetic (net x rate / 100, half-adjust to 2 dp)
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4690,13 +4690,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; %dech((net * VATRATE) / 100 : 9 : 2) with an 11P 4 intermediate; net and result 9P 2 by value.'
+  notes: 'confidence: observed-in-code; ClcVAT(code, net) returns the VAT amount (not the gross): tot(11P 4) = (net * VATRATE) / 100 (truncated to 4 dp, no H), return %dech(tot : 9 : 2). Both parameters
+    by value; net 9P 2, result 9P 2. Equivalent to half-adjusting the exact quotient to 2 dp. No overflow path (|tot| < 10^7). Callers add it to the net (ODTOTVAT = ODTOT + vat); DETORD stores ODTOT/ODTOTVAT
+    only, never the code or rate.'
 - behaviour_id: vat-module-c02
   surface_id: srvpgm:FVAT
   name: Unknown VAT code -> rate 0 -> zero VAT silently
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4705,13 +4707,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Buffer cleared on miss so VATRATE = 0; ClcVAT and GetVATRate return 0; no caller checks ExistVATRate first.'
+  notes: 'confidence: observed-in-code; chainVATDEF clears the buffer before the chain, so a miss leaves VATRATE 0 / VATDESC blank; ClcVAT and GetVATRate return 0, no message. No caller calls ExistVATRate
+    first. Unknown codes enter via ART200 FMT02 ARVATCD (unvalidated, no F4 prompt; FAVATCD default never applied). Misses are re-read on every call (not cached) except a blank code, which never reads (c05).
+    ORD100 stores ODTOTVAT = ODTOT, indistinguishable from a zero-rated line.'
 - behaviour_id: vat-module-c03
   surface_id: srvpgm:FVAT
   name: GetVATRate / GetVATDesc getters (GetVATDesc unused)
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4720,13 +4724,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Return VATRATE (4P 2) / VATDESC (20A); no caller of GetVATDesc.'
+  notes: 'confidence: observed-in-code; GetVATRate returns VATRATE (4P 2 percentage), called only for display on the ORD100/ORD101 line panel immediately after ClcVAT for the same code (cache hit, no second
+    read). GetVATDesc returns VATDESC (20A) and has no caller; ART200D FMT02 has VATRATE/VATDESC/WITHVAT output fields next to the ARVATCD input that ART200 never fills (no VAT.RPGLEINC copy). VATDESC is
+    never displayed anywhere.'
 - behaviour_id: vat-module-c04
   surface_id: srvpgm:FVAT
   name: ExistVATRate respects the delete flag but has no caller
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4735,13 +4741,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; %found and VATDEL <> ''X''; unused in ATU_SRC.'
+  notes: 'confidence: observed-in-code; Returns %found(VATDEF) and VATDEL <> ''X''; no caller in ATU_SRC. Consequence: ClcVAT/GetVATRate/GetVATDesc ignore VATDEL, so a soft-deleted rate is still applied.
+    Only reader of VATDEL; no writer of VATDEL exists (c07). On the cached path %found reflects the previous I/O; before any I/O (blank first code) it is *off.'
 - behaviour_id: vat-module-c05
   surface_id: mod:VAT300
   name: Lazy open and last-key cache; closeVATDEF not exported
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4750,13 +4757,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; USROPN input-only; chain skipped on same code; close present but not in FVAT.BND.'
+  notes: 'confidence: observed-in-code; VATDEF if e k disk usropn; chainVATDEF opens on first call (unmonitored) and reads only when P_VATCODE <> buffered VATCODE (clear *all FVAT then chain, unmonitored).
+    Hits cached until another code is requested; non-blank misses re-read each call; a blank request code never reads (buffer starts/clears blank). closeVATDEF present but not exported and never called;
+    copybook advertises CloseVATDEF (would fail to bind). File stays open for the caller''s activation group (ACTGRP(*CALLER); callers are DFTACTGRP(*NO) with no ACTGRP keyword - compile-time).'
 - behaviour_id: vat-module-c06
   surface_id: mod:VAT300
   name: Rate cache stale for the activation group after a VATDEF change
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4765,13 +4774,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Same code requested twice never re-reads; a rate change is invisible until another code is requested in between.'
+  notes: 'confidence: observed-in-code; Same code requested twice never re-reads; a change to the buffered VATDEF row is invisible until a different code is requested and the original code asked for again.
+    In an ORD100 session with one VAT code the first-read rate holds for every line of every order until the program ends. Misses do not stick (buffer blank), so newly added codes are seen. Reachable only
+    via out-of-tree writes (no maintainer, c07).'
 - behaviour_id: vat-module-c07
   surface_id: srvpgm:FVAT
   name: No maintenance path for VAT rates (absence)
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4780,13 +4791,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No VAT200, no menu option, no writer of VATDEF in ATU_SRC; audit and delete columns have no writer.'
+  notes: 'confidence: observed-in-code; No program, CL, SQL, menu option or display file creates, changes, deletes or lists VATDEF rows; VAT300 is the only member that opens VATDEF (input only). VATCREA/VATMOD/VATMODID/VATDEL
+    have no writer; VATDESC has no executed reader. No SltVAT selection procedure (ART200 F4 prompts the family only). Sibling reference tables have maintainers (PAR200, COU200, ART200, CUS200, PRO200).
+    FAMILLY.FAVATCD is a second unused VAT reference (pointer).'
 - behaviour_id: vat-module-c08
   surface_id: srvpgm:FVAT
   name: VAT code comes from the article via GetArtVatCode (two srvpgm hops)
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4795,13 +4808,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Every caller does CLCVat(GetArtVatCode(arid), net); FVAT never sees an article id.'
+  notes: 'confidence: observed-in-code; ORD100 and ORD101 call CLCVat(GetArtVatCode(odarid) : odtot) then GetVatRate(GetArtVatCode(odarid)) - two srvpgm hops, round trip twice per line prepare (both caches
+    hit the second time). ART250 has already chained ARTICLE1 and passes ARVATCD directly (one hop) - correction to Phase A ''every caller''. FVAT never sees an article id; unknown article -> blank code
+    -> zero VAT without reading VATDEF. ART250 shows the ClcVAT result (VAT amount) under a ''with VAT'' label (pointer, art-interactive). DETORD never stores the code.'
 - behaviour_id: vat-module-c09
   surface_id: srvpgm:FVAT
   name: Export surface and binding
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4810,13 +4825,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1'') ACTGRP(*CALLER); in SAMPLE.BNDDIR.'
+  notes: 'confidence: observed-in-code; FVAT.BND: STRPGMEXP PGMLVL(*CURRENT) SIGNATURE(''V1''), exports CLCVAT / EXISTVATRATE / GETVATDESC / GETVATRATE, no *PRV block (contrast FPROVIDER''s SIGNATURE(*GEN)
+    + *PRV). FVAT.ILESRVPGM (ARCAD-generated): CRTSRVPGM MODULE(VAT300) ACTGRP(*CALLER) EXPORT(*SRCFILE). Tenth of eleven entries in SAMPLE.BNDDIR; all callers name BNDDIR(''SAMPLE''). closeVATDEF compiled
+    but not exported; copybook publishes five prototypes for four exports.'
 - behaviour_id: vat-module-c10
   surface_id: mod:VAT300
   name: Copybook / module parameter-type drift on CLCVat
-  status: candidate
+  status: documented
   slice_id: vat-module
-  discovery_card: null
+  discovery_card: discovery/vat-module/features/vat-module-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4825,6 +4842,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Prototype declares the code as ''1'' (no A), module as ''1A''; same storage.'
-last_updated: '2026-09-08T19:39:46Z'
-updated_by: estate-discovery-loop
+  notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
+    the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
+    -> decimal(9,2). Cosmetic; no runtime effect.'
+last_updated: '2026-09-08T20:19:13Z'
+updated_by: document-slices-conveyor

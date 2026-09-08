@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T19:39:45Z` by `estate-discovery-loop`
+- last_updated: `2026-09-08T20:19:13Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -18,13 +18,13 @@
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 12 |
-| surfaces `candidate` | 50 |
+| surfaces `accepted` | 14 |
+| surfaces `candidate` | 48 |
 | surfaces `deferred` | 2 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 226 |
-| behaviours `documented` | 42 |
+| behaviours `candidate` | 216 |
+| behaviours `documented` | 52 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -60,7 +60,7 @@
 | `pro-modules` | 3 | 14 | 0 | `candidate` |
 | `sql-objects` | 5 | 10 | 0 | `candidate` |
 | `srvpgm-supporting` | 5 | 9 | 0 | `candidate` |
-| `vat-module` | 2 | 10 | 0 | `candidate` |
+| `vat-module` | 2 | 10 | 10 | `documented` |
 
 ## Scanned seeds
 
