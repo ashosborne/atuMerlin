@@ -1,0 +1,117 @@
+pack_id: atu-merlin-ts-cus-v1
+version: 1
+status: DRAFT
+migration_id: atu-merlin
+slice_ids:
+  - cus-interactive
+  - cus-modules
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: features/customer/
+
+boundaries:
+  in_scope:
+    - CUS only (cus-interactive, cus-modules)
+  stay_legacy:
+    - ORD
+    - ART
+    - other non-CUS domains
+    - ATU_SRC
+  anti_corruption: "CUS modern vertical only; do not bridge ORD/ART into the new stack in this pack"
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths: []
+  sourced_vs_inferred: inferred
+  notes: "New HTTP JSON APIs for CUS; not preserve-wire against IBM i 5250"
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: greenfield-from-pf
+  migration_tool: null
+  notes: "Map CUSTOMER and related PFs into Postgres tables; no shared IBM i DB"
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM"
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+
+mapping_rules:
+  - from: DSPF
+    to: web
+  - from: RPGLE
+    to: TS service
+  - from: FCUSTOMER
+    to: shared module
+  - from: PF
+    to: postgres table
+  - from: LF
+    to: index/query
+
+non_goals:
+  - "No ORD or ART conversion in this pack"
+  - "No edits under ATU_SRC/**"
+  - "No IBM i characterization goldens / REPLAY_GREEN required for pathfinder"
+  - "No microservice split; modular monolith only"
+  - "Convert is NOT authorized by this DRAFT pack"
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TS API only"
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Pull ORD/ART into modern CUS scope"
+  - "Set status BOUND without human bind + ROOM_OK"
+  - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
+  - "IBM i goldens as conversion gate for this pathfinder"
+  - "Drive-by renames outside edit_surface"
+  - "String-concat SQL in repositories"
+
+edit_surface:
+  allow:
+    - modern/**
+    - architecture/atu-merlin/**
+    - discovery/cus*
+    - inventory/**
+    - overnight/**
+  deny:
+    - ATU_SRC/**
+
+known_risks:
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API boundary"
+  - "CUS PF/LF semantics must be reconstructed from Discovery cards, not assumed"
+  - "ORD/ART remain legacy; accidental coupling is a conversion fail"
+  - "DRAFT pack does not authorize Convert; BOUND + ROOM_OK required separately"
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/cus-interactive/features/
+    - discovery/cus-modules/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin/ADR/0001-cus-vertical-ts-postgres.md
+
+bound_by: null
+bound_at: null
+change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+reference_skeleton: null
