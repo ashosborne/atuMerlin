@@ -7,13 +7,13 @@ out_of_scope_hints:
   - update behaviour (none present)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T21:26:00Z
+bind_status: accepted
 
 features:
   - id: ord-maintain-ord202-c01
     name: Order header display with sentinel dates
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Chains ORDER1 and CUSTOME1; converts ISO numeric dates; zero -> 1940-01-01.
     entrypoints:
@@ -24,7 +24,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord202-c02
     name: Order lines display with totals
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: DETORD1 by ORID; article description via ARTICLE1 chain; sums ODTOT and ODTOTVAT.
     entrypoints:
@@ -35,7 +35,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord202-c03
     name: Read-only exit on any key
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: F3, F12 and Enter all end the program.
     entrypoints:
@@ -46,7 +46,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord202-c04
     name: Callers ORD200 / ORD201 option 5
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Both list programs call ORD202(orid).
     entrypoints:
@@ -57,7 +57,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord202-c05
     name: Dead keys and no paging in display
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: DSPF has CF06/CA05 and option field unused by program; SFLSIZ 7 / SFLPAG 6 without page-down handling.
     entrypoints:
@@ -68,7 +68,7 @@ features:
     open_questions: ["Orders with more than 7 lines - what does the user see? Runtime confirmation needed."]
   - id: ord-maintain-ord202-c06
     name: Direct ARTICLE1 access bypasses FARTICLE
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Unlike ORD100/ORD101, article description is read by chain, not GetArtDesc.
     entrypoints:

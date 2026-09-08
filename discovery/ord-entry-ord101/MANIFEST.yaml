@@ -7,13 +7,13 @@ out_of_scope_hints:
   - ORD100 creation, ORD200/201 lists, ORD202 display
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T21:26:00Z
+bind_status: accepted
 
 features:
   - id: ord-entry-ord101-c01
     name: Load order lines with totals
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Reads DETORD1 by ORID; sums ODTOT / ODTOTVAT; article description via GetArtDesc.
     entrypoints:
@@ -24,7 +24,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c02
     name: Header context from ORDER1 and customer name
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Chains ORDER1 by id; GetCusName(orcuid).
     entrypoints:
@@ -35,7 +35,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c03
     name: Edit line quantities and price
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 2 edits ODQTY, ODQTYLIV, ODPRICE via display copies; recomputes ODTOT and ODTOTVAT; updates FDETO.
     entrypoints:
@@ -46,7 +46,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c04
     name: Quantity validation (delivered vs ordered)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ERR1001 if delivered > ordered; ERR1002 if ordered < delivered.
     entrypoints:
@@ -57,7 +57,7 @@ features:
     open_questions: ["Both checks compare new ordered vs old delivered and new delivered vs old ordered — confirm the intended pairing."]
   - id: ord-entry-ord101-c05
     name: Delete blocked when line has deliveries
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 4 with ODQTYLIV > 0 is rejected with SFLMSG 36.
     entrypoints:
@@ -68,7 +68,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c06
     name: Delete line
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 4 deletes DETORD1 (id, odline), adjusts totals, shows '**** Delete ***'.
     entrypoints:
@@ -79,7 +79,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c07
     name: Dead option 6
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 6 accepted by validation but no action branch exists.
     entrypoints:
@@ -90,7 +90,7 @@ features:
     open_questions: ["Was 6 meant to print (ORD500 prototype declared but unused)?"]
   - id: ord-entry-ord101-c08
     name: Unused ORD500 prototype and create indicator
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Declared but never referenced; DSPF has no CF06.
     entrypoints:
@@ -101,7 +101,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c09
     name: Callers ORD200 / ORD201 option 2
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Both list programs call ORD101(orid) on option 2.
     entrypoints:
@@ -112,7 +112,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c10
     name: No add-line path for existing orders (absence)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Only exit/cancel/refresh keys; lines are added only at creation.
     entrypoints:
@@ -123,7 +123,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c11
     name: Trigger side effects on update/delete (pointer)
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: ORD700U / ORD700D fire on DETORD changes if attached.
     entrypoints:
@@ -134,7 +134,7 @@ features:
     open_questions: []
   - id: ord-entry-ord101-c12
     name: Closed-order guard lives in callers
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORD101 has no ORDATCLO check; ORD200/201 refuse option 2 on closed orders.
     entrypoints:

@@ -9,13 +9,13 @@ out_of_scope_hints:
   - PDF rendering internals (processing program not in tree)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T21:26:00Z
+bind_status: accepted
 
 features:
   - id: ord-print-ord500-c01
     name: Print order document to spool
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Header formats, one DETAIL per line, page break every 14 details, TOTAL (net, VAT, total), FOOTER.
     entrypoints:
@@ -26,7 +26,7 @@ features:
     open_questions: ["Exact field layout of the PRTF not verified field-by-field this pass."]
   - id: ord-print-ord500-c02
     name: Resolve IFS path from PATH parameter and hand off to PDF step
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: getParm2('PATH',' ') then ORD500C(orid, path).
     entrypoints:
@@ -37,7 +37,7 @@ features:
     open_questions: ["What if PATH parameter is missing (blank path)?"]
   - id: ord-print-ord500-c03
     name: Spool to PDF via CVTSPLPDF
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Custord<orid>.pdf in &PATH, last spool, replace, A4 portrait, Courier 11, no bookmarks.
     entrypoints:
@@ -48,7 +48,7 @@ features:
     open_questions: []
   - id: ord-print-ord500-c04
     name: CVTSPLPDF implementation not in tree
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: Command definition present; processing program absent from ATU_SRC.
     entrypoints:
@@ -59,7 +59,7 @@ features:
     open_questions: ["Which product provides it? Is PDF output in parity scope?"]
   - id: ord-print-ord500-c05
     name: Callers of ORD500
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORD100 after confirm; ORD200/ORD201 option 6; ORD101 declares only.
     entrypoints:
@@ -70,7 +70,7 @@ features:
     open_questions: []
   - id: ord-print-ord500-c06
     name: Direct file access instead of service programs
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ARTICLE1 and CUSTOME1 chained directly; only FPARAMETER used.
     entrypoints:
@@ -81,7 +81,7 @@ features:
     open_questions: []
   - id: ord-print-ord500-c07
     name: Code quirks (datord overwrite, unused oflind, early *inlr)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Harmless as-is oddities to document rather than replicate blindly.
     entrypoints:
@@ -92,7 +92,7 @@ features:
     open_questions: []
   - id: ord-print-ord500-c08
     name: Unknown order id prints blank document
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No %found check after chain ORDER1.
     entrypoints:

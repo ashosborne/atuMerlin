@@ -7,13 +7,13 @@ out_of_scope_hints:
   - ORD200 per-customer twin (shared rules noted, not merged)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T21:26:00Z
+bind_status: accepted
 
 features:
   - id: ord-maintain-ord201-c01
     name: List all orders paged from ORDERCUS
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: SQL cursor over ORDERCUS with customer id/name; 14 rows per load; ordered by date desc, id desc.
     entrypoints:
@@ -24,7 +24,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c02
     name: F6 create -> ORD100C2
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Calls ORD100C2 (no customer parm); closes cursor and reloads.
     entrypoints:
@@ -35,7 +35,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c03
     name: Option 2 update -> ORD101 with correct closed guard
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: (opt 2 or 4) and closed -> rejected; otherwise ORD101(orid).
     entrypoints:
@@ -46,7 +46,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c04
     name: Option 4 delete lines then header
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Loop-delete DETORD1 by ORID, then delete ORDER1; clears row ids.
     entrypoints:
@@ -57,7 +57,7 @@ features:
     open_questions: ["No confirmation prompt."]
   - id: ord-maintain-ord201-c05
     name: Option 5 display / option 6 print
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORD202(orid), ORD500(orid).
     entrypoints:
@@ -68,7 +68,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c06
     name: Option 7 close / option 8 deliver (shared with ORD200)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Same rules as ord-maintain-ord200-c06/c07.
     entrypoints:
@@ -79,7 +79,7 @@ features:
     open_questions: ["Pack B: one shared card set referenced by both slices."]
   - id: ord-maintain-ord201-c07
     name: Option guards and dead option 3
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: 7 if closed, 8 if delivered, 4 if any delivered line, 1 / >8 invalid; option 3 passes validation with no action.
     entrypoints:
@@ -90,7 +90,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c08
     name: F5 refresh
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Closes cursor and reloads from the first row.
     entrypoints:
@@ -101,7 +101,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c09
     name: Menu entry option 3
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: SAMMNU 'Work with Customer Orders' calls ORD201.
     entrypoints:
@@ -112,7 +112,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c10
     name: Unused file declarations CUSTOME1, ARTICLE1
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Declared in F-specs; no I/O observed.
     entrypoints:
@@ -123,7 +123,7 @@ features:
     open_questions: []
   - id: ord-maintain-ord201-c11
     name: Cursor closed at end
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: pnl00 closes c1 before *inlr; ORD200 does not.
     entrypoints:
