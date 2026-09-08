@@ -6,140 +6,167 @@ seed_entrypoints:
 out_of_scope_hints:
   - ORD100 creation, ORD200/201 lists, ORD202 display
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T21:26:00Z
+phase: B
+updated_at: 2026-09-08T21:55:00Z
 bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 8, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-7."
+needs_sme:
+  - "c11 (inferred): whether ORD700U / ORD700D triggers are attached to DETORD on the box; owned by ord-trigger-ord700. No card."
+  - "c04: both quantity rules compare a typed value against the STORED row (dsqtyliv > odqty; dsqty < odqtyliv), never the two typed values. Worked cases in the card: raising both consistently is rejected; lowering both inconsistently (delivered > ordered) is accepted. Intended semantics?"
+  - "c03: a plain Enter on FMT02 (nothing modified) still rewrites ODTOT and ODTOTVAT recomputed at today's VAT rate (unknown code -> zero VAT silently, vat-module-c02). Known?"
+  - "c03/c06: footer TOT/TOTVAT not refreshed after an edit; a re-selected blank (deleted) row subtracts its hidden ODTOTVAT again. Display-only; preserve vs fix is a later-station decision."
+  - "c07: option 6 is advertised on screen as '6=Deliver' (not print) and has no action. Removed deliberately in favour of order-level 8=Deliver, or unfinished?"
+  - "c09 (owner ord-maintain-ord200): ORD200 option 2 is unreachable — precedence defect in the closed-order guard (opt01 = 2 or opt01 = 4 and datclo > datBlank). Planted defect; documented as-is."
+  - "c12: ORD101 has no closed-order or delivered-order test; guard only in the callers (ORD201 correct, ORD200 broken), none on a direct CALL. Enforce inside the line surface in the target?"
+  - "c02: ORD101 holds an update lock on the ORDER header row for the whole session (UF open, chain, never updated). Intended concurrency rule or incidental?"
+  - "c03/c04: no lower bound on quantity or price (0 accepted; negative delivered quantity not blocked); no article / stock / reference-price check on edit."
+  - "c10: no add-line path after creation (only ORD100 writes DETORD). Business rule or gap?"
+  - "c09: activation group inferred as QILE (no ACTGRP keyword) — build owner to confirm CRTBNDRPG options."
 
 features:
   - id: ord-entry-ord101-c01
     name: Load order lines with totals
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Reads DETORD1 by ORID; sums ODTOT / ODTOTVAT; article description via GetArtDesc.
+    summary: "One-shot load of every DETORD1 row for the order (partial key ODORID, ascending ODLINE); TOT / TOTVAT are running sums of the STORED ODTOT / ODTOTVAT; ARTDESC via GetArtDesc truncated 50 -> 30 on screen. SFLSIZ 15 / SFLPAG 14 auto-extend, sflend always on, so paging is display-handled and the RPG pagedown indicator is never tested. Empty order shows header + footer only. Reload happens only at start and on F5."
     entrypoints:
       - kind: screen
-        locator: ORD101 CTL01/SFL01
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:105-120"]
-    dependencies: [DETORD1.LF, FARTICLE.ILESRVPGM]
-    open_questions: []
+        locator: ORD101 CTL01/SFL01 (s01prp / s01lod / s01dsp)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:95-132", "ATU_SRC/QDDSSRC/ORD101D.DSPF:12-42", "ATU_SRC/QDDSSRC/ORD101D.DSPF:87-89"]
+    behaviour_doc: features/ord-entry-ord101-c01.md
+    dependencies: [DETORD1.LF, DETORD.PF, FARTICLE.ILESRVPGM, SAMREF.PF]
+    open_questions: ["Description truncated at 30 of 50 characters on screen — accepted as-is (display-only)?"]
   - id: ord-entry-ord101-c02
     name: Header context from ORDER1 and customer name
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Chains ORDER1 by id; GetCusName(orcuid).
+    summary: "*inzsr chains ORDER1 by id (UF open, %found not tested) and sets CUSTNAME = GetCusName(orcuid); header fields come straight from the FORDE buffer. The chain holds an update lock on the ORDER row for the whole session although the program never updates it (released at *inlr). Order not found -> header shows 0 / blank, empty list, no message (direct CALL only)."
     entrypoints:
       - kind: other
         locator: ORD101 *inzsr
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:281-283"]
-    dependencies: [ORDER1.LF, FCUSTOMER.ILESRVPGM]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:8", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:281-289", "ATU_SRC/QDDSSRC/ORD101D.DSPF:56-57"]
+    behaviour_doc: features/ord-entry-ord101-c02.md
+    dependencies: [ORDER1.LF, ORDER.PF, FCUSTOMER.ILESRVPGM]
+    open_questions: ["needs-SME: session-long lock on the ORDER header while lines are edited — intended (blocks close/deliver from another job) or incidental?"]
   - id: ord-entry-ord101-c03
     name: Edit line quantities and price
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 2 edits ODQTY, ODQTYLIV, ODPRICE via display copies; recomputes ODTOT and ODTOTVAT; updates FDETO.
+    summary: "Option 2 -> FMT02 with DSQTY, DSQTYLIV, DSPRICE as copies of the stored row. Enter recomputes ODTOT = qty x price, VAT = CLCVat(GetArtVatCode), ODTOTVAT; a modified screen (CHANGE 27) is redisplayed with the new figures, an unmodified Enter writes ODQTY/ODQTYLIV/ODPRICE/ODTOT/ODTOTVAT (update fdeto) and rewrites the subfile row. Plain Enter with no change still rewrites ODTOTVAT at today's rate. F3 and F12 both return to the list without saving (no program exit). Footer totals not refreshed after a save. Option 2 on a row deleted in the same pass -> chain miss then unmonitored update exception."
     entrypoints:
       - kind: screen
-        locator: ORD101 opt 2 -> FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:218-228", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:258-275"]
-    dependencies: [DETORD1.LF, FVAT.ILESRVPGM]
-    open_questions: []
+        locator: ORD101 opt 2 -> FMT02 (S02prp / S02chk / S02act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:185-187", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:218-276", "ATU_SRC/QDDSSRC/ORD101D.DSPF:93-138"]
+    behaviour_doc: features/ord-entry-ord101-c03.md
+    dependencies: [DETORD1.LF, FARTICLE.ILESRVPGM, FVAT.ILESRVPGM, ORD700U.SYSTRG]
+    open_questions: ["needs-SME: silent re-rate of ODTOTVAT on an unmodified Enter — known?", "needs-SME: no lower bound on quantity / price; no article, stock or reference-price check on edit."]
   - id: ord-entry-ord101-c04
     name: Quantity validation (delivered vs ordered)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ERR1001 if delivered > ordered; ERR1002 if ordered < delivered.
+    summary: "S02chk: ERR1001 if typed delivered > STORED ordered; ERR1002 if typed ordered < STORED delivered. Neither rule compares the two typed values, so raising both consistently is rejected and lowering both inconsistently (delivered > ordered) is stored. Negative ordered qty blocked only as a side effect of rule 2; negative delivered qty not blocked. Errors keep the recomputed totals on screen; indicator reset relies on the DDS same-indicator ERRMSGID idiom."
     entrypoints:
       - kind: screen
         locator: ORD101 S02chk
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:250-257", "ATU_SRC/QDDSSRC/ORD101D.DSPF:120", "ATU_SRC/QDDSSRC/ORD101D.DSPF:138"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:248-257", "ATU_SRC/QDDSSRC/ORD101D.DSPF:120", "ATU_SRC/QDDSSRC/ORD101D.DSPF:138", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:21-26"]
+    behaviour_doc: features/ord-entry-ord101-c04.md
     dependencies: [SAMMSGF.MSGF]
-    open_questions: ["Both checks compare new ordered vs old delivered and new delivered vs old ordered — confirm the intended pairing."]
+    open_questions: ["needs-SME: compare-against-stored-row semantics intended? (worked cases in the card)", "needs-SME: negative delivered quantity accepted."]
   - id: ord-entry-ord101-c05
     name: Delete blocked when line has deliveries
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 4 with ODQTYLIV > 0 is rejected with SFLMSG 36.
+    summary: "s01chk rejects option 4 when the row's HIDDEN subfile field ODQTYLIV > 0: DSPATR(RI), SFLMSG 36 'Line with delivery can not be deleted.' (DDS literal), page repositioned to the first error row, and no option on that screen is executed. Reads the screen copy, not the file (stale after another job's deliver). Same rule at order level in ORD200/201 option 4 (their SFLMSG 37)."
     entrypoints:
       - kind: screen
-        locator: ORD101 S01chk
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:164-172", "ATU_SRC/QDDSSRC/ORD101D.DSPF:40"]
+        locator: ORD101 s01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:164-172", "ATU_SRC/QDDSSRC/ORD101D.DSPF:26", "ATU_SRC/QDDSSRC/ORD101D.DSPF:40-41"]
+    behaviour_doc: features/ord-entry-ord101-c05.md
     dependencies: []
-    open_questions: []
+    open_questions: ["needs-SME: partially delivered lines never deletable; guard reads the screen copy — target rule?"]
   - id: ord-entry-ord101-c06
     name: Delete line
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 4 deletes DETORD1 (id, odline), adjusts totals, shows '**** Delete ***'.
+    summary: "Option 4 (after c05): tot -= odtot; totvat -= odtotvat (ODTOTVAT IS a hidden subfile field here, so no footer drift on a straight delete — differs from ORD100); delete (id:odline) detord1 by full key, not-found silent; row rewritten blank with '**** Delete ***' (ODLINE kept; hidden ODQTYLIV/ODTOTVAT not cleared). Consecutive 4s in one pass, no confirmation, list redisplayed not reloaded. Re-selecting a blanked row subtracts its hidden ODTOTVAT again. Fires ORD700 delete trigger if attached (c11)."
     entrypoints:
       - kind: screen
-        locator: ORD101 opt 4
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:188-199"]
-    dependencies: [DETORD1.LF]
-    open_questions: []
+        locator: ORD101 opt 4 (s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:188-198", "ATU_SRC/QDDSSRC/ORD101D.DSPF:26-27"]
+    behaviour_doc: features/ord-entry-ord101-c06.md
+    dependencies: [DETORD1.LF, ORD700D.SYSTRG]
+    open_questions: ["needs-SME: no confirmation; zero-line orders after deleting the last line — accepted as-is?"]
   - id: ord-entry-ord101-c07
-    name: Dead option 6
-    status: accepted
+    name: Dead option 6 (advertised as "6=Deliver")
+    status: documented
     confidence: observed-in-code
-    summary: Option 6 accepted by validation but no action branch exists.
+    summary: "CTL01 legend shows '6=Deliver'; s01chk accepts 6; s01act has no branch, so 6 does nothing (no message, no I/O, the 6 stays typed, row no longer 'changed'). Phase A guessed print — the DSPF says deliver (per-line counterpart of ORD200/201 order-level 8=Deliver, never implemented or removed). Document as-is, do not fix."
     entrypoints:
       - kind: screen
         locator: ORD101 S01chk / S01act
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:155", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:182-199"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:155", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:182-199", "ATU_SRC/QDDSSRC/ORD101D.DSPF:79-80"]
+    behaviour_doc: features/ord-entry-ord101-c07.md
     dependencies: []
-    open_questions: ["Was 6 meant to print (ORD500 prototype declared but unused)?"]
+    open_questions: ["needs-SME: per-line deliver removed deliberately or unfinished? Carry a per-line deliver action in the target or drop the legend?"]
   - id: ord-entry-ord101-c08
-    name: Unused ORD500 prototype and create indicator
-    status: accepted
+    name: Unused ORD500 prototype and create indicator (dead declarations)
+    status: documented
     confidence: observed-in-code
-    summary: Declared but never referenced; DSPF has no CF06.
+    summary: "Prtord (extpgm ORD500), indicators help/prompt/create/confirm/morekeys/pagedown, variable count and state lod for panel 2 are declared and never referenced; DSPF has only CA03, CA12, CA05 (+N80 PAGEDOWN). ORD101 does not print, add or deliver. Only GetCusName, GetArtDesc, GetArtVatCode, CLCVat, GetVATRate are used from the three copybooks."
     entrypoints:
       - kind: other
         locator: ORD101 declarations
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:27-28", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:38"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:27-28", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:33-60", "ATU_SRC/QDDSSRC/ORD101D.DSPF:10-11", "ATU_SRC/QDDSSRC/ORD101D.DSPF:30-31"]
+    behaviour_doc: features/ord-entry-ord101-c08.md
     dependencies: []
     open_questions: []
   - id: ord-entry-ord101-c09
     name: Callers ORD200 / ORD201 option 2
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Both list programs call ORD101(orid) on option 2.
+    summary: "Only callers under ATU_SRC: ORD200 and ORD201 via Updord extpgm('ORD101') on option 2, passing the row's ORID by reference; no menu / command / CL. ORD200's option 2 is UNREACHABLE (guard 'opt01 = 2 or opt01 = 4 and datclo > datBlank' — and binds first), so line maintenance is reached only from ORD201. Neither caller reloads its list after return (amount column stale until F5). Planted defect, as-is."
     entrypoints:
       - kind: other
-        locator: extpgm ORD101
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:229-232"]
+        locator: extpgm ORD101 (ORD200 / ORD201 s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:21-22", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:18-19", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191-199", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:229-232"]
+    behaviour_doc: features/ord-entry-ord101-c09.md
     dependencies: []
-    open_questions: []
+    open_questions: ["needs-SME (owner ord-maintain-ord200): confirm the precedence defect is the known 'option-2 unreachable' planted defect.", "Build owner: activation group (inferred QILE)."]
   - id: ord-entry-ord101-c10
     name: No add-line path for existing orders (absence)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Only exit/cancel/refresh keys; lines are added only at creation.
+    summary: "List keys are F3 (exit), F12 (identical to F3 on the list), F5 (reload) and Enter; options 2, 4 (dead 6). No F6 / 1=Add / write fdeto anywhere in the member; the only write fdeto under ATU_SRC is ORD100's confirm. Lines can only be added at creation; ODLINE gaps after deletes are permanent."
     entrypoints:
       - kind: screen
         locator: ORD101 S01key
-        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:134-146"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:134-147", "ATU_SRC/QDDSSRC/ORD101D.DSPF:10-11", "ATU_SRC/QDDSSRC/ORD101D.DSPF:83-91"]
+    behaviour_doc: features/ord-entry-ord101-c10.md
     dependencies: []
-    open_questions: []
+    open_questions: ["needs-SME: 'no add after creation' — business rule or gap?"]
   - id: ord-entry-ord101-c11
     name: Trigger side effects on update/delete (pointer)
     status: needs-SME
     confidence: inferred
-    summary: ORD700U / ORD700D fire on DETORD changes if attached.
+    summary: ORD700U / ORD700D fire on DETORD changes if attached (update fdeto in c03, delete in c06). Owned by ord-trigger-ord700 (c03 delete, c04 update). No card here.
     entrypoints:
       - kind: other
         locator: DETORD triggers
         evidence: ["ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7"]
     dependencies: [ORD700.PGM.RPGLE]
-    open_questions: []
+    open_questions: ["needs-SME: trigger attachment on the box (inferred); route to ord-trigger-ord700 sign-off."]
   - id: ord-entry-ord101-c12
-    name: Closed-order guard lives in callers
-    status: accepted
+    name: Closed-order guard lives in the callers (absence here)
+    status: documented
     confidence: observed-in-code
-    summary: ORD101 has no ORDATCLO check; ORD200/201 refuse option 2 on closed orders.
+    summary: "ORD101 loads ORDATCLO / ORDATDEL into the buffer and never tests them: closed or delivered orders are fully editable once inside. Guard only in ORD201 s01chk ((opt01 = 2 or 4) and datclo > 1940-01-01) and, broken, in ORD200 (c09). Direct CALL has no guard. Editing lines of a closed order leaves ORDATCLO set (no reopen). In-flight close from another job is serialised by the ORDER record lock (c02), not by a rule."
     entrypoints:
       - kind: other
-        locator: ORD101 (absence) / ORD201 S01chk
-        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191-199"]
+        locator: ORD101 (absence) / ORD201 S01chk / ORD200 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:282", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191-199", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195", "ATU_SRC/QDDSSRC/ORDER.PF:11-14"]
+    behaviour_doc: features/ord-entry-ord101-c12.md
     dependencies: []
-    open_questions: ["Direct call to ORD101 on a closed order would allow edits — acceptable?"]
+    open_questions: ["needs-SME: enforce the closed-order rule inside the line surface in the target (defence in depth) or list-only as today?", "needs-SME: delivered (not closed) orders editable at line level — intended?"]

@@ -14,7 +14,8 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   discovery/dat-utils/features/); no needs-SME candidates; surfaces udf:ISOTODATE40 / udf:ISO_Num_To_Date candidate -> accepted (bind mirror). Remaining queue: cou-maintain FCOUNTRY c07-c12. CHARACTERIZATION:
   deferred-waived. No conversion, no tests. | Pack B run 7 (2026-09-08): cou-maintain FCOUNTRY half c07-c12 6/6 accepted behaviours documented (cards discovery/cou-maintain/features/); c01-c06, c13 deferred
   (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION:
-  deferred-waived. No conversion, no tests.'
+  deferred-waived. No conversion, no tests. | Pack B run 8 (2026-09-08): ord-entry-ord101 documented (11 cards; c11 needs-SME); ORD wave queue left: ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202,
+  ord-print-ord500'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -279,7 +280,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord101
   notes: '*PGM RPGLE - Maintain lines of an existing order (called by ORD200/ORD201 opt 2); screen ORD101D'
   discovery_evidence:
@@ -1888,9 +1889,9 @@ behaviours:
 - behaviour_id: ord-entry-ord101-c01
   surface_id: pgm:ORD101
   name: Load order lines with totals
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1899,13 +1900,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Reads DETORD1 by ORID; sums ODTOT / ODTOTVAT; article description via GetArtDesc.'
+  notes: 'confidence: observed-in-code; One-shot load of every DETORD1 row for the order (partial key ODORID, ascending ODLINE); TOT / TOTVAT are running sums of the STORED ODTOT / ODTOTVAT; ARTDESC via
+    GetArtDesc truncated 50 -> 30 on screen. SFLSIZ 15 / SFLPAG 14 auto-extend, sflend always on, so paging is display-handled and the RPG pagedown indicator is never tested. Empty order shows header +
+    footer only. Reload happens only at start and on F5.'
 - behaviour_id: ord-entry-ord101-c02
   surface_id: pgm:ORD101
   name: Header context from ORDER1 and customer name
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1914,13 +1917,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Chains ORDER1 by id; GetCusName(orcuid).'
+  notes: 'confidence: observed-in-code; *inzsr chains ORDER1 by id (UF open, %found not tested) and sets CUSTNAME = GetCusName(orcuid); header fields come straight from the FORDE buffer. The chain holds
+    an update lock on the ORDER row for the whole session although the program never updates it (released at *inlr). Order not found -> header shows 0 / blank, empty list, no message (direct CALL only).'
 - behaviour_id: ord-entry-ord101-c03
   surface_id: pgm:ORD101
   name: Edit line quantities and price
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1929,13 +1933,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 2 edits ODQTY, ODQTYLIV, ODPRICE via display copies; recomputes ODTOT and ODTOTVAT; updates FDETO.'
+  notes: 'confidence: observed-in-code; Option 2 -> FMT02 with DSQTY, DSQTYLIV, DSPRICE as copies of the stored row. Enter recomputes ODTOT = qty x price, VAT = CLCVat(GetArtVatCode), ODTOTVAT; a modified
+    screen (CHANGE 27) is redisplayed with the new figures, an unmodified Enter writes ODQTY/ODQTYLIV/ODPRICE/ODTOT/ODTOTVAT (update fdeto) and rewrites the subfile row. Plain Enter with no change still
+    rewrites ODTOTVAT at today''s rate. F3 and F12 both return to the list without saving (no program exit). Footer totals not refreshed after a save. Option 2 on a row deleted in the same pass -> chain
+    miss then unmonitored update exception.'
 - behaviour_id: ord-entry-ord101-c04
   surface_id: pgm:ORD101
   name: Quantity validation (delivered vs ordered)
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1944,13 +1951,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ERR1001 if delivered > ordered; ERR1002 if ordered < delivered.'
+  notes: 'confidence: observed-in-code; S02chk: ERR1001 if typed delivered > STORED ordered; ERR1002 if typed ordered < STORED delivered. Neither rule compares the two typed values, so raising both consistently
+    is rejected and lowering both inconsistently (delivered > ordered) is stored. Negative ordered qty blocked only as a side effect of rule 2; negative delivered qty not blocked. Errors keep the recomputed
+    totals on screen; indicator reset relies on the DDS same-indicator ERRMSGID idiom.'
 - behaviour_id: ord-entry-ord101-c05
   surface_id: pgm:ORD101
   name: Delete blocked when line has deliveries
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1959,13 +1968,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 4 with ODQTYLIV > 0 is rejected with SFLMSG 36.'
+  notes: 'confidence: observed-in-code; s01chk rejects option 4 when the row''s HIDDEN subfile field ODQTYLIV > 0: DSPATR(RI), SFLMSG 36 ''Line with delivery can not be deleted.'' (DDS literal), page repositioned
+    to the first error row, and no option on that screen is executed. Reads the screen copy, not the file (stale after another job''s deliver). Same rule at order level in ORD200/201 option 4 (their SFLMSG
+    37).'
 - behaviour_id: ord-entry-ord101-c06
   surface_id: pgm:ORD101
   name: Delete line
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1974,13 +1985,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 4 deletes DETORD1 (id, odline), adjusts totals, shows ''**** Delete ***''.'
+  notes: 'confidence: observed-in-code; Option 4 (after c05): tot -= odtot; totvat -= odtotvat (ODTOTVAT IS a hidden subfile field here, so no footer drift on a straight delete — differs from ORD100); delete
+    (id:odline) detord1 by full key, not-found silent; row rewritten blank with ''**** Delete ***'' (ODLINE kept; hidden ODQTYLIV/ODTOTVAT not cleared). Consecutive 4s in one pass, no confirmation, list
+    redisplayed not reloaded. Re-selecting a blanked row subtracts its hidden ODTOTVAT again. Fires ORD700 delete trigger if attached (c11).'
 - behaviour_id: ord-entry-ord101-c07
   surface_id: pgm:ORD101
-  name: Dead option 6
-  status: candidate
+  name: Dead option 6 (advertised as "6=Deliver")
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1989,13 +2002,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 6 accepted by validation but no action branch exists.'
+  notes: 'confidence: observed-in-code; CTL01 legend shows ''6=Deliver''; s01chk accepts 6; s01act has no branch, so 6 does nothing (no message, no I/O, the 6 stays typed, row no longer ''changed''). Phase
+    A guessed print — the DSPF says deliver (per-line counterpart of ORD200/201 order-level 8=Deliver, never implemented or removed). Document as-is, do not fix.'
 - behaviour_id: ord-entry-ord101-c08
   surface_id: pgm:ORD101
-  name: Unused ORD500 prototype and create indicator
-  status: candidate
+  name: Unused ORD500 prototype and create indicator (dead declarations)
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2004,13 +2018,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Declared but never referenced; DSPF has no CF06.'
+  notes: 'confidence: observed-in-code; Prtord (extpgm ORD500), indicators help/prompt/create/confirm/morekeys/pagedown, variable count and state lod for panel 2 are declared and never referenced; DSPF
+    has only CA03, CA12, CA05 (+N80 PAGEDOWN). ORD101 does not print, add or deliver. Only GetCusName, GetArtDesc, GetArtVatCode, CLCVat, GetVATRate are used from the three copybooks.'
 - behaviour_id: ord-entry-ord101-c09
   surface_id: pgm:ORD101
   name: Callers ORD200 / ORD201 option 2
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2019,13 +2034,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Both list programs call ORD101(orid) on option 2.'
+  notes: 'confidence: observed-in-code; Only callers under ATU_SRC: ORD200 and ORD201 via Updord extpgm(''ORD101'') on option 2, passing the row''s ORID by reference; no menu / command / CL. ORD200''s option
+    2 is UNREACHABLE (guard ''opt01 = 2 or opt01 = 4 and datclo > datBlank'' — and binds first), so line maintenance is reached only from ORD201. Neither caller reloads its list after return (amount column
+    stale until F5). Planted defect, as-is.'
 - behaviour_id: ord-entry-ord101-c10
   surface_id: pgm:ORD101
   name: No add-line path for existing orders (absence)
-  status: candidate
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2034,7 +2051,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Only exit/cancel/refresh keys; lines are added only at creation.'
+  notes: 'confidence: observed-in-code; List keys are F3 (exit), F12 (identical to F3 on the list), F5 (reload) and Enter; options 2, 4 (dead 6). No F6 / 1=Add / write fdeto anywhere in the member; the
+    only write fdeto under ATU_SRC is ORD100''s confirm. Lines can only be added at creation; ODLINE gaps after deletes are permanent.'
 - behaviour_id: ord-entry-ord101-c11
   surface_id: pgm:ORD101
   name: Trigger side effects on update/delete (pointer)
@@ -2052,10 +2070,10 @@ behaviours:
   notes: 'confidence: inferred; ORD700U / ORD700D fire on DETORD changes if attached.'
 - behaviour_id: ord-entry-ord101-c12
   surface_id: pgm:ORD101
-  name: Closed-order guard lives in callers
-  status: candidate
+  name: Closed-order guard lives in the callers (absence here)
+  status: documented
   slice_id: ord-entry-ord101
-  discovery_card: null
+  discovery_card: discovery/ord-entry-ord101/features/ord-entry-ord101-c12.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2064,7 +2082,9 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ORD101 has no ORDATCLO check; ORD200/201 refuse option 2 on closed orders.'
+  notes: 'confidence: observed-in-code; ORD101 loads ORDATCLO / ORDATDEL into the buffer and never tests them: closed or delivered orders are fully editable once inside. Guard only in ORD201 s01chk ((opt01
+    = 2 or 4) and datclo > 1940-01-01) and, broken, in ORD200 (c09). Direct CALL has no guard. Editing lines of a closed order leaves ORDATCLO set (no reopen). In-flight close from another job is serialised
+    by the ORDER record lock (c02), not by a rule.'
 - behaviour_id: ord-maintain-ord200-c01
   surface_id: pgm:ORD200
   name: List customer's orders from ORDERCUS view
@@ -4905,5 +4925,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T21:16:26Z'
+last_updated: '2026-09-08T21:44:05Z'
 updated_by: document-slices-conveyor
