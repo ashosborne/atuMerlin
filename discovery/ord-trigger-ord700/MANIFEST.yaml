@@ -7,132 +7,153 @@ seed_entrypoints:
   - ATU_SRC/QTRGSRC/ORD700U.SYSTRG
   - ATU_SRC/QSQLSRC/ORD701.SQLTRG
 out_of_scope_hints:
-  - ART801 reconciliation (sql-objects seed) - referenced only
-  - writer programs' own behaviour
+  - ART801 reconciliation (sql-objects seed) - referenced only; c10 documents the relationship, not that seed
+  - writer programs' own behaviour (ORD100/101/200/201/901 cited as firing call sites only)
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T13:20:29Z
+phase: B
+updated_at: 2026-09-08T18:20:00Z
 bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 4, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as cus-interactive, cus-modules and ord-entry-ord100."
+needs_sme:
+  - "c01 (inferred): are the three ADDPFTRG definitions and ORD701 actually attached on the reference box (DSPFD DETORD / ORDER)? Source defines; attachment is runtime state."
+  - "c08 (inferred): no update/delete trigger on ORDER; CULASTORD stays stale after out-of-tree deletes or ORD901 date shifts until ART801/ORD901 recompute. Accepted drift or defect?"
+  - "c11 (inferred): ORD700 never sees an order close (ORD200/201 opt 7 touches ORDER only) while ART801 excludes closed orders; ORD700 insert adds ODQTY where every other path uses ODQTY - ODQTYLIV. Verify with data before this becomes a card."
+  - "c03: is the SAMLOG deletion log (menu opt 84, ADSPUSRSPC not in tree) an observable a target must preserve? Only the delete event logs; the message carries ODQTY, not the outstanding quantity subtracted."
+  - "c03/c06: how is AddLogEntry bound into ORD700? H-spec has no bnddir, LOG is not in SAMPLE.BNDDIR, no ORD700.ILEPGM in QILESRC. Build owner / ARCAD."
+  - "c05: silent no-op when the article is unknown or the delta is 0; ARCUSQTY can go negative; no error handling on chain/update inside the trigger. Acceptable as-is?"
+  - "c07: ORD701 assigns the inserted ORDATE unconditionally (not MAX) — back-dated inserts move CULASTORD backwards. Only reachable from outside ORD100 today."
+  - "c10: ART801 leaves articles with no open lines and customers with no open orders untouched (WHERE EXISTS) despite the menu label 'Reset'. Intended?"
 
 features:
   - id: ord-trigger-ord700-c01
     name: Trigger registration on DETORD
     status: needs-SME
     confidence: inferred
-    summary: Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES). Definitions observed; attachment on the box inferred.
+    summary: "Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES), named ORD700_DETORD_ARTICLE_{INSERT,DELETE,UPDATE}; plus ORD701 CREATE TRIGGER on ORDER. Definitions observed; attachment on the box inferred. No card (bind: keep inferred labelled inferred)."
     entrypoints:
       - kind: other
         locator: DETORD triggers ORD700_DETORD_ARTICLE_*
-        evidence: ["ATU_SRC/QTRGSRC/ORD700A.SYSTRG:4-7", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7", "ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8"]
-    dependencies: [DETORD.PF]
-    open_questions: []
+        evidence: ["ATU_SRC/QTRGSRC/ORD700A.SYSTRG:4-7", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7", "ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8", "ATU_SRC/QSQLSRC/ORD701.SQLTRG:5-10"]
+    dependencies: [DETORD.PF, ORDER.PF]
+    open_questions: ["needs-SME: confirm attachment with DSPFD on the reference box."]
   - id: ord-trigger-ord700-c02
     name: Insert adds ordered quantity to article customer-order quantity
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ARCUSQTY += new.ODQTY.
+    summary: "teven='1': UpdArt(new.ODQTY, new.ODARID) -> ARCUSQTY += full ODQTY; new.ODQTYLIV is ignored on insert (every other path uses ODQTY - ODQTYLIV). Only in-tree inserter is ORD100 write fdeto at confirm (ODQTYLIV = 0), once per line, after the ORDER header. No sign/existence checks; missing article is a silent no-op."
     entrypoints:
       - kind: other
         locator: ORD700 teven='1'
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:73-75", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:97-110"]
-    dependencies: [ARTICLE1.LF]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:73-75", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:97-110", "ATU_SRC/QTRGSRC/ORD700A.SYSTRG:4-7", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:206"]
+    behaviour_doc: features/ord-trigger-ord700-c02.md
+    dependencies: [ARTICLE1.LF, DETORD.PF]
+    open_questions: ["needs-SME (c11): is ARCUSQTY 'ordered' (insert path) or 'outstanding' (delete/update/ART801 paths)?"]
   - id: ord-trigger-ord700-c03
     name: Delete subtracts outstanding quantity and logs
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ARCUSQTY -= (old.ODQTY - old.ODQTYLIV); AddLogEntry with order/line/article/qty; log errors swallowed.
+    summary: "teven='2': callp(e) AddLogEntry('ORD700:Order Line deleted <ODORID> <ODLINE> article : <ODARID> quantity : <ODQTY>') to SAMLOG user space (User/Date/Msg line appended by LOG300; failure swallowed, %error unread), then UpdArt(-(ODQTY - ODQTYLIV), old.ODARID). Delete is the only logging event. Only in-tree deleter is ORD101 opt 4, which refuses lines with ODQTYLIV > 0. LOG binding not in source."
     entrypoints:
       - kind: other
         locator: ORD700 teven='2'
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:76-82"]
-    dependencies: [ARTICLE1.LF, LOG.ILESRVPGM]
-    open_questions: ["Is the SAMLOG user-space log an observable a target must preserve?"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:76-82", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:18-35", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:191"]
+    behaviour_doc: features/ord-trigger-ord700-c03.md
+    dependencies: [ARTICLE1.LF, LOG.ILESRVPGM, LOG.RPGLEINC, SAMLOG (*USRSPC, not in tree)]
+    open_questions: ["needs-SME: is the SAMLOG user-space log an observable a target must preserve?", "needs-SME (build): how is AddLogEntry bound into ORD700 (no bnddir in H-spec; LOG not in SAMPLE.BNDDIR)?"]
   - id: ord-trigger-ord700-c04
     name: Update applies outstanding-quantity delta, handles article change
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Same article -> (dQty - dDelivered); changed article -> subtract old outstanding, add new outstanding.
+    summary: "teven='3' (TRGUPDCND(*CHANGE)): same article -> UpdArt((dODQTY) - (dODQTYLIV)); article changed -> add new outstanding to new article, subtract old outstanding from old article. In-tree firers: ORD101 line edit (qty/delivered/price; price-only nets 0), ORD200/201 opt 8 deliver (ODQTYLIV = ODQTY -> -ODQTY per undelivered line), ORD901 ODYEAR backfill (nets 0). No in-tree writer changes ODARID. Order close (opt 7) touches ORDER only -> not seen here."
     entrypoints:
       - kind: other
         locator: ORD700 teven='3'
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:83-93"]
-    dependencies: [ARTICLE1.LF]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:83-93", "ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:267-270", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:259-270", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:42-45"]
+    behaviour_doc: features/ord-trigger-ord700-c04.md
+    dependencies: [ARTICLE1.LF, DETORD1.LF]
+    open_questions: ["needs-SME (c11): ARCUSQTY is not reduced when an order is closed without delivery."]
   - id: ord-trigger-ord700-c05
     name: Silent no-op on zero delta or unknown article
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: UpdArt returns without error.
+    summary: "UpdArt: qty = 0 -> return; chain ARTICLE1 by id, not %found -> return; else ARCUSQTY += qty; update FARTI (ARMOD/ARMODID not stamped, ARDEL ignored). No error, message or log on skip; no (e) extender on chain/update so lock/I-O errors are unhandled inside the trigger; result may go negative; overflow past 99999 unguarded."
     entrypoints:
       - kind: other
         locator: ORD700 UpdArt
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:101-107"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:97-110", "ATU_SRC/QDDSSRC/ARTICLE1.LF:4-6", "ATU_SRC/QDDSSRC/SAMREF.PF:47"]
+    behaviour_doc: features/ord-trigger-ord700-c05.md
+    dependencies: [ARTICLE1.LF]
+    open_questions: ["needs-SME: are silent skips (unknown article) and negative ARCUSQTY acceptable as-is?"]
   - id: ord-trigger-ord700-c06
     name: Trigger buffer mechanics
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Standard PARM1 layout with old/new offsets; %parms = 0 early return.
+    summary: "*ENTRY PARM1 (80-byte trigger buffer header: FNAME/LNAME/MNAME/TEVEN/TTIME/CMTLCK/CCSID/offsets+lengths) + PARM2 length; NEW/OLD are EXTNAME(detord) based DS set from NEWOFF/OLDOFF. %parms = 0 -> seton lr + return; otherwise select on TEVEN (no other branch) and return with LR off (program and ARTICLE1 stay active). TTIME, CMTLCK, null maps, lengths and PARM2 never read. dftactgrp(*no) with no actgrp keyword (compile-time)."
     entrypoints:
       - kind: other
         locator: ORD700 *ENTRY
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:14-48", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:65-71"]
-    dependencies: []
-    open_questions: ["Conversion must replace this mechanism, not port it."]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:14-61", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:65-72", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:94-95"]
+    behaviour_doc: features/ord-trigger-ord700-c06.md
+    dependencies: [DETORD.PF]
+    open_questions: ["Bind note for a later station (not a behaviour): conversion must replace this mechanism, not port it.", "needs-SME (build): compile-time ACTGRP and bind directory for ORD700."]
   - id: ord-trigger-ord700-c07
     name: ORD701 sets customer last-order date on order insert
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: SQL AFTER INSERT trigger updates CUSTOMER.CULASTORD = new.ORDATE.
+    summary: "SQL AFTER INSERT FOR EACH ROW trigger on ORDER (PROGRAM NAME ORD701, sqlPath *LIBL): UPDATE Customer SET culastord = n.ordate WHERE cuid = n.orcuid. Unconditional assignment (not MAX) - back-dated inserts move the date backwards; unknown customer -> 0 rows, silent; soft-deleted customer updated; CUMOD/CUMODID untouched. Only in-tree inserter is ORD100 write forde (today's date, before the lines). Insert only - no update/delete counterpart (c08)."
     entrypoints:
       - kind: other
         locator: ORDER trigger ORD701_Insert_order
-        evidence: ["ATU_SRC/QSQLSRC/ORD701.SQLTRG:4-14"]
+        evidence: ["ATU_SRC/QSQLSRC/ORD701.SQLTRG:5-16", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:189-197", "ATU_SRC/QDDSSRC/CUSTOMER.PF:21-22"]
+    behaviour_doc: features/ord-trigger-ord700-c07.md
     dependencies: [ORDER.PF, CUSTOMER.PF]
-    open_questions: []
+    open_questions: ["needs-SME: is 'last order date' meant as most-recent (then unconditional assignment is a latent defect for back-dated inserts)?"]
   - id: ord-trigger-ord700-c08
     name: Trigger asymmetry leaves CULASTORD stale on delete
     status: needs-SME
     confidence: inferred
-    summary: No delete/update trigger on ORDER; ART801/ORD901 recompute later.
+    summary: "No delete/update trigger on ORDER; ART801/ORD901 recompute later with MAX(ORDATE). No in-tree program deletes ORDER rows; ORD901 shifts ORDATE and then recomputes itself. No card (bind: keep inferred labelled inferred)."
     entrypoints:
       - kind: other
         locator: ORDER (absence of triggers)
-        evidence: ["ATU_SRC/QSQLSRC/ORD701.SQLTRG", "ATU_SRC/QSQLSRC/ART801.SQLPRC:33-36"]
+        evidence: ["ATU_SRC/QSQLSRC/ORD701.SQLTRG:6", "ATU_SRC/QSQLSRC/ART801.SQLPRC:34-37", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:46-50"]
     dependencies: []
     open_questions: ["Accepted drift or defect?"]
   - id: ord-trigger-ord700-c09
     name: Staging copy excludes triggers
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ORD100C creates QTEMP/DETORD with TRG(*NO); only final writes fire ORD700.
+    summary: "ORD100C / ORD100C2: CRTDUPOBJ DETORD -> QTEMP CST(*NO) TRG(*NO) + OVRDBF TMPDETORD; all staging add/edit/delete in ORD100 hits the untriggered copy. Real DETORD is opened output-only in ORD100, so only the confirm-time write fdeto fires ORD700 (insert, once per line, ODQTYLIV = 0, after ORDER header -> ORD701). Abandoned orders leave no trigger footprint."
     entrypoints:
-      - kind: other
-        locator: ORD100C CRTDUPOBJ
-        evidence: ["ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:8-9"]
-    dependencies: []
+      - kind: job
+        locator: ORD100C / ORD100C2 CRTDUPOBJ TRG(*NO)
+        evidence: ["ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-12", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:5-11", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:10-12", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:197-208"]
+    behaviour_doc: features/ord-trigger-ord700-c09.md
+    dependencies: [DETORD.PF, ord-entry-ord100 (c02/c07 boundary)]
     open_questions: []
   - id: ord-trigger-ord700-c10
     name: ART801 batch reconciliation (related surface)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: SQL procedure recomputes ARCUSQTY, CUCREDIT, CULASTORD from open orders; menu opt 82.
+    summary: "SQL procedure UPDATE_ON_CUS_ORD_QTY (SPECIFIC ART801, COMMIT *NONE, menu opt 82 'Reset Summary Fields'): ARCUSQTY = SUM(ODQTY - ODQTYLIV) over open orders (ORDATCLO = 0); CUCREDIT = SUM(ODTOTVAT) over open orders (no incremental maintainer exists); CULASTORD = MAX(ORDATE) over all orders (same statement as ORD901). Each UPDATE guarded by WHERE EXISTS, so rows with no qualifying orders are left untouched, not reset. Plain SQL UPDATEs - ORD700/ORD701 do not fire."
     entrypoints:
       - kind: job
-        locator: ART801 UPDATE_ON_CUS_ORD_QTY
-        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:22-36", "ATU_SRC/QPNLSRC/SAMMNU.MENU:152-155"]
-    dependencies: []
-    open_questions: ["Owned by sql-objects seed; listed here for the relationship."]
+        locator: ART801 UPDATE_ON_CUS_ORD_QTY (menu opt 82)
+        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:4-38", "ATU_SRC/QPNLSRC/SAMMNU.MENU:151-154", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:46-50"]
+    behaviour_doc: features/ord-trigger-ord700-c10.md
+    dependencies: [ORDER.PF, DETORD.PF, ARTICLE.PF, CUSTOMER.PF]
+    open_questions: ["Owned by sql-objects seed; listed here for the relationship.", "needs-SME: 'Reset' leaves rows without qualifying orders untouched - intended?"]
   - id: ord-trigger-ord700-c11
     name: Possible arithmetic divergence between trigger and reconciliation
     status: needs-SME
     confidence: inferred
-    summary: ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.
+    summary: "Observed facts (cards c02/c04/c10): ORD700 never sees an order close (opt 7 updates ORDER only) while ART801 excludes closed orders; ORD700 insert adds ODQTY, every other path uses ODQTY - ODQTYLIV; ORD701 assigns, ART801 takes MAX. Whether values actually diverge in practice is a data question. No card (bind: keep inferred labelled inferred)."
     entrypoints:
       - kind: other
         locator: ORD700 vs ART801
-        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:75", "ATU_SRC/QSQLSRC/ART801.SQLPRC:24-27"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:75", "ATU_SRC/QSQLSRC/ART801.SQLPRC:23-27", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:249-257"]
     dependencies: []
     open_questions: ["SME to verify with data before this becomes a card."]

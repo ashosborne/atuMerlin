@@ -1,7 +1,7 @@
 # atu-merlin estate INDEX (readability mirror)
 
 > Status mirror for Ash. **Factory SoT for radar = `inventory/atu-merlin/APP_MANIFEST.yaml`**; slice truth = `discovery/<SLICE_ID>/MANIFEST.yaml`.
-> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`) run 2 (2026-09-08, `document-slices: cus-modules`) and run 3 (2026-09-08, `document-slices: ord-entry-ord100`).
+> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`) run 2 (2026-09-08, `document-slices: cus-modules`), run 3 (2026-09-08, `document-slices: ord-entry-ord100`) and run 4 (2026-09-08, `document-slices: ord-trigger-ord700` — last slice in the 2026-09-08 bind; conveyor idle until more slices are bound).
 
 Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09-08, cards not yet written · `done` = Phase B cards written for every accepted behaviour (SME sign-off still pending) · `deferred` = bind deferred · `unscanned` = in queue, not yet Phase A'd · counts are behaviours (not progress).
 
@@ -19,7 +19,7 @@ Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09
 | 8 | `ord-maintain-ord201` | ORD | candidate | ORD201 (+ORD201D) | 11 | ORDERCUS view, ISOTODATE40, ORDER1, DETORD1 | Menu opt 3; twin of ORD200 |
 | 9 | `ord-maintain-ord202` | ORD | candidate | ORD202 (+ORD202D) | 6 | ORDER1, DETORD1, CUSTOME1, ARTICLE1 | Read-only display |
 | 10 | `ord-print-ord500` | ORD | candidate | ORD500, ORD500C (+ORD500O.PRTF) | 8 | ORDER1, DETORD1, CUSTOME1, ARTICLE1, FPARAMETER, CVTSPLPDF | PDF impl not in tree |
-| 11 | `ord-trigger-ord700` | ORD | accepted (8 accept, 3 needs-SME) | ORD700, ORD700A/D/U.SYSTRG, ORD701.SQLTRG | 11 | DETORD, ARTICLE1, ORDER, CUSTOMER, LOG srvpgm | Hidden side effects of every order write |
+| 11 | `ord-trigger-ord700` | ORD | **done** (8/8 cards; `c01`, `c08`, `c11` needs-SME, no card) | ORD700, ORD700A/D/U.SYSTRG, ORD701.SQLTRG | 11 | DETORD/DETORD1, ARTICLE1, ORDER, CUSTOMER, LOG srvpgm + SAMLOG (not in tree), ART801 (related, sql-objects) | Cards `discovery/ord-trigger-ord700/features/`; hidden side effects of every order write; insert adds full ODQTY, delete/update use ODQTY−ODQTYLIV; only delete logs (SAMLOG, failure swallowed); order close never reaches ORD700; no in-tree writer changes ODARID; UpdArt silent on unknown article, no error handling, can go negative; ORD701 assigns (not MAX) CULASTORD; ART801 "Reset" leaves rows without open orders untouched, only writer of CUCREDIT; AddLogEntry binding not in source; CHARACTERIZATION deferred-waived |
 | 12 | `ord-batch-ord900` | ORD | deferred (bind) | ORD900, ORD901 | 9 | ORDER/ORDER1, DETORD, CUSTOMER, LASTORDNO | Likely demo-refresh tools (inferred) |
 
 ## Not yet scanned (queue order — residual, not a completeness claim)

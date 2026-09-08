@@ -4,13 +4,14 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T16:31:41Z` by `document-slices-conveyor`
+- last_updated: `2026-09-08T18:01:30Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
   - Pack B run 1 (2026-09-08): cus-interactive 12/12 accepted behaviours documented (cards under discovery/cus-interactive/features/); bind statuses (accepted/deferred) mirrored from slice MANIFESTs for cus-modules, ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests.
   - Pack B run 2 (2026-09-08): cus-modules 10/10 accepted behaviours documented (cards under discovery/cus-modules/features/); c10 stays needs-SME (inferred), no card.
   - Pack B run 3 (2026-09-08): ord-entry-ord100 12/12 accepted behaviours documented (cards under discovery/ord-entry-ord100/features/); c09, c11 stay needs-SME (inferred), no card.
+  - Pack B run 4 (2026-09-08): ord-trigger-ord700 8/8 accepted behaviours documented (cards discovery/ord-trigger-ord700/features/); c01, c08, c11 stay needs-SME. Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests.
 
 ## Histogram
 
@@ -22,9 +23,8 @@
 | surfaces `deferred` | 2 |
 | surfaces `unknown` | 3 |
 | behaviours_known | 134 |
-| behaviours `accepted` | 8 |
 | behaviours `candidate` | 92 |
-| behaviours `documented` | 34 |
+| behaviours `documented` | 42 |
 | behaviours confidence `inferred` | 10 |
 | behaviours confidence `observed-in-code` | 124 |
 | scanned_seeds | 12 |
@@ -48,7 +48,7 @@
 | `ord-maintain-ord201` | 1 | 11 | 0 | `candidate` |
 | `ord-maintain-ord202` | 1 | 6 | 0 | `candidate` |
 | `ord-print-ord500` | 2 | 8 | 0 | `candidate` |
-| `ord-trigger-ord700` | 3 | 11 | 0 | `candidate` |
+| `ord-trigger-ord700` | 3 | 11 | 8 | `candidate` |
 
 ## Scanned seeds
 
