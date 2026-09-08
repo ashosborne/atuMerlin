@@ -16,7 +16,8 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION:
   deferred-waived. No conversion, no tests. | Pack B run 8 (2026-09-08): ord-entry-ord101 documented (11 cards; c11 needs-SME); ORD wave queue left: ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202,
   ord-print-ord500 | Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500 | Pack B run 10
-  (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500'
+  (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500 | Pack B run
+  11 (2026-09-08): ord-maintain-ord202 documented (6/6 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-print-ord500'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -312,7 +313,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-maintain-ord202
   notes: '*PGM RPGLE - Display order (read-only; called by ORD200/ORD201 opt 5); screen ORD202D'
   discovery_evidence:
@@ -2504,9 +2505,9 @@ behaviours:
 - behaviour_id: ord-maintain-ord202-c01
   surface_id: pgm:ORD202
   name: Order header display with sentinel dates
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2515,13 +2516,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Chains ORDER1 and CUSTOME1; converts ISO numeric dates; zero -> 1940-01-01.'
+  notes: 'confidence: observed-in-code; chain id order1 then chain orcuid custome1, neither %found tested; datord = %date(ordate:*iso) unconditional, datliv/datclo converted only when > 0 else left at the
+    *inzsr preset 1940-01-01 (implicit sentinel, relies on *inlr every call); DSPF *DMY shows 01/01/40 which MAPVAL blanks on DATLIV/DATCLO, DATORD has no MAPVAL. Not-found id (ghost row after a delete
+    in ORD200/ORD201, or concurrent delete) -> ORDATE 0 -> %date(0) -> unmonitored status 00112, no screen (ORD500 identical). Zero/invalid stored ORDATE, or non-zero invalid ORDATDEL/ORDATCLO, fail the
+    same way (guard is a zero test); no in-tree writer stores ORDATE 0. Missing customer -> blank customer line, no message (orphans unreachable via the lists). Two-digit years; the three ORD screens do
+    not share a date presentation. No writes (four ''if'' files). Dead declarations User/count/mode/crt/upd/chk/rrs01/err01 and nine indicators; panel id ''ORD202-1'' (own).'
 - behaviour_id: ord-maintain-ord202-c02
   surface_id: pgm:ORD202
   name: Order lines display with totals
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2530,13 +2535,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; DETORD1 by ORID; article description via ARTICLE1 chain; sums ODTOT and ODTOTVAT.'
+  notes: 'confidence: observed-in-code; setll/reade DETORD1 by ODORID (ascending ODLINE), every line in one pass; chain odarid article1 per line (no %found -> a missing article repeats the previous line''s
+    ARDESC); tot += odtot, totvat += odtotvat (stored sums, never recomputed); write sfl01; sflend on unconditionally. Two-line SFL01 record (row 8 line/article/qty/delivered/price/total/with-VAT, row 9
+    ARDESC 50 full width); SFLDROP(CF11) -> shown truncated first (12 per page), F11 folds (6 per page, SFLPAG); SFLSIZ 7 != SFLPAG 6 -> auto-extend, display-side paging, More.../Bottom. Totals on the footer
+    KEY01 (written before exfmt ctl01), EDTCDE(2) shows zero as blank (undelivered lines have an empty Deliver column). Empty order: header + headings + blank totals, no message. RRb01 = LRRN after exfmt
+    is dead (program exits). SFLNXTCHG/SFLMSG residue never set.'
 - behaviour_id: ord-maintain-ord202-c03
   surface_id: pgm:ORD202
   name: Read-only exit on any key
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2545,13 +2554,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; F3, F12 and Enter all end the program.'
+  notes: 'confidence: observed-in-code; One exfmt per call. s01key: exit (F3) and cancel (F12) -> panel 0; other (Enter, F5, F6, anything else that returns) -> s01act -> panel 0; next cycle pnl00 -> *inlr.
+    No redisplay, refresh, option processing or message; id never modified; no return value. F3 = F12 (one panel). Keys that do not return: F11 (SFLDROP), Page Up/Down inside the loaded subfile, Print.
+    Fresh state every call (*inzsr presets, inz(1)/inz(prp), file opens) - the c01 implicit sentinel depends on it. Callers clear the option and rewrite the row, no reload (ord-maintain-ord200-c05 / ord-maintain-ord201-c05).'
 - behaviour_id: ord-maintain-ord202-c04
   surface_id: pgm:ORD202
   name: Callers ORD200 / ORD201 option 5
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2560,13 +2571,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Both list programs call ORD202(orid).'
+  notes: 'confidence: observed-in-code; Exactly two call sites under ATU_SRC: ORD200 s01act opt 5 and ORD201 s01act opt 5, prototype dspord extpgm(''ORD202'') with one like(orid) parameter by reference,
+    synchronous; then opt01 = 0, update sfl01, no reload. No menu, CMD, CL or other caller (contrast ORD500C). Option 5 has no state or existence guard in either twin: closed/delivered orders display normally;
+    a ghost row (ORD201 blanks to orid 0, ORD200 leaves the deleted id) or a concurrent delete -> the c01 exception fires inside ORD202 in the list program''s session (inquiry message; cancel unwinds through
+    the caller - ILE inference). Parameter unchanged by the callee. Legend ''5=Display'' on both list screens.'
 - behaviour_id: ord-maintain-ord202-c05
   surface_id: pgm:ORD202
-  name: Dead keys and no paging in display
-  status: candidate
+  name: Dead keys and display-side paging
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2575,13 +2589,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; DSPF has CF06/CA05 and option field unused by program; SFLSIZ 7 / SFLPAG 6 without page-down handling.'
+  notes: 'confidence: observed-in-code; ORD202D is the list template minus input: CF06 ''Create'' and CA05 ''Refresh'' enabled, indicators create/refresh declared and never tested -> both exit (c03); neither
+    in the KEY01 legend (F3=Exit, F11=Detail, F12=Cancel). NO option column - every SFL01/CTL01 field is output-only (Phase A ''option field unused'' corrected: none exists); SFLNXTCHG, SFLMSG(''Invalid
+    Option''), ERRSFL, SFLRCDNBR copy are residue never exercised. Paging is NOT missing: SFLSIZ 7 != SFLPAG 6 auto-extends the subfile, the display handles Page Up/Down (no PAGEDOWN/ROLLUP keyword; pagedown
+    indicator never tested) and permits SFLDROP; sflend always on -> SFLEND(*MORE) More.../Bottom. Orders with more than 7 lines display fully (Phase A concern withdrawn); roll past Bottom -> system message.
+    PRINT key live. Same 15/14 idiom in ORD101D/ORD200D; ORD201D pages in the program because it fetches in batches.'
 - behaviour_id: ord-maintain-ord202-c06
   surface_id: pgm:ORD202
   name: Direct ARTICLE1 access bypasses FARTICLE
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord202
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord202/features/ord-maintain-ord202-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2590,7 +2608,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Unlike ORD100/ORD101, article description is read by chain, not GetArtDesc.'
+  notes: 'confidence: observed-in-code; farticle1 if e k disk + chain odarid article1 per line (no %found, no clear) where ORD100:117,266 / ORD101:114,223 call FARTICLE.GetArtDesc. Miss semantics differ:
+    FARTICLE.chainARTICLE1 does clear *all FARTI before the chain -> blank; ORD202 leaves the buffer -> previous line''s description repeated. Freshness differs: ORD202 opens/closes ARTICLE1 every call
+    (*inlr) vs FARTICLE''s lazy-open last-key cache per activation group. ARDESC shown at full 50 (ORD101D truncates to 30). ARDEL not tested. bnddir(''SAMPLE'') on the H spec is inert - no /COPY, no prototype,
+    no bound call: ORD202 has no service-program dependency, only the four LFs (+PFs) and ORD202D on *LIBL. Customer lookup (chain custome1, c01) bypasses FCUSTOMER.GetCusName the same way (ORD100:328 /
+    ORD101:283 use it; ORD200 chains too). Dependency fact for the ORD pack; no redesign here.'
 - behaviour_id: ord-print-ord500-c01
   surface_id: pgm:ORD500
   name: Print order document to spool
@@ -4981,5 +5003,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T22:45:56Z'
+last_updated: '2026-09-08T23:32:37Z'
 updated_by: document-slices-conveyor
