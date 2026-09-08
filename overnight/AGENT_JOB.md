@@ -1,14 +1,14 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — FIRE run 2 after run 1 DONE
+# PACK B — Document-slices conveyor (atuMerlin) — FIRE run 3 after run 2 DONE
 # Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# Accepted slices only: cus-interactive (documented), cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700.
+# Accepted slices only: cus-interactive (documented), cus-modules (documented; fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700.
 # Deferred: ord-batch-ord900. Skip art-* this round.
-# Pick next: prefer cus-modules (CUS-first prove path; cus-interactive already documented).
-# Then ord-entry-ord100, then ord-trigger-ord700.
+# Pick next: prefer ord-entry-ord100 (CUS prove path documented; 12 accepted behaviours).
+# Then ord-trigger-ord700.
 # inferred / needs-SME stay needs-SME — do not promote to observed.
 # CHARACTERIZATION: deferred-waived. No convert. No architecture bind. ROOM_OK false for arch/convert.
-# See overnight/BIND_RECORD.md and discovery/*/BIND.md. Prior brief: overnight/MORNING_BRIEF.md (run 1).
+# See overnight/BIND_RECORD.md and discovery/*/BIND.md. Prior brief: overnight/MORNING_BRIEF.md (run 2 cus-modules).
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRED after room bind 2026-09-08
 # Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
