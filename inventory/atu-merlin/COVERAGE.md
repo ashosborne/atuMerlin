@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T20:43:21Z` by `document-slices-conveyor`
+- last_updated: `2026-09-08T21:16:26Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -13,19 +13,21 @@
   - Pack B run 3 (2026-09-08): ord-entry-ord100 12/12 accepted behaviours documented (cards under discovery/ord-entry-ord100/features/); c09, c11 stay needs-SME (inferred), no card.
   - Pack B run 4 (2026-09-08): ord-trigger-ord700 8/8 accepted behaviours documented (cards discovery/ord-trigger-ord700/features/); c01, c08, c11 stay needs-SME. Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests.
   - Pack B run 6 (2026-09-08): dat-utils 8/8 accepted behaviours documented (cards discovery/dat-utils/features/); no needs-SME candidates; surfaces udf:ISOTODATE40 / udf:ISO_Num_To_Date candidate -> accepted (bind mirror). Remaining queue: cou-maintain FCOUNTRY c07-c12. CHARACTERIZATION: deferred-waived. No conversion, no tests.
+  - Pack B run 7 (2026-09-08): cou-maintain FCOUNTRY half c07-c12 6/6 accepted behaviours documented (cards discovery/cou-maintain/features/); c01-c06, c13 deferred (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION: deferred-waived. No conversion, no tests.
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 16 |
-| surfaces `candidate` | 46 |
-| surfaces `deferred` | 2 |
+| surfaces `accepted` | 19 |
+| surfaces `candidate` | 42 |
+| surfaces `deferred` | 3 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 208 |
-| behaviours `documented` | 60 |
+| behaviours `candidate` | 195 |
+| behaviours `deferred` | 7 |
+| behaviours `documented` | 66 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -40,7 +42,7 @@
 | --- | ---: | ---: | ---: | --- |
 | `art-interactive` | 5 | 16 | 0 | `candidate` |
 | `art-modules` | 4 | 11 | 0 | `candidate` |
-| `cou-maintain` | 4 | 13 | 0 | `candidate` |
+| `cou-maintain` | 4 | 13 | 6 | `deferred` |
 | `cus-interactive` | 4 | 12 | 12 | `documented` |
 | `cus-modules` | 3 | 11 | 10 | `candidate` |
 | `dat-utils` | 2 | 8 | 8 | `documented` |

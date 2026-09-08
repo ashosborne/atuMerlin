@@ -5,6 +5,8 @@ Status bumps + pointers only (Field Guide "Who writes what": Discovery may move 
 - behaviour status: accepted | documented | deferred | rejected are copied from the slice MANIFEST; `documented` also sets
   `discovery_card` to the card path. Notes are refreshed with the Phase B summary.
 - surface status: candidate -> accepted when the slice `bind_status` is accepted; -> deferred when deferred. `unknown` stays.
+  Split bind: an accepted slice whose features on a given surface are *all* deferred/rejected marks that surface deferred,
+  not accepted (e.g. cou-maintain: FCOUNTRY half accepted, pgm:COU200 deferred).
 - never sets converted / verified / green flags; never adds surfaces or behaviours (that is upsert_app_manifest.py's job).
 
 Usage: python3 overnight/tools/mark_documented.py [--app-id atu-merlin] [--updated-by document-slices-conveyor] [--slice cus-interactive ...]
@@ -61,11 +63,19 @@ def main() -> int:
             b["notes"] = f"confidence: {f.get('confidence')}; {f.get('summary', '')}".strip()
 
         bind = sm.get("bind_status")
+        # feature statuses per APP_MANIFEST surface, so a split bind can leave the deferred half's surface deferred
+        feat_status_by_surface: dict[str, list[str]] = {}
+        for f in sm.get("features", []):
+            b = beh_by_id.get(f["id"])
+            if b is not None and b.get("surface_id"):
+                feat_status_by_surface.setdefault(b["surface_id"], []).append(f.get("status"))
         for s in manifest["surfaces"]:
             if s.get("slice_id") != slice_id or s.get("status") != "candidate":
                 continue
             if bind == "accepted":
-                s["status"] = "accepted"
+                on_surface = feat_status_by_surface.get(s["surface_id"], [])
+                all_deferred = bool(on_surface) and all(st in ("deferred", "rejected") for st in on_surface)
+                s["status"] = "deferred" if all_deferred else "accepted"
                 bumped_s += 1
             elif bind == "deferred":
                 s["status"] = "deferred"

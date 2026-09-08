@@ -12,6 +12,8 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   c09, c11 stay needs-SME (inferred), no card. | Pack B run 4 (2026-09-08): ord-trigger-ord700 8/8 accepted behaviours documented (cards discovery/ord-trigger-ord700/features/); c01, c08, c11 stay needs-SME.
   Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 6 (2026-09-08): dat-utils 8/8 accepted behaviours documented (cards
   discovery/dat-utils/features/); no needs-SME candidates; surfaces udf:ISOTODATE40 / udf:ISO_Num_To_Date candidate -> accepted (bind mirror). Remaining queue: cou-maintain FCOUNTRY c07-c12. CHARACTERIZATION:
+  deferred-waived. No conversion, no tests. | Pack B run 7 (2026-09-08): cou-maintain FCOUNTRY half c07-c12 6/6 accepted behaviours documented (cards discovery/cou-maintain/features/); c01-c06, c13 deferred
+  (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION:
   deferred-waived. No conversion, no tests.'
 scanned_seeds:
 - art-interactive
@@ -367,7 +369,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGSRC/COU200.RPG
   repo_path: ATU_SRC/QRPGSRC/COU200.RPG
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   notes: '*PGM RPG III OPM (only OPM member) - Work with Countries, edit name/ISO only (menu opt 21); screen COU200D'
   discovery_evidence:
@@ -378,7 +380,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
   repo_path: ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
-  status: candidate
+  status: accepted
   slice_id: cou-maintain
   notes: '*SRVPGM MODULE(COU300 COU301); 4 exports; used by CUS200/CUS250/PRO200/PRO250'
   discovery_evidence:
@@ -388,7 +390,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/COU300.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/COU300.RPGLE
-  status: candidate
+  status: accepted
   slice_id: cou-maintain
   notes: '*MODULE nomain - GetCountryName, GetCountryIso3 (unused), ExistCountry'
   discovery_evidence:
@@ -397,7 +399,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/COU301.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/COU301.RPGLE
-  status: candidate
+  status: accepted
   slice_id: cou-maintain
   notes: '*MODULE nomain - SltCountry keyed-read selection window; screen COU301D'
   discovery_evidence:
@@ -2817,7 +2819,7 @@ behaviours:
 - behaviour_id: cou-maintain-c01
   surface_id: pgm:COU200
   name: COU200 lists all countries in one load; option 2 only
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2828,11 +2830,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; *LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35.'
+  notes: 'confidence: observed-in-code; *LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35. Deferred at bind (COU200 half); not deepened.'
 - behaviour_id: cou-maintain-c02
   surface_id: pgm:COU200
   name: Edit country name / ISO-3 with no validation
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2843,11 +2845,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns.'
+  notes: 'confidence: observed-in-code; FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns. Deferred at bind (COU200 half); not deepened.'
 - behaviour_id: cou-maintain-c03
   surface_id: pgm:COU200
   name: Chain indicator 98 never tested before UPDAT
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2858,11 +2860,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; A concurrent delete between list and edit would UPDAT without a locked record.'
+  notes: 'confidence: observed-in-code; A concurrent delete between list and edit would UPDAT without a locked record. Deferred at bind (COU200 half); not deepened.'
 - behaviour_id: cou-maintain-c04
   surface_id: pgm:COU200
   name: No create / delete path; code not editable; no delete flag (absence)
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2873,11 +2875,12 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column.'
+  notes: 'confidence: observed-in-code; No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column. Deferred at bind (COU200 half); not deepened. The no-delete-flag fact is carried by
+    c07 for the FCOUNTRY half.'
 - behaviour_id: cou-maintain-c05
   surface_id: pgm:COU200
   name: Key semantics (F3 on detail ends program; F12 returns without reload)
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2888,11 +2891,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload.'
+  notes: 'confidence: observed-in-code; List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload. Deferred at bind (COU200 half); not deepened.'
 - behaviour_id: cou-maintain-c06
   surface_id: pgm:COU200
   name: Consecutive option-2 rows processed; subfile row not refreshed
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -2903,13 +2906,13 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; STEP01 stays ''ACT'' after an update so the next changed row is picked up; the list shows stale values.'
+  notes: 'confidence: observed-in-code; STEP01 stays ''ACT'' after an update so the next changed row is picked up; the list shows stale values. Deferred at bind (COU200 half); not deepened.'
 - behaviour_id: cou-maintain-c07
   surface_id: srvpgm:FCOUNTRY
-  name: GetCountryName / GetCountryIso3 / ExistCountry
-  status: candidate
+  name: GetCountryName / GetCountryIso3 / ExistCountry (cached keyed chain)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2918,13 +2921,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Cached COUNTRY chain by 2A code; unknown -> blanks; ExistCountry = %found (no delete flag exists).'
+  notes: 'confidence: observed-in-code; COU300 nomain: three exports over one private chainCOUNTRY. Open guard on a USROPN COUNTRY (opened by the first getter, never closed - c08). Cache test is P_COID
+    <> COID against the record buffer''s own field: a hit is cached (no I/O, stale until a different code is asked for), a miss clears the buffer first (blanks, %found off, so a miss is never cached), a
+    blank code never reads (buffer COID blank at start and after every miss) and ExistCountry(blank) as the first call returns *off from the initial %found - correct by construction. Getters return the
+    buffer field (COUNTR 30A / COISO 3A), ExistCountry = %found(country). COUNTRY has no delete flag, so exists = row present; no IsCountryDeleted analogue to FAM300. Callers: CUS200 / PRO200 (name on entry,
+    name after F4, ExistCountry in the check -> ERR0002), CUS250 / PRO250 (name only). Pointer: modern/src/shared/fcountry/index.ts is the converted CUS dependency surface for these two getters (per-call
+    query, no cache) - not changed.'
 - behaviour_id: cou-maintain-c08
   surface_id: mod:COU300
-  name: GetCountryIso3 unused; closeCOUNTRY not exported
-  status: candidate
+  name: GetCountryIso3 has no caller; closeCOUNTRY is not exported
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2933,13 +2941,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No caller of GetCountryIso3 in ATU_SRC; close procedure not in FCOUNTRY.BND.'
+  notes: 'confidence: observed-in-code; GetCountryIso3 is compiled, exported (FCOUNTRY.BND:6) and prototyped but no ATU_SRC member calls it; COISO (literal 3A in COUNTRY.PF, not a SAMREF field) is otherwise
+    read/written only by the deferred COU200 FMT02, and CUSTOMER / PROVIDER store the 2A COID only. closeCOUNTRY is implemented and prototyped (copybook publishes five prototypes for four exports - same
+    drift as FVAT) but absent from FCOUNTRY.BND, so with EXPORT(*SRCFILE) no caller can bind to it; a CloseCOUNTRY() call would compile and fail at bind. Nothing inside the module calls it either, so COU300''s
+    COUNTRY ODP - and COU301''s separate COUNTRY / COUNTR1 / COU301D opens - live until the activation group ends (ACTGRP(*CALLER)).'
 - behaviour_id: cou-maintain-c09
   surface_id: srvpgm:FCOUNTRY
-  name: SltCountry selection window (keyed read, by code or name)
-  status: candidate
+  name: SltCountry selection window (keyed read, by code or by name)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2948,13 +2959,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Native keyed read over COUNTRY or COUNTR1 positioned at pcod; 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns COID; F3/F12 return pcod.'
+  notes: 'confidence: observed-in-code; COU301 nomain, window COU301D ''Select a Country Code'' (WINDOW(4 25 18 42)). Native keyed read - not SQL (contrast SltCustomer): SETLL pcod on COUNTRY (by code)
+    or SETLL keydes on COUNTR1 (by name, RENAME REC52), one-row look-ahead saved in SAVCOD/SAVDES, 20 rows per load into SFLSIZ 11 / SFLPAG 10 (two pages per load; PAGEDOWN active under N80; RRB01 = LRRN
+    keeps the cursor page). Option 1 on exactly one row returns that row''s COID (the SFL01 field shares storage with the file field); F3 / F12 return pcod unchanged; plain Enter redisplays. No filter,
+    no search field, no not-found message: pcod or position-to beyond the last key gives the frame with no rows (sfldsp = rrs01 > 0). pcod is passed by reference (prototype without VALUE - unlike SltCustomer)
+    and never written. Both callers (CUS200 / PRO200 F4 on the edit panel) assign the result back to their code field and refresh the name without validation (cus-interactive-c05). Files and display file
+    are opened once per activation group and never closed. Pointer: modern/src/shared/fcountry/index.ts listCountries() is a flat list by code, not a positioned keyed read - not changed.'
 - behaviour_id: cou-maintain-c10
   surface_id: mod:COU301
-  name: F8 toggle clears the key of the mode entered (opposite of FAM301)
-  status: candidate
+  name: F8 toggle clears the key of the mode entered (source differs from FAM301; observable behaviour identical)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2963,13 +2979,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; bydesc -> clear KEYDES so the new order restarts from the top.'
+  notes: 'confidence: observed-in-code; F8 -> S01chk first (ignored if any row option was typed: STS01 and IN08 -> dsp), then S01act: bydesc = not bydesc; if bydesc clear KEYDES else clear KEYCOD; prp repositions
+    with the blank key. FAM301 clears the opposite key (the mode left). Correction to Phase A (''opposite of FAM301'', ''template divergence''): traced through both modules, the retained key in COU301 is
+    never read while the other order is active and is cleared again on re-entry, so both windows show the new order from the top on every toggle and both lose the caller''s pcod position after the first
+    toggle away and back. Divergence is real in source, nil on the screen. IN08 is tested before OPTC1 = 8, so F8 + position-to on one Enter toggles and discards the position; F8 + invalid control option
+    never reaches the toggle (41 fires first).'
 - behaviour_id: cou-maintain-c11
   surface_id: mod:COU301
   name: Position-to option 8, guards 41/42 and row rules 35/36
-  status: candidate
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c11.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2978,13 +2998,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Identical to SltArtFam.'
+  notes: 'confidence: observed-in-code; S01chk per changed row: OPT01 in {0,1} else 35 INVALID OPTION + RI (34) with the page set to the first offending row (ERR01 latch); a second 1 -> 36 ONLY ONE SELECTION.
+    Control line after the loop, in order: OPTC1 not in {0,8} -> 41 Invalid option; SLT01 and OPTC1 <> 0 -> 42 Position to not available with selection pending; STS01 and IN08 -> redisplay (F8 ignored).
+    S01act: OPTC1 = 8 -> KEYCOD = POSCOD (by code) or KEYDES = POSDES (by name, the only CHECK(LC) input), prp clears the control line and SETLLs. Invalid row + option 8: position not applied and the 8
+    stays typed; valid 1 + option 8: 42, nothing returned. SFLNXTCHG is set on every read row so blanked rows keep coming back through readc (harmless). Message texts are DDS literals, not SAMMSGF. Confirmed
+    by diff: S01chk (166-220) and the position-to branch (233-239) are byte-identical to FAM301 sltArtFam; FAM301D differs from COU301D only in %TEXT, REFFLDs, titles and WINDOW geometry.'
 - behaviour_id: cou-maintain-c12
   surface_id: srvpgm:FCOUNTRY
-  name: Export surface, binding and callers
-  status: candidate
+  name: FCOUNTRY export surface, binding and callers
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c12.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2993,11 +3017,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1'') ACTGRP(*CALLER); in SAMPLE.BNDDIR and PRO200.ILEPGM; callers CUS200, CUS250, PRO200, PRO250.'
+  notes: 'confidence: observed-in-code; CRTSRVPGM MODULE(COU300 COU301) ACTGRP(*CALLER) EXPORT(*SRCFILE); FCOUNTRY.BND exports 4 symbols (EXISTCOUNTRY, GETCOUNTRYISO3, GETCOUNTRYNAME, SLTCOUNTRY) under
+    a literal SIGNATURE(''V1'') with no *PRV block (same as FCUSTOMER / FVAT / FARTICLE / FFAMILLY; only FPROVIDER is *GEN + *PRV) - compatibility by append-only convention, not checked. Listed in SAMPLE.BNDDIR
+    (11th of 11) and named explicitly in PRO200.ILEPGM BNDSRVPGM because PRO200.RPGLE has no H spec / bnddir; CUS200 (h dftactgrp(*no) bnddir(''SAMPLE'')), CUS250 and PRO250 (ctl-opt) resolve through the
+    binding directory. Callers: CUS200 / PRO200 use GetCountryName + SltCountry + ExistCountry (indicator 40 -> ERR0002 ''Country code unknown. Press F4 to select.''), CUS250 / PRO250 GetCountryName only;
+    SltCustomer shows the raw CUCOUN code without FCOUNTRY. *CALLER means the getter cache / ODPs live in the caller''s activation group: PRO200 is QILE explicitly, the other three are compile metadata.
+    Compile-time dependents of the COUNTRY layout: CUS250D / PRO250D / COU301D (REFFLD) and CUSTOMER.PF / PROVIDER.PF (COID via SAMREF). COU200 (deferred) bypasses the service program and writes COUNTRY
+    directly.'
 - behaviour_id: cou-maintain-c13
   surface_id: pgm:COU200
   name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
-  status: candidate
+  status: deferred
   slice_id: cou-maintain
   discovery_card: null
   traceability: null
@@ -3008,7 +3038,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF.'
+  notes: 'confidence: observed-in-code; Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF. Deferred at bind (COU200 half); not deepened. Cited by c07 / c12 as the direct COUNTRY writer that
+    can leave a getter cache stale.'
 - behaviour_id: dat-utils-c01
   surface_id: udf:ISOTODATE40
   name: ISOTODATE40 sentinel conversion (0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL)
@@ -4874,5 +4905,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T20:43:21Z'
+last_updated: '2026-09-08T21:16:26Z'
 updated_by: document-slices-conveyor
