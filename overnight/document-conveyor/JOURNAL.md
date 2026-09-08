@@ -7,6 +7,7 @@ One row per run. Branch `cursor/atu-merlin-estate-discovery`. Times UTC (Ash is 
 | 1 | 2026-09-08T13:22Z | `ab342e9` | `cus-interactive` | 12/12 accepted cards written; MANIFEST → `documented`; APP_MANIFEST bumped; COVERAGE regenerated; INDEX row mirrored. `CHARACTERIZATION: deferred-waived`. |
 | 2 | 2026-09-08T15:11Z | `0e32c19` | `cus-modules` | 10/10 accepted cards written (`c01`–`c09`, `c11`); `c10` stays needs-SME (inferred, no card); MANIFEST → `documented`; APP_MANIFEST bumped (documented 12→22); COVERAGE regenerated; INDEX row 2 done. `CHARACTERIZATION: deferred-waived`. |
 | 3 | 2026-09-08T16:07Z | `5ac7f0d` | `ord-entry-ord100` | 12/12 accepted cards written (`c01`–`c08`, `c10`, `c12`–`c14`); `c09`, `c11` stay needs-SME (inferred, no card); MANIFEST → `documented`; APP_MANIFEST bumped (documented 22→34); COVERAGE regenerated; INDEX row 5 done. `CHARACTERIZATION: deferred-waived`. Queue left: `ord-trigger-ord700`. |
+| 4 | 2026-09-08T17:45Z | `fa5b77f` | `ord-trigger-ord700` | 8/8 accepted cards written (`c02`–`c07`, `c09`, `c10`); `c01`, `c08`, `c11` stay needs-SME (inferred, no card); MANIFEST → `documented`; APP_MANIFEST bumped (documented 34→42, accepted 8→0); COVERAGE regenerated; INDEX row 11 done. `CHARACTERIZATION: deferred-waived`. **Queue empty — conveyor idle until more slices are bound.** |
 
 ## Run 1 notes (2026-09-08)
 
@@ -43,3 +44,16 @@ One row per run. Branch `cursor/atu-merlin-estate-discovery`. Times UTC (Ash is 
 - Pointers only (not deepened): `ORD901.PGM.SQLRPGLE:42-45` (deferred `ord-batch-ord900`), `ORD500` callee signature, `ORD200`/`ORD201` call sites, `ORD700A`/`ORD701` trigger definitions.
 - Tooling: `mark_documented.py --slice ord-entry-ord100` (12 bumps, 12 cards), `gen_coverage.py` 0 problems. No tool changes.
 - Pushed once at the end with `AGENT_JOB.md` already `DONE`.
+
+## Run 4 notes (2026-09-08)
+
+- `overnight/stop.txt` absent at start; `overnight/AGENT_JOB.md` line 1 `RUN` (job header: "run 4 prefer ord-trigger-ord700", re-queued after the CUS convert station finished at `efb5e2a`).
+- Station: Document (Phase B). No Architecture-bind, no Convert, no Test gen, no RECORD. `ROOM_OK` not required for this station and not claimed. `modern/` (CUS convert) and the CUS PACK were not touched.
+- VM had a scratch branch checked out at `fa5b77f`; switched to `cursor/atu-merlin-estate-discovery` (same SHA) before any write.
+- Pick: `ord-trigger-ord700` (only accepted undocumented slice left; matches job preference). Bind queue is now empty.
+- `c01`, `c08`, `c11` (inferred) kept `needs-SME`, no card written. Auto-accept policy not exercised. Their MANIFEST summaries were sharpened with the observed facts from the cards (e.g. "order close never reaches ORD700") without changing status or confidence.
+- Findings beyond Phase A summaries (as-is, cited in cards): insert path adds full `ODQTY` and ignores `ODQTYLIV` (every other path uses outstanding); only the delete event logs, message carries `ODQTY` not the subtracted quantity, `callp(e)` with `%error` unread; in-tree update firers are `ORD101` edit, `ORD200`/`ORD201` opt 8 deliver (`-ODQTY` per undelivered line) and `ORD901` `ODYEAR` backfill (nets 0); no in-tree writer changes `ODARID`; order close (opt 7) touches `ORDER` only; `UpdArt` has no error handling, ignores `ARDEL`, does not stamp `ARMOD`, can go negative; `*inlr` only on the no-parm path; `ORD701` assigns (not `MAX`), fires before the lines are written; `ART801` `WHERE EXISTS` leaves rows without open orders untouched and is the only writer of `CUCREDIT`; `AddLogEntry` binding not in source (no `bnddir`, `LOG` absent from `SAMPLE.BNDDIR`, no `ORD700.ILEPGM`).
+- Evidence corrections: `ORD701` body `ORD701.SQLTRG:5-16` (was `:4-14`); menu opt 82 `SAMMNU.MENU:151-154` (was `:152-155`); `ART801` `CULASTORD` statement `:34-37` (was `:33-36`).
+- Pointers only (not deepened): `ORD100`/`ORD101`/`ORD200`/`ORD201`/`ORD901` call sites; `LOG300` (what the log line contains); `PRO202`/`PRO203`/`CUS200`/`CUS250D`/`CUS300` as consumers of the maintained fields.
+- Tooling: `mark_documented.py --slice ord-trigger-ord700` (8 bumps, 8 cards, 0 surface bumps — surfaces were already `accepted` from run 1), `gen_coverage.py` 0 problems. No tool changes.
+- Pushed once at the end with `AGENT_JOB.md` already `DONE` (every push re-fires the automation; expect one no-op run).
