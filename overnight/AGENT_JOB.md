@@ -1,4 +1,13 @@
-RUN
+DONE
+
+# RESULT 2026-09-08 — verify CUS vertical under atu-merlin-ts-cus-v1@1 (WAIVED_PATHFINDER, parity: TS_BOUNDARY_GREEN — not IBM i parity)
+# - verification/cus-vertical/2026-09-08-r1/PARITY.yaml           rollup + per-card status; parity_green/legacy_green stay false
+# - verification/cus-vertical/2026-09-08-r1/REPORT.md             gates, commands, card COMPARE, gaps G-1..G-3, CR-1..CR-9 table (7 accept-for-demo, 2 defer: CR-6, CR-8)
+# - verification/cus-vertical/2026-09-08-r1/HANDOFF.yaml          inputs, oracle (cards + OpenAPI, no goldens), conversion commits
+# - verification/cus-vertical/2026-09-08-r1/evidence/             typecheck-and-vitest.log (55/55), probe.mjs + results.json (31/31 live HTTP cases)
+# - verification/cus-vertical/2026-09-08-r1/narrative/HOW_IT_WORKS.md
+# - modern/README.md                                              status line now points at PARITY.yaml
+# Talk-track: CUS pathfinder verified at TS API under waiver — not Merlin migrated. Follow-ups: OpenAPI doc gaps G-1..G-3; room decides CR-6, CR-8.
 
 # VERIFY — CUS vertical (atuMerlin) — FIRE after Field+CTO Verification ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
