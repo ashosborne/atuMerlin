@@ -7,7 +7,8 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required. | Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold
   srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only. | Pack B run
   1 (2026-09-08): cus-interactive 12/12 accepted behaviours documented (cards under discovery/cus-interactive/features/); bind statuses (accepted/deferred) mirrored from slice MANIFESTs for cus-modules,
-  ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
+  ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 2 (2026-09-08): cus-modules 10/10 accepted behaviours documented (cards
+  under discovery/cus-modules/features/); c10 stays needs-SME (inferred), no card.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -950,9 +951,9 @@ behaviours:
 - behaviour_id: cus-modules-c01
   surface_id: srvpgm:FCUSTOMER
   name: Customer getter family (GetCus*)
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -961,13 +962,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Eleven exported procedures each chain CUSTOME1 by CUID and return one column.'
+  notes: 'confidence: observed-in-code; Eleven exported nomain procedures each call chainCUSTOME1 by CUID (5P 0 by value) and return one CUSTOMER column from the module-global buffer; no found/not-found
+    signal (unknown id -> blanks/0). Country returned as code. Export surface = 15 symbols, SIGNATURE(''V1''). Only GetCusName has callers in ATU_SRC (ORD100, ORD101).'
 - behaviour_id: cus-modules-c02
   surface_id: srvpgm:FCUSTOMER
   name: ExistCus (found and not deleted)
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -976,13 +978,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Returns %found(CUSTOME1) and CUDEL <> ''X''.'
+  notes: 'confidence: observed-in-code; Returns %found(CUSTOME1) and CUDEL <> ''X'' after the cached chain; only uppercase X counts as deleted; unknown id -> false. No caller in ATU_SRC. ExistCus(0) as
+    the very first FCUSTOMER call never chains, so %found has no prior operation (result not documented by IBM; unknown).'
 - behaviour_id: cus-modules-c03
   surface_id: srvpgm:FCUSTOMER
   name: IsCusDeleted
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -991,13 +994,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Returns CUDEL = ''X'' after chain.'
+  notes: 'confidence: observed-in-code; Returns CUDEL = ''X'' after the cached chain; unknown id -> false (buffer cleared), so not-deleted and missing are indistinguishable from this call alone. No caller
+    in ATU_SRC; no writer of CUDEL for customers in ATU_SRC either.'
 - behaviour_id: cus-modules-c04
   surface_id: mod:CUS300
   name: Lazy open and last-key cache in chainCUSTOME1
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1006,13 +1010,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Opens CUSTOME1 on first use; skips chain when the requested CUID equals the buffered CUID; clears buffer before chain so missing ids yield blanks/zeros.'
+  notes: 'confidence: observed-in-code; Opens CUSTOME1 (USROPN, input-only) on first use, never closed by exported code; skips the CHAIN when the requested id equals the buffer CUID; otherwise clear *all
+    FCUST then chain. Hits cached for the activation-group lifetime (stale after updates by other programs); misses return blanks/zeros and are not cached (buffer CUID = 0). Unmonitored open/chain.'
 - behaviour_id: cus-modules-c05
   surface_id: srvpgm:FCUSTOMER
   name: CloseCUSTOME1 prototyped but not exported
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1021,13 +1026,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Procedure exists and is in the include, but FCUSTOMER.BND does not export it.'
+  notes: 'confidence: observed-in-code; closeCUSTOME1 has no export keyword on its P-spec and no symbol in FCUSTOMER.BND, yet CUSTOMER.RPGLEINC prototypes it; nothing calls it (dead code). CUSTOME1 stays
+    open for the activation group. Closing would not reset the cache anyway (buffer CUID untouched). A caller compiled against the include would fail at bind time.'
 - behaviour_id: cus-modules-c06
   surface_id: mod:CUS301
   name: SltCustomer selection window
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1036,13 +1042,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Dynamic SQL over CUSTOMER filtered by name and/or city LIKE, ordered by name, paged 14; returns selected CUID or the passed default.'
+  notes: 'confidence: observed-in-code; Dynamic SQL SELECT over CUSTOMER with contains-LIKE on UPPER(name) and/or UPPER(city), ORDER BY CUSTNM; extendable subfile (SFLSIZ 15 / SFLPAG 14) loaded 14 rows
+    per Page Down with one-row look-ahead; option 1 returns the row CUID, F3/F12 return pcod. SQL errors silent (empty list); criteria fields persist across calls (display file never closed); F8 acts as
+    Enter; country shown as code; soft-deleted rows listed.'
 - behaviour_id: cus-modules-c07
   surface_id: mod:CUS301
   name: Selection rules (option 1 only, single selection)
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1051,13 +1059,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Non-1 options and second selections are flagged with SFLMSG and reverse image; cursor to first error.'
+  notes: 'confidence: observed-in-code; S01chk reads changed rows: 0 ignored; <>1 -> INVALID OPTION (35); second 1 -> ONLY ONE SELECTION (36); error rows DSPATR(RI)+(PC); page to first error; every changed
+    row re-marked SFLNXTCHG (which is what lets S01act find the selection); act only when clean. OPT01 <> 1 tested before the duplicate test.'
 - behaviour_id: cus-modules-c08
   surface_id: mod:CUS301
   name: Criteria change re-prepares; F3/F12 return default
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1066,13 +1075,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; If search fields changed since last load the cursor is closed and rebuilt; exit/cancel return the input default unchanged.'
+  notes: 'confidence: observed-in-code; S01act tests savName/savCity vs screen first: any change closes C1 and restarts prp, discarding an option 1 typed on the old list; otherwise the first OPT01 = 1 row
+    is returned. F3 and F12 (CA keys, identical) exit the loop and return pcod unchanged. Page Down with changed criteria pages the old result; option errors block a new search until fixed.'
 - behaviour_id: cus-modules-c09
   surface_id: mod:CUS301
   name: Dynamic SQL string concatenation of user input
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1081,7 +1091,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Search text is trimmed and concatenated into the SELECT; single quotes in input would break or alter the statement.'
+  notes: 'confidence: observed-in-code; Search text (<=10 chars per field, uppercased by the 5250 session) is trimmed and concatenated inside LIKE ''%...%'' literals; no escaping, no parameter markers;
+    '' breaks/alters the statement, %/_ are wildcards; no SQLCODE check so failures show an empty list with Bottom. Statement is SELECT-only into a 4-column DS.'
 - behaviour_id: cus-modules-c10
   surface_id: mod:CUS300
   name: Dormant GetCusLastOrdDate scaffold
@@ -1100,9 +1111,9 @@ behaviours:
 - behaviour_id: cus-modules-c11
   surface_id: mod:CUS301
   name: Blank criteria list-all semantics
-  status: accepted
+  status: documented
   slice_id: cus-modules
-  discovery_card: null
+  discovery_card: discovery/cus-modules/features/cus-modules-c11.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1111,7 +1122,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; With both search fields blank the city branch is taken and LIKE ''%%'' matches every customer.'
+  notes: 'confidence: observed-in-code; No both-blank branch in s01prp: both fields blank -> else (city) branch with LIKE ''%%''; CUCITY is DDS CHAR(30) without ALWNULL so every customer (incl. CUDEL =
+    ''X'') is listed by name, 14 per page. First SltCustomer call in an activation group (ORD100 without parm) therefore shows the whole customer list.'
 - behaviour_id: ord-batch-ord900-c01
   surface_id: pgm:ORD900
   name: ORD900 reset LASTORDNO to max order id
@@ -2372,5 +2384,5 @@ behaviours:
   parity_green: false
   waiver: null
   notes: 'confidence: inferred; ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.'
-last_updated: '2026-09-08T13:41:45Z'
+last_updated: '2026-09-08T15:30:19Z'
 updated_by: document-slices-conveyor

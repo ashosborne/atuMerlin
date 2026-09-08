@@ -1,7 +1,7 @@
 # atu-merlin estate INDEX (readability mirror)
 
 > Status mirror for Ash. **Factory SoT for radar = `inventory/atu-merlin/APP_MANIFEST.yaml`**; slice truth = `discovery/<SLICE_ID>/MANIFEST.yaml`.
-> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`).
+> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`) and run 2 (2026-09-08, `document-slices: cus-modules`).
 
 Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09-08, cards not yet written · `done` = Phase B cards written for every accepted behaviour (SME sign-off still pending) · `deferred` = bind deferred · `unscanned` = in queue, not yet Phase A'd · counts are behaviours (not progress).
 
@@ -10,7 +10,7 @@ Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09
 | # | slice_id | domain | status | members (entry) | cand. | deps (not members) | notes |
 | ---: | --- | --- | --- | --- | ---: | --- | --- |
 | 1 | `cus-interactive` | CUS | **done** (12/12 cards; 3 needs-SME questions) | CUS200, CUS250 (+CUS200D, CUS250D) | 12 | CUSTOMER/CUSTOME1/2, CUSSEQ, FCOUNTRY, FCUSTOMER, ORD200, SAMMSGF | Cards `discovery/cus-interactive/features/`; CUMODID not refreshed on update; UPD duplicate gap; no delete path; CHARACTERIZATION deferred-waived |
-| 2 | `cus-modules` | CUS | accepted (10 accept, 1 needs-SME) | CUS300, CUS301 (+CUS301D) | 11 | CUSTOMER/CUSTOME1, FCUSTOMER.ILESRVPGM/.BND | `srvpgm-fcustomer` folded in at bind; next in Pack B queue |
+| 2 | `cus-modules` | CUS | **done** (10/10 cards; `c10` needs-SME, no card) | CUS300, CUS301 (+CUS301D) | 11 | CUSTOMER/CUSTOME1, FCUSTOMER.ILESRVPGM/.BND, SAMPLE.BNDDIR | Cards `discovery/cus-modules/features/`; `srvpgm-fcustomer` folded in (export facts in c01/c05); ExistCus/IsCusDeleted have no callers in ATU_SRC; last-key cache stale after external updates; SltCustomer criteria persist across calls, SQL errors silent; CHARACTERIZATION deferred-waived |
 | 3 | `art-interactive` | ART | candidate (skipped at bind until ART302 answered) | ART200, ART201, ART202, ART250 (+4 DSPF) | 16 | ARTICLE/1/2, ARTIPROV/1/2, ARTIINF, FARTICLE, FFAMILLY, FPROVIDER, FVAT | ART202 called from PRO side |
 | 4 | `art-modules` | ART | candidate (skipped at bind until ART302 answered) | ART300, ART301, ART302 (+ART301D) | 11 | ARTICLE/1, ARTIINF, FARTICLE.ILESRVPGM/.BND, FFAMILLY | **ART302 not bound in FARTICLE source** |
 | 5 | `ord-entry-ord100` | ORD | accepted (12 accept, 2 needs-SME) | ORD100, ORD100C, ORD100C2, CRTORD (+ORD100D) | 14 | ORDER, DETORD (QTEMP staging), LASTORDNO, FCUSTOMER, FARTICLE, FVAT, ORD500 | Core create transaction |
@@ -35,7 +35,7 @@ Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09
 | 19 | `vat-module` | VAT | unscanned | VAT300 (FVAT) |
 | 20 | `log-programs` | LOG | unscanned | LOG100/300 (SAMLOG user space) |
 | 21 | `dat-utils` | DAT | unscanned | DAT001/002 (behind ISOTODATE UDFs) |
-| 22 | `srvpgm-fcustomer` | SRVPGM | folded into #2 (bind 2026-09-08) | no separate Phase A |
+| 22 | `srvpgm-fcustomer` | SRVPGM | folded into #2 (bind 2026-09-08); export facts documented in #2 cards c01/c05 | no separate Phase A |
 | 23 | `srvpgm-farticle` | SRVPGM | unscanned | recommend merge into #4 |
 | 24 | `srvpgm-fprovider` | SRVPGM | unscanned | versioned signatures |
 | 25 | `srvpgm-supporting` | SRVPGM | unscanned | includes SAMPLE.BNDDIR with 4 missing srvpgms |
