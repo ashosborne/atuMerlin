@@ -1,0 +1,103 @@
+slice_id: ord-print-ord500
+seed: "Print a customer order - ORD500(orid) spool + ORD500C PDF conversion"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+  - ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+  - ATU_SRC/QDDSSRC/ORD500O.PRTF
+out_of_scope_hints:
+  - order creation/maintain screens
+  - PDF rendering internals (processing program not in tree)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T13:55:00Z
+bind_status: unbound
+
+features:
+  - id: ord-print-ord500-c01
+    name: Print order document to spool
+    status: candidate
+    confidence: observed-in-code
+    summary: Header formats, one DETAIL per line, page break every 14 details, TOTAL (net, VAT, total), FOOTER.
+    entrypoints:
+      - kind: job
+        locator: ORD500(orid) -> ORD500O
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:30-57", "ATU_SRC/QDDSSRC/ORD500O.PRTF:6-108"]
+    dependencies: [ORDER1.LF, DETORD1.LF, CUSTOME1.LF, ARTICLE1.LF, ORD500O.PRTF]
+    open_questions: ["Exact field layout of the PRTF not verified field-by-field this pass."]
+  - id: ord-print-ord500-c02
+    name: Resolve IFS path from PATH parameter and hand off to PDF step
+    status: candidate
+    confidence: observed-in-code
+    summary: getParm2('PATH',' ') then ORD500C(orid, path).
+    entrypoints:
+      - kind: other
+        locator: ORD500 -> extpgm ORD500C
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:21-23", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:58-59"]
+    dependencies: [FPARAMETER.ILESRVPGM, PARAMETER.RPGLEINC]
+    open_questions: ["What if PATH parameter is missing (blank path)?"]
+  - id: ord-print-ord500-c03
+    name: Spool to PDF via CVTSPLPDF
+    status: candidate
+    confidence: observed-in-code
+    summary: Custord<orid>.pdf in &PATH, last spool, replace, A4 portrait, Courier 11, no bookmarks.
+    entrypoints:
+      - kind: job
+        locator: ORD500C
+        evidence: ["ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:4-14"]
+    dependencies: [CVTSPLPDF.CMD]
+    open_questions: []
+  - id: ord-print-ord500-c04
+    name: CVTSPLPDF implementation not in tree
+    status: candidate
+    confidence: inferred
+    summary: Command definition present; processing program absent from ATU_SRC.
+    entrypoints:
+      - kind: other
+        locator: CVTSPLPDF.CMD
+        evidence: ["ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-26"]
+    dependencies: []
+    open_questions: ["Which product provides it? Is PDF output in parity scope?"]
+  - id: ord-print-ord500-c05
+    name: Callers of ORD500
+    status: candidate
+    confidence: observed-in-code
+    summary: ORD100 after confirm; ORD200/ORD201 option 6; ORD101 declares only.
+    entrypoints:
+      - kind: other
+        locator: extpgm ORD500
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:209", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:240-243", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:246-249"]
+    dependencies: []
+    open_questions: []
+  - id: ord-print-ord500-c06
+    name: Direct file access instead of service programs
+    status: candidate
+    confidence: observed-in-code
+    summary: ARTICLE1 and CUSTOME1 chained directly; only FPARAMETER used.
+    entrypoints:
+      - kind: other
+        locator: ORD500 F-specs
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:8-13"]
+    dependencies: []
+    open_questions: []
+  - id: ord-print-ord500-c07
+    name: Code quirks (datord overwrite, unused oflind, early *inlr)
+    status: candidate
+    confidence: observed-in-code
+    summary: Harmless as-is oddities to document rather than replicate blindly.
+    entrypoints:
+      - kind: other
+        locator: ORD500 main
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:30-32", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:53-56"]
+    dependencies: []
+    open_questions: []
+  - id: ord-print-ord500-c08
+    name: Unknown order id prints blank document
+    status: candidate
+    confidence: observed-in-code
+    summary: No %found check after chain ORDER1.
+    entrypoints:
+      - kind: other
+        locator: ORD500 chain
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:31-33"]
+    dependencies: []
+    open_questions: []
