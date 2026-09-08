@@ -1,4 +1,14 @@
-RUN
+DONE
+
+# RESULT 2026-09-08 — Pack A estate radar residual: 12 seeds scanned (13–24), 3 folded; PHASE A ONLY, nothing bound
+# - overnight/MORNING_BRIEF.md                 banner PHASE A ONLY - UNBOUND CANDIDATES + ESTATE_SCAN_INCOMPLETE; top candidates; bind priority; blind spots
+# - inventory/atu-merlin/APP_MANIFEST.yaml     31 -> 71 surfaces (+36 candidate, +4 unknown: XML/XSS/ORDER/TXT srvpgms), 134 -> 268 behaviours (all new = candidate), 24 scanned_seeds, 17 hints
+# - inventory/atu-merlin/COVERAGE.md           regenerated (0 lint problems)
+# - discovery/{pro-interactive,pro-modules,pro-cobol-pro201,fam-maintain,cou-maintain,par-maintain,vat-module,log-programs,dat-utils,sql-objects,menu-cmd-shell,srvpgm-supporting}/{CANDIDATES.md,MANIFEST.yaml,SME_BRIEF.md}
+# - overnight/seeds/<12 slices>.md, overnight/JOURNAL.md (residual section), overnight/METHOD_COVERAGE.md, overnight/CONTEXT_GATE.md, docs/estate/INDEX.md rows 13-27
+# - overnight/tools/upsert_app_manifest.py     12 new SURFACES groups, FOLDED_SEEDS, unknown_surfaces[].surface_id, owner-surface picker
+# Headline finds: PRO200 edit never saves (planted bug); ARPURQTY has no writer; ExistArtFam ignores FADEL; unknown VAT code -> 0 silently; ORDERCUS inner join hides orders for missing customers; SAMLOG 5000 bytes no capacity check; 4 sourceless srvpgms + QM queries + ADSPUSRSPC outside tree.
+# Seed queue now empty; residual = objects not in tree + box-only facts. Suggested first bind batch: vat-module, dat-utils, cou-maintain (FCOUNTRY half). Not touched: ATU_SRC, modern/, architecture/, verification/, atu-merlin-ts-cus-v1.
 
 # PACK A — Estate radar residual (atuMerlin) — FIRE after CUS Verification DONE
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
