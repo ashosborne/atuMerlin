@@ -1,116 +1,71 @@
-# MORNING_BRIEF — atu-merlin Pack A (2026-09-08)
+# MORNING_BRIEF — atu-merlin
 
-# PHASE A ONLY - UNBOUND CANDIDATES
+# PHASE B DOCUMENT ONLY — NO TESTS — NO CONVERSION
 
-# ESTATE_SCAN_INCOMPLETE
+Run: Pack B document-slices conveyor, run 1 · 2026-09-08 13:22–13:45 UTC (14:22–14:45 Europe/London)
+Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `ab342e9`
+Previous brief (Pack A, `PHASE A ONLY - UNBOUND CANDIDATES`) preserved in git at `ab342e9:overnight/MORNING_BRIEF.md`.
 
-`completeness: incomplete` — human residual gate required. Nothing below is accepted, documented, tested, bound or converted.
+## 1. Slice processed
 
-> Of the allowlisted seeds scanned, these candidate slices were proposed; APP_MANIFEST updated; nothing bound.
+**`cus-interactive`** (CUS-first prove path, as the job asked). `CUS200` Work with Customers + `CUS250` Customer by id.
 
-## 1. Counts (histogram, not progress)
+## 2. Cards written / needs-SME left
 
-| Metric | Count |
-| --- | ---: |
-| Seeds in charter queue | 27 |
-| Seeds scanned this run (Phase A) | 12 |
-| Seeds remaining as `unscanned_hints` | 15 (+6 structural blind-spot hints) |
-| Candidate surfaces (callable objects) | 28 (+3 `unknown`) |
-| Candidate behaviours | 134 — 124 `observed-in-code`, 10 `inferred` |
-| Deferred / reject **recommendations** (prose only) | 6 (see §6) |
-| Errors / BLOCKED | 0 |
-| `overnight/stop.txt` | never appeared |
+- **12 / 12** accepted behaviours now have as-is behaviour cards: `discovery/cus-interactive/features/cus-interactive-c01.md` … `c12.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, all 12 `documented`.
+- **0** accepted items left undocumented in this slice. **0** `blocked`.
+- **3 needs-SME questions** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions` (cards stay `documented`; the questions are about intent, not about what the code does):
+  - `c04` — update-mode duplicate check (`dup > 1`) lets a name+phone change collide with exactly one other customer.
+  - `c08` — `CUMODID` is refreshed on **create only**; update keeps the previous modifier (chain reloads it). **Corrects the Phase A summary.**
+  - `c11` — no writer of `CUDEL` for customers anywhere under `ATU_SRC`; deleted-flag rows remain listable/editable here while `FCUSTOMER.ExistCus` excludes them.
+- Phase A open question on `CUCREA` answered from source (update preserves it; create stamps program-start date).
+- Other as-is facts an SME should glance at: F12 on the list ends the program; F3 on the edit/detail screens returns to the previous panel; `CUSSEQ` consumed on F6 before save; record lock held while editing; `LASTORD` input-capable but never stored; `CUS250` shows `CULASTORD` raw while `CUS200` shows blank/date. All in `SME_BRIEF.md`.
 
-Stop reason: `MAX_ITERATIONS` = 12 reached. Each iteration added new surfaces; `STOP_WHEN_NO_NEW_SURFACES` never fired.
+## 3. Characterization
 
-## 2. Top candidates worth a human's first look
+`CHARACTERIZATION: deferred-waived` — note present at `discovery/cus-interactive/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere.
 
-| id | slice | entry hint | confidence | evidence |
-| --- | --- | --- | --- | --- |
-| ord-entry-ord100-c07 | ord-entry-ord100 | F8 confirm: LASTORDNO + ORDER + DETORD write | observed | `ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:188-208` |
-| ord-entry-ord100-c02 | ord-entry-ord100 | CL stages lines in `QTEMP/DETORD` with `TRG(*NO)` | observed | `ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-10` |
-| cus-interactive-c04 | cus-interactive | Customer validation (country, name, phone, duplicate) | observed | `ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:290-317` |
-| cus-interactive-c02 | cus-interactive | Customer id from SQL sequence `CUSSEQ` | observed | `CUS200.PGM.SQLRPGLE:179-185` |
-| art-interactive-c02 | art-interactive | Article id = max+1 with duplicate retry | observed | `ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:245-250,300-306` |
-| art-interactive-c04 | art-interactive | Free-text info in SQL table `ARTIINF` | observed | `ART200.PGM.SQLRPGLE:331-377` |
-| ord-maintain-ord200-c09 | ord-maintain-ord200 | **Option 2 unreachable** (precedence bug) | observed | `ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187` vs `ORD201.PGM.SQLRPGLE:191` |
-| ord-maintain-ord201-c06 | ord-maintain-ord201 | Close (7) / deliver (8) lifecycle rules | observed | `ORD201.PGM.SQLRPGLE:250-278` |
-| ord-entry-ord101-c04 | ord-entry-ord101 | Delivered ≤ ordered rules (ERR1001/1002) | observed | `ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:250-257` |
-| ord-trigger-ord700-c02..c04 | ord-trigger-ord700 | ARCUSQTY maintained by DETORD triggers | observed | `ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:73-93` |
-| ord-trigger-ord700-c07 | ord-trigger-ord700 | ORD701: CULASTORD on order insert | observed | `ATU_SRC/QSQLSRC/ORD701.SQLTRG:4-14` |
-| art-modules-c06 | art-modules | **ART302/GetArtInfo not bound in FARTICLE source** | observed | `ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM:8`, `QSRVSRC/FARTICLE.BND` |
-| cus-modules-c06 | cus-modules | `SltCustomer` dynamic-SQL selection window | observed | `ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:54-124` |
-| ord-print-ord500-c03 | ord-print-ord500 | Spool → PDF `Custord<orid>.pdf` via CVTSPLPDF | observed | `ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:4-14` |
-| ord-batch-ord900-c04 | ord-batch-ord900 | Hidden "auto-close 10 days after delivery" rule | observed | `ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:22-37` |
+## 4. COVERAGE / APP_MANIFEST / INDEX delta
 
-Full lists: `discovery/<SLICE_ID>/CANDIDATES.md` (12 slices).
+`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + pointers only; no new surfaces/behaviours):
 
-## 3. APP_MANIFEST / COVERAGE delta
+| Metric | before | after |
+| --- | ---: | ---: |
+| behaviours `documented` | 0 | 12 (`cus-interactive`, `discovery_card` set) |
+| behaviours `accepted` | 0 | 30 (bind mirror: `cus-modules` 10, `ord-entry-ord100` 12, `ord-trigger-ord700` 8) |
+| behaviours `candidate` | 134 | 92 (incl. 6 bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
+| surfaces `accepted` / `deferred` | 0 / 0 | 12 / 2 (`ord-batch-ord900` deferred per bind) |
+| legacy_green / parity_green / parity_waived | 0 / 0 / 0 | 0 / 0 / 0 |
 
-- `inventory/atu-merlin/APP_MANIFEST.yaml` — **created** this run (did not exist). 31 surfaces, 134 behaviours, 12 `scanned_seeds`, 21 `unscanned_hints`. Validates against `migration-factory/schemas/app-manifest.schema.json` (0 errors). `status: in_progress`, `completeness: incomplete`, notes `estate_scan: partial`.
-- `inventory/atu-merlin/COVERAGE.md` — generated by `overnight/tools/gen_coverage.py` (never hand-edited).
-- `overnight/tools/upsert_app_manifest.py` — additive merge of slice manifests; re-run is a no-op; never touches human-set statuses.
-- `docs/estate/INDEX.md` — optional readability mirror (status only; grants nothing).
+- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems; JSON-schema validation passed). Per-slice table now carries a `documented` count column; header no longer says "nothing bound".
+- Repairs made while bumping (honest): the bind commit had introduced a **duplicate top-level `notes` key** and a **list-typed `notes`** (schema says string|null) — PyYAML was silently dropping the room-bind note. Fixed to one `" | "`-separated string; `upsert_app_manifest.py` no longer clobbers notes; new `overnight/tools/mark_documented.py` does the status mirror idempotently.
+- `docs/estate/INDEX.md`: row 1 `cus-interactive` → **done** (cards written; SME sign-off pending); bind statuses mirrored on rows 2, 5, 11, 12; `srvpgm-fcustomer` shown as folded into `cus-modules`; `art-*` marked skipped-at-bind.
 
-## 4. Remaining `unscanned_hints` (honesty metric, not completeness)
+## 5. Remaining accepted undocumenteds (queue for next run)
 
-Seeds scanned: **12 of 27 in the charter queue.** Not scanned: `pro-interactive`, `pro-modules`, `pro-cobol-pro201`, `fam-maintain`, `cou-maintain`, `par-maintain`, `vat-module`, `log-programs`, `dat-utils`, `srvpgm-fcustomer`, `srvpgm-farticle`, `srvpgm-fprovider`, `srvpgm-supporting`, `menu-cmd-shell`, `sql-objects`.
-Method families not touched this pass: **COBOL** (`PRO201.CBL`), **OPM RPG** (`COU200.RPG`). See `overnight/METHOD_COVERAGE.md`.
+1. `cus-modules` — 10 accepted (+1 needs-SME stays needs-SME). CUS-first: recommend next.
+2. `ord-entry-ord100` — 12 accepted (+2 needs-SME).
+3. `ord-trigger-ord700` — 8 accepted (+3 needs-SME).
 
-A second Pack A run (same job file, line 1 back to `RUN`) would pick up seed #13 onward; the upsert is additive.
+Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices (the 2 `art-*` above + `ord-entry-ord101`, `ord-maintain-ord200/201/202`, `ord-print-ord500`). Unscanned seeds: 15 (see COVERAGE).
 
-## 5. Recommended human priority for bind (not auto-bound)
+## 6. Explicit non-claims
 
-Order reflects charter preference CUS/ART first, then ORD seams, weighted by how self-contained and characterizable each seam is:
+- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` for later Architecture/Conversion stations (ROOM_OK still required there).
+- Did **not** generate tests, RECORD, REPLAY, goldens, or any waiver artefact.
+- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08). `inferred`/`needs-SME` rows in other slices were not promoted.
+- Did **not** edit `ATU_SRC/**` or touch `master`.
+- No claim of parity, verification, or "% documented". Counts only.
 
-1. `cus-interactive` — self-contained, rich validation, 12 candidates all observed.
-2. `cus-modules` — clean callable API; bind together with (or instead of) `srvpgm-fcustomer`.
-3. `art-interactive` — largest seam; decide `ART202` ownership at bind.
-4. `art-modules` — needs the `ART302` binding question answered first (build owner).
-5. `ord-entry-ord100` — the core create transaction; first ORD bind.
-6. `ord-maintain-ord201` — menu-reachable lifecycle twin with the correct guard; bind before `ord-maintain-ord200`.
-7. `ord-trigger-ord700` — must be bound alongside any ORD writer, never merged into one.
-8. `ord-entry-ord101`, `ord-maintain-ord202`, `ord-print-ord500` — thin, low-risk.
-9. `ord-maintain-ord200` — bind with an explicit decision on the option-2 defect.
-10. `ord-batch-ord900` — likely **defer** (demo-refresh tooling) pending SME confirmation.
+## 7. Deviations recorded
 
-## 6. Deferred / reject recommendations (prose — nothing set in manifests)
+- FEATURE_IDs kept as `cus-interactive-cNN` (bind record, BIND.md and APP_MANIFEST reference them) rather than renumbering to `<SLICE_ID>-NNN`. Open decision for the Field Guide.
+- Bind statuses for the three other accepted slices and the deferred one were mirrored into APP_MANIFEST this run (status bump only, from human-recorded bind). No cards were written for them.
 
-| Candidate | Recommendation | Why |
-| --- | --- | --- |
-| `cus-modules-c10` | reject | Commented-out training scaffold, not behaviour |
-| `cus-interactive-c11` | defer | Absence finding (no customer delete path) — record as gap |
-| `ord-batch-ord900` (slice) | defer | Inferred demo-data refresh utilities |
-| `srvpgm-fcustomer`, `srvpgm-farticle` (seeds) | merge into `cus-modules` / `art-modules` | Same modules viewed from the binding side |
-| `ord-trigger-ord700-c11` | needs data check before card | Inferred arithmetic divergence trigger vs `ART801` |
-| `ord-entry-ord100-c09` | needs build owner | CMD→PGM binding is ARCAD metadata |
+## 8. completeness: incomplete
 
-## 7. Suspected blind spots (first-class residual)
+Human residual gate untouched. Estate scan still partial (`overnight/METHOD_COVERAGE.md`).
 
-- **Missing sources:** `XML`, `ORDER`, `TXT`, `XSS` service programs listed in `SAMPLE.BNDDIR`; `qprotosrc,xml` copybook used by `PRO202`; `CVTSPLPDF` processing program; `ADSPUSRSPC` command; QM queries `CUSQRY`/`ARTQRY` and form `CUSQRYFMT` (menu opts 12/13).
-- **Metadata-only:** `CRTORD` command→program binding; trigger attachment to `DETORD`/`ORDER`; `FARTICLE` real module list (source says `ART300 ART301`, but `ART250` needs `ART302`).
-- **Runtime-only:** trigger firing, `QTEMP` override lifetime, activation-group caching in getters, subfile overflow (`ORD202` SFLSIZ 7), commitment control (none observed).
-- **Unreferenced data:** `CUSTADRE.PF`/`ADDRESS.PF` (no program uses them); `ARTIPROV` link creation path not found.
-- **Not scanned:** everything in §4 — PRO domain in particular has the only COBOL member and an external XML dependency.
+## 9. Next action
 
-## 8. Explicit non-actions
-
-Did **not**: bind, accept, deepen Phase B, PACK, RECORD, generate tests, execute tests, run Architecture BIND, or Convert. Did not edit `ATU_SRC/**`. Did not commit to `master`. No completion percentage anywhere.
-
-## 9. Completeness
-
-`completeness: incomplete` — human residual gate required. This brief covers **scanned seeds**, not the estate.
-
-## 10. Method coverage
-
-`ESTATE_SCAN_INCOMPLETE` — COBOL and OPM RPG families untouched; four service programs and several commands have no source in the allowlist. Details: `overnight/METHOD_COVERAGE.md`.
-
-## 11. Closing ask
-
-**Bind which slice IDs today?** (`record-bind` accept / reject / defer per candidate; then fire Pack B document conveyor on accepted only.)
-
-Suggested first bind set if you want one sentence: `cus-interactive`, `cus-modules` (+ fold `srvpgm-fcustomer`), `ord-entry-ord100`, `ord-trigger-ord700`.
-
----
-
-Artefacts: `overnight/CONTEXT_GATE.md` · `overnight/METHOD_COVERAGE.md` · `overnight/JOURNAL.md` · `overnight/seeds/*.md` · `discovery/<SLICE_ID>/{CANDIDATES.md,MANIFEST.yaml,SME_BRIEF.md}` · `inventory/atu-merlin/{APP_MANIFEST.yaml,COVERAGE.md}` · `docs/estate/INDEX.md` · `overnight/tools/{gen_coverage.py,upsert_app_manifest.py}`
+**Re-run this paste** (flip `overnight/AGENT_JOB.md` line 1 back to `RUN`) to document the next accepted slice — recommend `cus-modules` next. In parallel, a human SME should work the sign-off checklist in `discovery/cus-interactive/SME_BRIEF.md`; that signature, not this brief, is what unlocks Test generation for `cus-interactive`.

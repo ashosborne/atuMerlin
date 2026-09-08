@@ -1,4 +1,5 @@
-RUN
+DONE
+finished_at: 2026-09-08T13:47Z (UTC) — run 1 documented cus-interactive; morning_brief: overnight/MORNING_BRIEF.md; re-run: set line 1 back to RUN
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRED after room bind 2026-09-08
 # Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
