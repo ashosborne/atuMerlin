@@ -2,65 +2,67 @@
 
 # PHASE B DOCUMENT ONLY — NO TESTS — NO CONVERSION
 
-Run: Pack B document-slices conveyor, run 1 · 2026-09-08 13:22–13:45 UTC (14:22–14:45 Europe/London)
-Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `ab342e9`
-Previous brief (Pack A, `PHASE A ONLY - UNBOUND CANDIDATES`) preserved in git at `ab342e9:overnight/MORNING_BRIEF.md`.
+Run: Pack B document-slices conveyor, run 2 · 2026-09-08 15:11–15:50 UTC (16:11–16:50 Europe/London)
+Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `0e32c19`
+Previous briefs preserved in git: run 1 at `0e32c19:overnight/MORNING_BRIEF.md`; Pack A at `ab342e9:overnight/MORNING_BRIEF.md`.
 
 ## 1. Slice processed
 
-**`cus-interactive`** (CUS-first prove path, as the job asked). `CUS200` Work with Customers + `CUS250` Customer by id.
+**`cus-modules`** (CUS-first prove path, as the job asked; `srvpgm-fcustomer` folded in per bind). `CUS300` (11 getters, `ExistCus`, `IsCusDeleted`, private `chainCUSTOME1`) + `CUS301` (`SltCustomer` selection window) + `CUS301D.DSPF`.
 
 ## 2. Cards written / needs-SME left
 
-- **12 / 12** accepted behaviours now have as-is behaviour cards: `discovery/cus-interactive/features/cus-interactive-c01.md` … `c12.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, all 12 `documented`.
+- **10 / 10** accepted behaviours now have as-is behaviour cards: `discovery/cus-modules/features/cus-modules-c01.md` … `c09.md`, `c11.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, 10 `documented`.
+- **`c10`** (dormant `GetCusLastOrdDate` scaffold) was `needs-SME` / `inferred` at bind → **no card**, stays `needs-SME` in `MANIFEST.yaml`; not promoted.
 - **0** accepted items left undocumented in this slice. **0** `blocked`.
-- **3 needs-SME questions** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions` (cards stay `documented`; the questions are about intent, not about what the code does):
-  - `c04` — update-mode duplicate check (`dup > 1`) lets a name+phone change collide with exactly one other customer.
-  - `c08` — `CUMODID` is refreshed on **create only**; update keeps the previous modifier (chain reloads it). **Corrects the Phase A summary.**
-  - `c11` — no writer of `CUDEL` for customers anywhere under `ATU_SRC`; deleted-flag rows remain listable/editable here while `FCUSTOMER.ExistCus` excludes them.
-- Phase A open question on `CUCREA` answered from source (update preserves it; create stamps program-start date).
-- Other as-is facts an SME should glance at: F12 on the list ends the program; F3 on the edit/detail screens returns to the previous panel; `CUSSEQ` consumed on F6 before save; record lock held while editing; `LASTORD` input-capable but never stored; `CUS250` shows `CULASTORD` raw while `CUS200` shows blank/date. All in `SME_BRIEF.md`.
+- **6 needs-SME questions** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions` (cards stay `documented`; the questions are about intent or about callers outside the tree, not about what the code does):
+  - `c01` / `c02` — **`ExistCus` and `IsCusDeleted` have no caller anywhere under `ATU_SRC`**; of the 11 getters only `GetCusName` is called (`ORD100`, `ORD101`). Dead API, or enforced from outside the tree?
+  - `c04` — unknown id → blanks/zeros silently; hits are cached until a *different* id is requested, so `CUS200` updates in the same activation group are invisible to repeated calls for the same id (misses are not cached).
+  - `c05` — `CloseCUSTOME1` prototyped in the shared include but not exported (and would not reset the cache anyway).
+  - `c09` — dynamic SQL by string concatenation (quote breaks the statement, `%`/`_` are wildcards, failure is silent) — preserve vs fix is an architecture decision (ROOM_OK), recorded not decided.
+- Other as-is facts an SME should glance at: `SltCustomer` search criteria persist across calls in an activation group (display-file fields, file never closed); SQL errors show an empty list with "Bottom" and no message; F8 is enabled but unhandled and acts as Enter; a criteria change takes precedence over an option `1` on the old list; blank criteria list every customer including `CUDEL = 'X'` rows; `ExistCus(0)` as the very first call never chains so `%found` has no prior operation (IBM does not document that value). All in `SME_BRIEF.md`.
+- Evidence corrections to Phase A: `SLTCUSTOMER` export is `FCUSTOMER.BND:19` (Phase A cited the list as `:5-17`); the `c10` prototype comment is `CUSTOMER.RPGLEINC:64-67` (Phase A `:37-40`).
 
 ## 3. Characterization
 
-`CHARACTERIZATION: deferred-waived` — note present at `discovery/cus-interactive/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere.
+`CHARACTERIZATION: deferred-waived` — note present at `discovery/cus-modules/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere.
 
 ## 4. COVERAGE / APP_MANIFEST / INDEX delta
 
-`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + pointers only; no new surfaces/behaviours):
+`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + `discovery_card` pointers only, via `overnight/tools/mark_documented.py --slice cus-modules`; no new surfaces/behaviours):
 
 | Metric | before | after |
 | --- | ---: | ---: |
-| behaviours `documented` | 0 | 12 (`cus-interactive`, `discovery_card` set) |
-| behaviours `accepted` | 0 | 30 (bind mirror: `cus-modules` 10, `ord-entry-ord100` 12, `ord-trigger-ord700` 8) |
-| behaviours `candidate` | 134 | 92 (incl. 6 bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
-| surfaces `accepted` / `deferred` | 0 / 0 | 12 / 2 (`ord-batch-ord900` deferred per bind) |
+| behaviours `documented` | 12 | 22 (`cus-interactive` 12 + `cus-modules` 10) |
+| behaviours `accepted` | 30 | 20 (`ord-entry-ord100` 12, `ord-trigger-ord700` 8) |
+| behaviours `candidate` | 92 | 92 (incl. 6 bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
+| surfaces `accepted` / `deferred` | 12 / 2 | 12 / 2 (unchanged) |
 | legacy_green / parity_green / parity_waived | 0 / 0 / 0 | 0 / 0 / 0 |
 
-- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems; JSON-schema validation passed). Per-slice table now carries a `documented` count column; header no longer says "nothing bound".
-- Repairs made while bumping (honest): the bind commit had introduced a **duplicate top-level `notes` key** and a **list-typed `notes`** (schema says string|null) — PyYAML was silently dropping the room-bind note. Fixed to one `" | "`-separated string; `upsert_app_manifest.py` no longer clobbers notes; new `overnight/tools/mark_documented.py` does the status mirror idempotently.
-- `docs/estate/INDEX.md`: row 1 `cus-interactive` → **done** (cards written; SME sign-off pending); bind statuses mirrored on rows 2, 5, 11, 12; `srvpgm-fcustomer` shown as folded into `cus-modules`; `art-*` marked skipped-at-bind.
+- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems). Per-slice row `cus-modules`: 11 behaviours, **10 documented**, weakest status `candidate` (that is `c10`, the needs-SME row — the weakest-wins column is doing its job, not a regression).
+- `docs/estate/INDEX.md`: row 2 `cus-modules` → **done** (cards written; SME sign-off pending); row 22 `srvpgm-fcustomer` notes where its export facts now live (cards `c01`/`c05`).
 
 ## 5. Remaining accepted undocumenteds (queue for next run)
 
-1. `cus-modules` — 10 accepted (+1 needs-SME stays needs-SME). CUS-first: recommend next.
-2. `ord-entry-ord100` — 12 accepted (+2 needs-SME).
-3. `ord-trigger-ord700` — 8 accepted (+3 needs-SME).
+1. `ord-entry-ord100` — 12 accepted (+2 needs-SME).
+2. `ord-trigger-ord700` — 8 accepted (+3 needs-SME).
 
-Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices (the 2 `art-*` above + `ord-entry-ord101`, `ord-maintain-ord200/201/202`, `ord-print-ord500`). Unscanned seeds: 15 (see COVERAGE).
+CUS prove path is now fully documented (`cus-interactive` + `cus-modules`); both await human SME sign-off in their `SME_BRIEF.md`. Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices. Unscanned seeds: 15 (see COVERAGE).
 
 ## 6. Explicit non-claims
 
-- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` for later Architecture/Conversion stations (ROOM_OK still required there).
+- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` for later Architecture/Conversion stations (ROOM_OK still required there; job body says `ROOM_OK false`).
 - Did **not** generate tests, RECORD, REPLAY, goldens, or any waiver artefact.
-- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08). `inferred`/`needs-SME` rows in other slices were not promoted.
+- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08; `c10` stays needs-SME). `inferred`/`needs-SME` rows in other slices were not promoted.
 - Did **not** edit `ATU_SRC/**` or touch `master`.
 - No claim of parity, verification, or "% documented". Counts only.
 
 ## 7. Deviations recorded
 
-- FEATURE_IDs kept as `cus-interactive-cNN` (bind record, BIND.md and APP_MANIFEST reference them) rather than renumbering to `<SLICE_ID>-NNN`. Open decision for the Field Guide.
-- Bind statuses for the three other accepted slices and the deferred one were mirrored into APP_MANIFEST this run (status bump only, from human-recorded bind). No cards were written for them.
+- FEATURE_IDs kept as `cus-modules-cNN` (same decision as run 1; bind record, `BIND.md` and APP_MANIFEST reference them). Open Field Guide decision, unchanged.
+- `srvpgm-fcustomer` was not given a separate feature/card: bind said fold; its export/signature facts sit inside `c01` (export surface section) and `c05`. `MANIFEST.yaml` `out_of_scope_hints` no longer lists it as out of scope; `bind_notes` records the fold.
+- `MANIFEST.yaml` summaries are now quoted strings (a `: ` inside an unquoted scalar broke PyYAML on first attempt; fixed before any tool ran).
+- Pushed once at the end with `AGENT_JOB.md` already `DONE` (every push re-fires the automation; expect one no-op run).
 
 ## 8. completeness: incomplete
 
@@ -68,4 +70,4 @@ Human residual gate untouched. Estate scan still partial (`overnight/METHOD_COVE
 
 ## 9. Next action
 
-**Re-run this paste** (flip `overnight/AGENT_JOB.md` line 1 back to `RUN`) to document the next accepted slice — recommend `cus-modules` next. In parallel, a human SME should work the sign-off checklist in `discovery/cus-interactive/SME_BRIEF.md`; that signature, not this brief, is what unlocks Test generation for `cus-interactive`.
+**Re-run this paste** (flip `overnight/AGENT_JOB.md` line 1 back to `RUN`) to document the next accepted slice — queue order says `ord-entry-ord100` next, then `ord-trigger-ord700`. In parallel, a human SME should work the sign-off checklists in `discovery/cus-interactive/SME_BRIEF.md` and `discovery/cus-modules/SME_BRIEF.md`; those signatures, not this brief, are what unlock Test generation for the CUS vertical.

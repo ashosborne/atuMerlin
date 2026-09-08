@@ -1,10 +1,10 @@
-# CONTEXT_GATE — Pack B document-slices conveyor (atu-merlin)
+# CONTEXT_GATE — Pack B document-slices conveyor (atu-merlin), run 2
 
-Run: `pack-b document-slices` via `overnight/AGENT_JOB.md` (fired by Agent Smith after room bind 2026-09-08)
-Started: 2026-09-08T13:22Z (UTC; 14:22 Europe/London)
+Run: `pack-b document-slices` via `overnight/AGENT_JOB.md` (line 1 `RUN`; re-fired by Ash after run 1 documented `cus-interactive`)
+Started: 2026-09-08T15:11Z (UTC; 16:11 Europe/London)
 Agent: document-slices-conveyor (Cloud Agent, automation job runner)
 
-Previous gate for Pack A (`discovery-phase-a`) is preserved in git at `ab342e9:overnight/CONTEXT_GATE.md`.
+Previous gates preserved in git: Pack A at `ab342e9:overnight/CONTEXT_GATE.md`; Pack B run 1 at `0e32c19:overnight/CONTEXT_GATE.md`.
 
 ## Repo identity
 
@@ -12,7 +12,7 @@ Previous gate for Pack A (`discovery-phase-a`) is preserved in git at `ab342e9:o
 | --- | --- |
 | Remote | `https://github.com/ashosborne/atuMerlin` |
 | Work branch | `cursor/atu-merlin-estate-discovery` |
-| HEAD at start | `ab342e9672db444afb47b264e5c7dad416485584` ("AGENT_JOB pack-b document-slices: RUN (accepted only)") |
+| HEAD at start | `0e32c1919cf722161728e802700c6f9be957632c` ("AGENT_JOB pack-b document-slices: RUN (run 2 prefer cus-modules)") |
 | Base / PR target | `master` (`db72c72`) |
 | Existing PR | #1 `cursor/atu-merlin-estate-discovery` → `master` (open; this run updates it) |
 | `overnight/stop.txt` | absent at start |
@@ -21,38 +21,37 @@ Previous gate for Pack A (`discovery-phase-a`) is preserved in git at `ab342e9:o
 ## Station and gate decision
 
 - Station: **Document (Discovery Phase B deepen)**. Not Architecture-bind, not Convert — `ROOM_OK` not required and not claimed (job body says `ROOM_OK false` for arch/convert).
-- Human bind present: `overnight/BIND_RECORD.md` + `discovery/*/BIND.md` (room bind 2026-09-08, recorded by Agent Smith). Pack B may proceed.
+- Human bind present: `overnight/BIND_RECORD.md` + `discovery/cus-modules/BIND.md` (room bind 2026-09-08, recorded by Agent Smith). Pack B may proceed.
 - Cap: 1 slice this run.
 
 ## Context read (hard gate)
 
-- `migration-factory/docs/FIELD-GUIDE.md` — App Discovery (v0.2) Phase B, Portfolio inventory, anti-greenwash rules
-- `migration-factory/docs/OPERATOR-RUNBOOK.md`
+- `migration-factory/docs/FIELD-GUIDE.md` — App Discovery Phase B run shape, "Done enough", Portfolio inventory anti-greenwash, "Who writes"
 - `migration-factory/prompts/discovery-agent-v0.2.md` (behaviour-card shape, Phase B exit criteria)
 - `migration-factory/skills/operator/deepen-phase-b/SKILL.md`
-- `migration-factory/skills/operator/waive-characterization/SKILL.md` — read for the deferred note only; **not** executed (no Test gen pack exists, so no waiver artefact may be produced)
-- `migration-factory/schemas/discovery-manifest.schema.md`, `migration-factory/schemas/app-manifest.schema.md` + `.json`
-- `operator/atu-merlin-factory-loop/TARGET.md` — context only (TypeScript modular monolith + PostgreSQL + simple web UI; not implemented here)
-- `operator/atu-merlin-factory-loop/TRIGGER-CONTRACT.md`, `CHARTER.yaml`
-- `overnight/BIND_RECORD.md`, `overnight/AGENT_JOB.md` (job body = Pack B charter)
+- `migration-factory/skills/operator/waive-characterization/SKILL.md` — deferred note only; **not** executed
+- `migration-factory/schemas/discovery-manifest.schema.md`; `app-manifest` schema via `overnight/tools/gen_coverage.py` lint
+- `overnight/BIND_RECORD.md`, `overnight/AGENT_JOB.md` (job body = Pack B charter), `overnight/MORNING_BRIEF.md` (run 1), `overnight/document-conveyor/JOURNAL.md`
+- `discovery/cus-modules/{MANIFEST.yaml,CANDIDATES.md,BIND.md,SME_BRIEF.md}`; `discovery/cus-interactive/features/*.md` (card style from run 1)
+- `overnight/tools/{mark_documented.py,gen_coverage.py}`
 
-Factory pack present at `migration-factory/` — no BLOCKED. `inventory/atu-merlin/APP_MANIFEST.yaml` present (Pack A).
+Factory pack present at `migration-factory/` — no BLOCKED. `inventory/atu-merlin/APP_MANIFEST.yaml` present.
 
 ## Slice pick
 
-Priority rule 1 (accepted, not yet `documented`) yields four slices: `cus-interactive`, `cus-modules`, `ord-entry-ord100`, `ord-trigger-ord700`. Job says prefer `cus-interactive` (CUS-first prove path).
+Priority rule 1 (accepted, not yet `documented`) yields three slices: `cus-modules`, `ord-entry-ord100`, `ord-trigger-ord700`. Job says prefer `cus-modules` (CUS-first prove path; `cus-interactive` already documented in run 1).
 
-**Chosen SLICE_ID: `cus-interactive`** — 12 accepted candidates (`c01`–`c12`), all `observed-in-code`; no `needs-SME`/`deferred` rows in the bind.
+**Chosen SLICE_ID: `cus-modules`** — 10 accepted candidates (`c01`–`c09`, `c11`), all `observed-in-code`; `c10` is `needs-SME` / `inferred` at bind and gets **no card**. `srvpgm-fcustomer` folded in per bind (export/binding facts documented inside `c01` and `c05`, no new feature invented).
 
-Not deepened this run: `cus-modules`, `ord-entry-ord100`, `ord-trigger-ord700` (remain in queue), `ord-batch-ord900` (deferred by bind), `art-*` (skipped by bind), all unbound Phase A slices.
+Not deepened this run: `ord-entry-ord100`, `ord-trigger-ord700` (remain in queue), `ord-batch-ord900` (deferred by bind), `art-*` (skipped by bind), all unbound Phase A slices.
 
 ## Source read for the deepen (read-only, `ATU_SRC/**` untouched)
 
-Seed members: `QRPGLESRC/CUS200.PGM.SQLRPGLE`, `QRPGLESRC/CUS250.PGM.RPGLE`, `QDDSSRC/CUS200D.DSPF`, `QDDSSRC/CUS250D.DSPF`.
-Deps read as citations only: `QDDSSRC/CUSTOMER.PF`, `CUSTOME1.LF`, `CUSTOME2.LF`, `SAMREF.PF`, `QSQLSRC/CUSSEQ.SQLSEQ`, `QMSGFSRC/SAMMSGF.MSGF`, `QPROTOSRC/COUNTRY.RPGLEINC`, `QPROTOSRC/CUSTOMER.RPGLEINC`, `QRPGLESRC/COU300.RPGLE` / `COU301.RPGLE` (FCOUNTRY return semantics), `QRPGLESRC/CUS300.RPGLE` / `CUS301.SQLRPGLE` (FCUSTOMER return semantics), `QILESRVSRC/FCOUNTRY.ILESRVPGM`, `QSRVSRC/FCOUNTRY.BND`, `QBNDSRC/SAMPLE.BNDDIR`, `QPNLSRC/SAMMNU.MENU`, `QPNLSRC/SAMHELP.PNLGRP`, `QRPGLESRC/ORD200.PGM.SQLRPGLE:16-19` (parameter interface only).
+Seed members: `QRPGLESRC/CUS300.RPGLE`, `QRPGLESRC/CUS301.SQLRPGLE`, `QDDSSRC/CUS301D.DSPF`.
+Deps read as citations only: `QPROTOSRC/CUSTOMER.RPGLEINC`, `QSRVSRC/FCUSTOMER.BND`, `QILESRVSRC/FCUSTOMER.ILESRVPGM`, `QDDSSRC/CUSTOMER.PF`, `QDDSSRC/CUSTOME1.LF`, `QDDSSRC/SAMREF.PF`, `QBNDSRC/SAMPLE.BNDDIR`, `QSQLSRC/CUSSEQ.SQLSEQ`; caller sites only: `QRPGLESRC/CUS250.PGM.RPGLE:4,86,98`, `QRPGLESRC/ORD100.PGM.RPGLE:7,318-328`, `QRPGLESRC/ORD101.PGM.RPGLE:5,283`. Structural grep of `ATU_SRC/**` for `ExistCus`, `IsCusDeleted`, `CloseCUSTOME1`, `SltCustomer`, `GetCus*` callers.
 
 ## Charter in force (Pack B)
 
 `PHASE_A: false`, `PHASE_B: true`, `CAP_SLICES_PER_RUN: 1`, `ALLOW_CONVERSION: false`, `ALLOW_TEST_GEN: false`, `ALLOW_TEST_EXEC: false`,
-`CHARACTERIZATION: deferred-waived`, `AUTO_ACCEPT_POLICY: observed-in-code-within-seed-only` (not needed — every card was human-accepted),
+`CHARACTERIZATION: deferred-waived`, `AUTO_ACCEPT_POLICY: observed-in-code-within-seed-only` (not exercised — every card was human-accepted; `c10` stays needs-SME),
 `WRITE_SCOPE: discovery/**, inventory/**, overnight/**, docs/estate/**`.
