@@ -7,137 +7,165 @@ out_of_scope_hints:
   - ORD201 all-customers list (separate seam; divergences flagged)
   - internals of ORD100/101/202/500
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T21:26:00Z
+phase: B
+updated_at: 2026-09-08T22:20:00Z
 bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 9, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-8."
+needs_sme:
+  - "c12 (inferred): deleting the latest order leaves CUSTOMER.CULASTORD pointing at it until ART801 recomputes (mechanism documented as ord-trigger-ord700-c08). Confirm on the box; accepted drift or not? No card."
+  - "c09: option 2 is unreachable in ORD200 (precedence defect, ORD200.PGM.SQLRPGLE:187); ORD201 has the parentheses. Preserve as-is in the target or adopt the ORD201 rule? Room decision; planted defect stays as-is for now."
+  - "c06/c07: close (7) stamps ORDATDEL when blank but leaves every ODQTYLIV at 0; deliver (8) sets undelivered lines to fully delivered, skips partial lines, does not close. Intended distinction? Header 'delivered' with outstanding partial lines is an accepted state?"
+  - "c06/c07/c08: 'already closed' (7) and 'already delivered' (8) are refused with the generic 'Invalid Option' text; only 2/4 get the closed-order wording. Accepted wording?"
+  - "c04/c13: no confirmation before delete; header deleted before lines (ORD201: lines first); an unmonitored failure between the two leaves orphan lines with no header (ORD201: header with missing lines). The deleted row stays on screen with its data (ORD201 blanks it) and 7/8 on that ghost row chain-miss then update -> unmonitored exception. Which twin is the parity reference?"
+  - "c01: whole result loaded in one pass (no PAGEDOWN; ORD201 pages 14 at a time); ORDER BY datord only, no orid tie-breaker (ORD201 adds orid desc); F5 is enabled (CA05) but unlabelled and unhandled - redisplay without reload. Follow ORD201 in the target or keep?"
+  - "c01: any non-zero SQLCOD (including -305 from ISOTODATE40 returning NULL on an invalid date) ends the load silently at that row. Known?"
+  - "c08: option 3 is invalid in ORD200 but passes validation in ORD201 (silently stays typed). One rule for the target?"
+  - "c08: one refused row cancels every option on the pass (valid rows stay typed). Keep or execute the valid rows?"
+  - "c06/c07: guards read the subfile copies of datclo/datliv; state changed by another job after the load is not seen (chain then overwrites). Accepted?"
+  - "c10: activation group inferred QILE (no ACTGRP keyword) - build owner to confirm CRTSQLRPGI options; c02: OVRDBF scope in ORD100C is a build property (ord-entry-ord100 owns)."
+  - "c10/c11: ORD201D reuses the panel id literal 'ORD200-1'; ORD200 takes CUSTNM from a native chain while ORD201 selects it from the view. Cosmetic; recorded."
 
 features:
   - id: ord-maintain-ord200-c01
     name: List customer's orders from ORDERCUS view
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: SQL cursor over ORDERCUS where orcuid = cuid, ISOTODATE40 on three dates, TOTVAL; ordered by order date desc; loads all rows.
+    summary: "SQL cursor over ORDERCUS WHERE orcuid = :cuid, ISOTODATE40 on ORDATE/ORDATDEL/ORDATCLO, TOTVAL (VAT-inclusive sum of ODTOTVAT), ORDER BY datord DESC with no tie-breaker; every row loaded in one pass (dow sqlcod = 0), cursor closed, sflend on. SFLSIZ 15 / SFLPAG 14 auto-extend, no PAGEDOWN keyword or branch. Any non-zero SQLCOD (incl. -305 on a NULL date) ends the load silently. F5 enabled (CA05) but unlabelled and unhandled -> redisplay, no reload. Reload only at start and after F6. Dead declarations rrs01/count/mode/User/savId/refresh/pagedown."
     entrypoints:
       - kind: screen
-        locator: ORD200 CTL01/SFL01
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:105-131", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW:4-19"]
+        locator: ORD200 CTL01/SFL01 (s01prp / s01lod / s01dsp)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:100-144", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW:5-21", "ATU_SRC/QDDSSRC/ORD200D.DSPF:12-45"]
+    behaviour_doc: features/ord-maintain-ord200-c01.md
     dependencies: [ORDERCUS.VIEW, ISOTODATE4.SQLUDF, DAT002.PGM.RPGLE]
-    open_questions: []
+    open_questions: ["needs-SME: no orid tie-breaker, whole-result load, unhandled F5 - follow ORD201 or keep as-is?", "needs-SME: silent truncation on any SQL condition - known?"]
   - id: ord-maintain-ord200-c02
     name: F6 create order for customer -> ORD100C
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Calls ORD100C(cuid) then reloads.
+    summary: "F6 (CF06) calls ORD100C(cuid) - CL that stages QTEMP/DETORD without constraints/triggers and runs CRTORD CUID(&CUID) - then step01 = prp reloads the whole list unconditionally (also after a cancelled create). Typed options on the F6 pass are discarded (s01key handles create before chk). cuid never modified. ORD201 calls the parameterless ORD100C2 instead."
     entrypoints:
       - kind: other
         locator: ORD200 F6 -> extpgm ORD100C
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:154-156"]
-    dependencies: [ORD100C.PGM.CLLE]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:154-156", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:4-12"]
+    behaviour_doc: features/ord-maintain-ord200-c02.md
+    dependencies: [ORD100C.PGM.CLLE, CRTORD.CMD]
     open_questions: []
   - id: ord-maintain-ord200-c03
-    name: Option 2 update lines -> ORD101
-    status: accepted
+    name: Option 2 update lines -> ORD101 (unreachable as coded)
+    status: documented
     confidence: observed-in-code
-    summary: Calls ORD101(orid). Note c09 - this branch is unreachable in ORD200 as coded.
+    summary: "s01act would call ORD101(orid) by reference, clear the option and rewrite the row without reload. Never executed: s01chk refuses every 2 with SFLMSG 36 (c09) and any refused row cancels the pass, so lines 225-228 are dead code under a live '2=Edit' legend. Line maintenance per customer is therefore impossible; only ORD201 reaches ORD101. Planted defect, as-is."
     entrypoints:
       - kind: other
         locator: ORD200 opt 2 -> extpgm ORD101
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:21-22", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195"]
+    behaviour_doc: features/ord-maintain-ord200-c03.md
     dependencies: [ORD101.PGM.RPGLE]
-    open_questions: []
+    open_questions: ["needs-SME / room: preserve 'option 2 never works in ORD200' or adopt the ORD201 rule (see c09)?"]
   - id: ord-maintain-ord200-c04
     name: Option 4 delete order and lines
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Deletes ORDER1 row then loop-deletes DETORD1 rows by ORID.
+    summary: "After the c08 guards (not closed by screen datclo; no DETORD line with ODQTYLIV > 0 by file read): delete orid order1 (keyed, no chain, not-found untested), then dou not %found / delete orid detord1 by partial key until none; opt01 = 0; update sfl01. No confirmation, no commitment control. The deleted row stays on screen with its data (ORD201 zeroes orid/oryear): re-selecting it, 4 is a silent no-op, 5/6 call the callee with a missing order, 7/8 chain-miss then update forde -> unmonitored exception. Each line delete fires ORD700 delete (full ODQTY subtracted since ODQTYLIV = 0). No ORDER delete trigger -> CULASTORD not maintained (c12)."
     entrypoints:
       - kind: screen
-        locator: ORD200 opt 4
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:229-235"]
-    dependencies: [ORDER1.LF, DETORD1.LF]
-    open_questions: ["No confirmation prompt before delete."]
+        locator: ORD200 opt 4 (s01chk guard + s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-212", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:229-235", "ATU_SRC/QDDSSRC/ORD200D.DSPF:43-44"]
+    behaviour_doc: features/ord-maintain-ord200-c04.md
+    dependencies: [ORDER1.LF, DETORD1.LF, ORD700D.SYSTRG]
+    open_questions: ["needs-SME: no confirmation prompt before delete - carry forward?", "needs-SME: ghost row after delete and the 7/8-on-ghost exception - known? ORD200 or ORD201 screen behaviour as parity reference?"]
   - id: ord-maintain-ord200-c05
     name: Option 5 display / option 6 print
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ORD202(orid) and ORD500(orid).
+    summary: "5 -> ORD202(orid), 6 -> ORD500(orid), synchronous, orid by reference; option cleared, row rewritten, no reload. No state guard: closed, delivered and ghost (deleted, c04) orders can be displayed or printed - the callee's not-found handling applies. Legend '6=Print  ' has two trailing blanks (ORD201D: '6=Print')."
     entrypoints:
       - kind: other
-        locator: ORD200 opt 5/6
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:236-243"]
+        locator: ORD200 opt 5/6 -> extpgm ORD202 / ORD500
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:24-28", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:236-243", "ATU_SRC/QDDSSRC/ORD200D.DSPF:61-65"]
+    behaviour_doc: features/ord-maintain-ord200-c05.md
     dependencies: [ORD202.PGM.RPGLE, ORD500.PGM.RPGLE]
     open_questions: []
   - id: ord-maintain-ord200-c06
     name: Option 7 close order
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ORDATCLO = today; ORDATDEL = today if zero.
+    summary: "Guard: screen datclo > 1940-01-01 -> refused with SFLMSG 35 'Invalid Option' (not the closed-order text). Action: chain (orid) order1 (%found untested); if ordatdel = 0 then ordatdel = today; ordatclo = today; update forde; datclo (and datliv) = %date() on the row; no reload. Lines untouched: closing an undelivered order stamps a delivery date while every ODQTYLIV stays 0, so the ORD700-maintained ARCUSQTY is not reduced by a close while ART801 (ORDATCLO = 0 filter) drops the order. After 7 the row refuses 7, 8, 4 and 2. Chain miss on a ghost row -> update without lock -> unmonitored exception. Identical in ORD201."
     entrypoints:
       - kind: screen
-        locator: ORD200 opt 7
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:244-254"]
+        locator: ORD200 opt 7 (s01chk guard + s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:177-186", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:244-254", "ATU_SRC/QDDSSRC/ORD200D.DSPF:40"]
+    behaviour_doc: features/ord-maintain-ord200-c06.md
     dependencies: [ORDER1.LF]
-    open_questions: ["Closing does not deliver lines (ODQTYLIV untouched) - intended?"]
+    open_questions: ["needs-SME: close implies delivery date but not delivered quantities - intended distinction from 8?", "needs-SME: 'Invalid Option' wording for already-closed - accepted?"]
   - id: ord-maintain-ord200-c07
     name: Option 8 deliver order
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ORDATDEL = today; lines with ODQTYLIV = 0 get ODQTYLIV = ODQTY; others unlocked.
+    summary: "Guard: screen datliv > 1940-01-01 -> refused with 'Invalid Option'. Action: chain order1 (%found untested); ordatdel = today; update forde; then setll/reade DETORD1 with lock: ODQTYLIV = 0 -> ODQTYLIV = ODQTY, update fdeto (ORD700U delta = -ODQTY); else unlock. Partial lines frozen; zero-qty lines rewritten with a zero delta; order not closed (ART801 still counts it). 7 always sets ORDATDEL, so deliver-after-close is impossible. No reload; SUMORD unchanged. Chain miss on a ghost row -> unmonitored exception. Identical in ORD201."
     entrypoints:
       - kind: screen
-        locator: ORD200 opt 8
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:255-272"]
-    dependencies: [ORDER1.LF, DETORD1.LF]
-    open_questions: []
+        locator: ORD200 opt 8 (s01chk guard + s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:177-186", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:255-272", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:83-93"]
+    behaviour_doc: features/ord-maintain-ord200-c07.md
+    dependencies: [ORDER1.LF, DETORD1.LF, ORD700U.SYSTRG]
+    open_questions: ["needs-SME: all-or-nothing per undelivered line, partial lines skipped, order left open - intended rule? Partial delivery at order level in the target?"]
   - id: ord-maintain-ord200-c08
     name: Option guards
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: 7 blocked if closed; 8 blocked if delivered; 4 blocked if any line delivered; 1,3,>8 invalid.
+    summary: "s01chk per changed row: 1/3/>8 invalid (35); 7 if datclo set or 8 if datliv set (35 'Invalid Option' - generic text for state refusals); 2 always or 4 if closed (36, c09); 4 with any line ODQTYLIV > 0 by live file read (37, DDS typo 'whith'). Failure: DSPATR(RI), first-error page positioning, step01 = dsp - one bad row cancels every action on the pass and valid options stay typed. Tests are not exclusive (36 + 37 can co-fire). State guards read subfile copies of datclo/datliv. Option 3 is invalid here but passes in ORD201 (stays typed silently). Message indicators cleared by the display (response indicators)."
     entrypoints:
       - kind: screen
-        locator: ORD200 S01chk
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:168-212", "ATU_SRC/QDDSSRC/ORD200D.DSPF:40-43"]
-    dependencies: []
-    open_questions: []
+        locator: ORD200 s01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:162-218", "ATU_SRC/QDDSSRC/ORD200D.DSPF:40-44", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:172"]
+    behaviour_doc: features/ord-maintain-ord200-c08.md
+    dependencies: [DETORD1.LF]
+    open_questions: ["needs-SME: 'Invalid Option' for already closed / delivered - surface the reason in the target?", "needs-SME: one refused row cancels the whole pass - keep?", "needs-SME: option 3 divergence with ORD201 - one rule?"]
   - id: ord-maintain-ord200-c09
     name: Precedence quirk - option 2 always rejected
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Missing parentheses make 'opt01 = 2' unconditionally trigger the closed-order message; ORD201 has the corrected form.
+    summary: "ORD200.PGM.SQLRPGLE:187 'if opt01 = 2 or opt01 = 4 and datclo > datBlank' parses as 2 or (4 and closed): every 2 is refused with 'Closed order can not be edited or deleted' on an open order under a '2=Edit' legend, and s01act's ORD101 call is dead; the 4 half is correct. ORD201:191 has the parentheses. A single 2 on the screen also cancels every other option on the pass. The only working closed-order guard for line edits in the estate is ORD201's (ORD101 has none). Planted defect - documented as-is, not fixed; preserve-or-correct is a room decision."
     entrypoints:
       - kind: screen
         locator: ORD200 S01chk line 187
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191", "ATU_SRC/QDDSSRC/ORD200D.DSPF:41-42"]
+    behaviour_doc: features/ord-maintain-ord200-c09.md
     dependencies: []
-    open_questions: ["Preserve as-is or adopt ORD201 rule? SME/architecture decision."]
+    open_questions: ["needs-SME / room: preserve as-is or adopt the ORD201 rule? Not a Discovery decision."]
   - id: ord-maintain-ord200-c10
     name: Caller CUS200 option 5
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Only caller found in ATU_SRC.
+    summary: "Only caller under ATU_SRC: CUS200 option 5 via orders extpgm('ORD200'), cuid (5P 0) by reference; no menu, command or CL wrapper (the other greps are ORD200D itself and the 'ORD200-1' panel literal reused in ORD201D). ORD200 never changes cuid; F3 and F12 both end the program (*inlr, files closed, cursor already closed); CUS200 clears its option and does not re-read its list. Activation group inferred QILE (no ACTGRP)."
     entrypoints:
       - kind: other
-        locator: extpgm ORD200
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:230-233"]
-    dependencies: []
-    open_questions: []
+        locator: extpgm ORD200 (CUS200 s01act)
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:37-38", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:230-233", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:146-153", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:286-288"]
+    behaviour_doc: features/ord-maintain-ord200-c10.md
+    dependencies: [CUS200.PGM.SQLRPGLE]
+    open_questions: ["Build owner: activation group (inferred QILE)."]
   - id: ord-maintain-ord200-c11
     name: Header context and sentinel dates
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Chains CUSTOME1; dates initialised to 1940-01-01 sentinel.
+    summary: "*inzsr sets datord/datclo/datliv to d'1940-01-01' and chains CUSTOME1 by the parameter (%found untested; unknown customer -> blank CUSTNM, empty list, no message, F6 still offered). CUID/CUSTNM shown at row 2 from the FCUST buffer (parameter and file field are one RPG field); panel id 'ORD200-1', DATE/TIME, legends and headings are DDS literals. DATLIV/DATCLO map the sentinel to blank via MAPVAL; DATORD has no MAPVAL. CUSTNM is taken from the native chain, not from the view (ORD201 selects it per row). Sentinel defined three times (RPG constant, DDS MAPVAL, DAT002)."
     entrypoints:
       - kind: screen
-        locator: ORD200 *inzsr
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:279-284"]
-    dependencies: [CUSTOME1.LF]
+        locator: ORD200 *inzsr / CTL01 header
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:279-284", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:74", "ATU_SRC/QDDSSRC/ORD200D.DSPF:23-27", "ATU_SRC/QDDSSRC/ORD200D.DSPF:46-84"]
+    behaviour_doc: features/ord-maintain-ord200-c11.md
+    dependencies: [CUSTOME1.LF, SAMREF.PF]
     open_questions: []
   - id: ord-maintain-ord200-c12
     name: Delete leaves CULASTORD stale (consequence)
     status: needs-SME
     confidence: inferred
-    summary: ORD701 only fires on insert; deleting the latest order leaves CUSTOMER.CULASTORD pointing at it until ART801/ORD901 recompute.
+    summary: ORD701 only fires on insert; deleting the latest order leaves CUSTOMER.CULASTORD pointing at it until ART801/ORD901 recompute. Mechanism documented as ord-trigger-ord700-c08; consequence for this screen stays inferred. No card.
     entrypoints:
       - kind: other
         locator: ORDER delete path
@@ -146,12 +174,13 @@ features:
     open_questions: ["Confirm on the box; SME to decide if this is accepted drift."]
   - id: ord-maintain-ord200-c13
     name: Delete ordering differs from ORD201
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ORD200 deletes header then lines; ORD201 deletes lines then header.
+    summary: "ORD200: delete orid order1 then dou/delete orid detord1, row left as loaded. ORD201: lines first, then header, then orid = 0 / oryear = 0 so the row shows blank. Same guards, triggers, no confirmation, no commitment control. Failure residue differs: ORD200 -> orphan lines with no header (invisible to ORDERCUS/ART801, still counted in ORD700-maintained ARCUSQTY, unreachable from any screen); ORD201 -> header with missing lines. ORD200 contends for the header lock first (held by any open ORD101 session), so it fails before touching lines. ORD201's blanking is cosmetic, not a guard (7/8 on the blank row chain-miss on key 0)."
     entrypoints:
       - kind: other
         locator: ORD200 vs ORD201 opt 4
-        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:230-233", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:233-237"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:229-235", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:233-241"]
+    behaviour_doc: features/ord-maintain-ord200-c13.md
+    dependencies: [ORDER1.LF, DETORD1.LF]
+    open_questions: ["needs-SME / room: which twin's delete (order of statements, screen residue) is the parity reference? One transactional path in the target removes both residues."]
