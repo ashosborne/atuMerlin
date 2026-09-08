@@ -1,6 +1,6 @@
 pack_id: atu-merlin-ts-cus-v1
 version: 1
-status: DRAFT
+status: BOUND
 migration_id: atu-merlin
 slice_ids:
   - cus-interactive
@@ -69,7 +69,7 @@ non_goals:
   - "No edits under ATU_SRC/**"
   - "No IBM i characterization goldens / REPLAY_GREEN required for pathfinder"
   - "No microservice split; modular monolith only"
-  - "Convert is NOT authorized by this DRAFT pack"
+  - "Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required"
 
 quality_gates:
   characterization: WAIVED_PATHFINDER
@@ -82,7 +82,7 @@ quality_gates:
 forbidden:
   - "Edit or rewrite ATU_SRC/**"
   - "Pull ORD/ART into modern CUS scope"
-  - "Set status BOUND without human bind + ROOM_OK"
+  - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
   - "IBM i goldens as conversion gate for this pathfinder"
@@ -104,7 +104,7 @@ known_risks:
   - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API boundary"
   - "CUS PF/LF semantics must be reconstructed from Discovery cards, not assumed"
   - "ORD/ART remain legacy; accidental coupling is a conversion fail"
-  - "DRAFT pack does not authorize Convert; BOUND + ROOM_OK required separately"
+  - "Architecture BOUND does not authorize Convert; separate ROOM_OK required"
   - "SME open questions on cus-interactive (c04 duplicate check, c08 CUMODID create-only, c11 CUDEL with no writer) stay as-is; do not invent target intent"
 
 evidence:
@@ -115,7 +115,7 @@ evidence:
   replay_green_run_ids: []
   waiver_record: architecture/atu-merlin/ADR/0001-cus-vertical-ts-postgres.md
 
-bound_by: null
-bound_at: null
+bound_by: "atuMerlin migration room (Field Engineer YAML pass + CTO skim; Agent Smith recorded)"
+bound_at: "2026-09-08T16:06:38Z"
 change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
 reference_skeleton: null
