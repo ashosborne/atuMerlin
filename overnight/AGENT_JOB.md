@@ -1,10 +1,10 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — ORD wave run 9
-# Prefer: ord-maintain-ord200, then ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
+# PACK B — Document-slices conveyor (atuMerlin) — ORD wave run 10
+# Prefer: ord-maintain-ord201, then ord-maintain-ord202, ord-print-ord500
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
 # Bind tip: overnight/BIND_RECORD_ORD_WAVE_2026-09-08.md + discovery/*/BIND.md
-# Cap 1 slice. ord-entry-ord101 DONE run 8. CHARACTERIZATION deferred-waived.
+# Cap 1 slice. ord-maintain-ord200 DONE run 9. CHARACTERIZATION deferred-waived.
 # Do not convert. Do not widen atu-merlin-ts-cus-v1. Planted defects: document as-is, do not fix.
 # After five ORD carded: ME drafts new ORD Architecture pack (ROOM_OK then).
 
