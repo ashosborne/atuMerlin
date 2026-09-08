@@ -33,9 +33,10 @@ boundaries:
 
 api_contract_policy:
   mode: new-http-json
-  contract_paths: []
+  contract_paths:
+    - modern/openapi/customer.yaml
   sourced_vs_inferred: inferred
-  notes: "New HTTP JSON APIs for CUS; not preserve-wire against IBM i 5250"
+  notes: "New HTTP JSON APIs for CUS; OpenAPI will live at modern/openapi/customer.yaml (may be authored at convert). Not preserve-wire against IBM i 5250"
 
 data:
   strategy: postgres-greenfield-from-pf
@@ -82,26 +83,29 @@ forbidden:
   - "Edit or rewrite ATU_SRC/**"
   - "Pull ORD/ART into modern CUS scope"
   - "Set status BOUND without human bind + ROOM_OK"
+  - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
   - "IBM i goldens as conversion gate for this pathfinder"
   - "Drive-by renames outside edit_surface"
   - "String-concat SQL in repositories"
+  - "Rewrite discovery cards, inventory, or overnight briefs during Convert"
 
 edit_surface:
   allow:
     - modern/**
     - architecture/atu-merlin/**
-    - discovery/cus*
-    - inventory/**
-    - overnight/**
   deny:
     - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
 
 known_risks:
   - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API boundary"
   - "CUS PF/LF semantics must be reconstructed from Discovery cards, not assumed"
   - "ORD/ART remain legacy; accidental coupling is a conversion fail"
   - "DRAFT pack does not authorize Convert; BOUND + ROOM_OK required separately"
+  - "SME open questions on cus-interactive (c04 duplicate check, c08 CUMODID create-only, c11 CUDEL with no writer) stay as-is; do not invent target intent"
 
 evidence:
   discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
