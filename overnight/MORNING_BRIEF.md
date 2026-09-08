@@ -2,66 +2,64 @@
 
 # PHASE B DOCUMENT ONLY — NO TESTS — NO CONVERSION
 
-Run: Pack B document-slices conveyor, run 2 · 2026-09-08 15:11–15:50 UTC (16:11–16:50 Europe/London)
-Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `0e32c19`
-Previous briefs preserved in git: run 1 at `0e32c19:overnight/MORNING_BRIEF.md`; Pack A at `ab342e9:overnight/MORNING_BRIEF.md`.
+Run: Pack B document-slices conveyor, run 3 · 2026-09-08 16:07–16:55 UTC (17:07–17:55 Europe/London)
+Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `5ac7f0d`
+Previous briefs preserved in git: run 2 at `5ac7f0d:overnight/MORNING_BRIEF.md`; run 1 at `0e32c19:overnight/MORNING_BRIEF.md`; Pack A at `ab342e9:overnight/MORNING_BRIEF.md`.
 
 ## 1. Slice processed
 
-**`cus-modules`** (CUS-first prove path, as the job asked; `srvpgm-fcustomer` folded in per bind). `CUS300` (11 getters, `ExistCus`, `IsCusDeleted`, private `chainCUSTOME1`) + `CUS301` (`SltCustomer` selection window) + `CUS301D.DSPF`.
+**`ord-entry-ord100`** (job preference: first ORD slice; 12 accepted behaviours). `ORD100` create-order program + `ORD100D` display file + CL wrappers `ORD100C` / `ORD100C2` + `CRTORD` command. The Architecture PACK bound at `5ac7f0d` is CUS-only and was **not** consumed — ORD slices are document-only per the bind record.
 
 ## 2. Cards written / needs-SME left
 
-- **10 / 10** accepted behaviours now have as-is behaviour cards: `discovery/cus-modules/features/cus-modules-c01.md` … `c09.md`, `c11.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, 10 `documented`.
-- **`c10`** (dormant `GetCusLastOrdDate` scaffold) was `needs-SME` / `inferred` at bind → **no card**, stays `needs-SME` in `MANIFEST.yaml`; not promoted.
+- **12 / 12** accepted behaviours now have as-is behaviour cards: `discovery/ord-entry-ord100/features/ord-entry-ord100-c01.md` … `c08.md`, `c10.md`, `c12.md`, `c13.md`, `c14.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, 12 `documented`.
+- **`c09`** (CRTORD → ORD100 binding) and **`c11`** (trigger side effects pointer) were `needs-SME` / `inferred` at bind → **no card**, stay `needs-SME` in `MANIFEST.yaml`; not promoted.
 - **0** accepted items left undocumented in this slice. **0** `blocked`.
-- **6 needs-SME questions** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions` (cards stay `documented`; the questions are about intent or about callers outside the tree, not about what the code does):
-  - `c01` / `c02` — **`ExistCus` and `IsCusDeleted` have no caller anywhere under `ATU_SRC`**; of the 11 getters only `GetCusName` is called (`ORD100`, `ORD101`). Dead API, or enforced from outside the tree?
-  - `c04` — unknown id → blanks/zeros silently; hits are cached until a *different* id is requested, so `CUS200` updates in the same activation group are invisible to repeated calls for the same id (misses are not cached).
-  - `c05` — `CloseCUSTOME1` prototyped in the shared include but not exported (and would not reset the cache anyway).
-  - `c09` — dynamic SQL by string concatenation (quote breaks the statement, `%`/`_` are wildcards, failure is silent) — preserve vs fix is an architecture decision (ROOM_OK), recorded not decided.
-- Other as-is facts an SME should glance at: `SltCustomer` search criteria persist across calls in an activation group (display-file fields, file never closed); SQL errors show an empty list with "Bottom" and no message; F8 is enabled but unhandled and acts as Enter; a criteria change takes precedence over an option `1` on the old list; blank criteria list every customer including `CUDEL = 'X'` rows; `ExistCus(0)` as the very first call never chains so `%found` has no prior operation (IBM does not document that value). All in `SME_BRIEF.md`.
-- Evidence corrections to Phase A: `SLTCUSTOMER` export is `FCUSTOMER.BND:19` (Phase A cited the list as `:5-17`); the `c10` prototype comment is `CUSTOMER.RPGLEINC:64-67` (Phase A `:37-40`).
+- **7 needs-SME lines** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions` (cards stay `documented`; the questions are about intent, callers outside the tree, or runtime facts, not about what the code does). The ones worth Ash's attention first:
+  - `c03` / `c13` — **`F3`/`F12` on the add-line screen reached via `F6` end the whole program** (staged order lost, no warning) because `s01key` still sees the indicators; and **after `F6`, cancelling the article prompt re-prompts until an article is chosen**. On the first-pass add screen and the edit screen the same keys return to the list. Consistent in code; runtime not exercised.
+  - `c07` — **`DETORD.ODYEAR` is never assigned by `ORD100`** (written `0`, also `ODQTYLIV = 0`); the only writer under `ATU_SRC` is batch `ORD901` (`odyear = oryear`, in the deferred `ord-batch-ord900` slice). No commitment control; header written before lines; a zero-line order can be confirmed.
+  - `c05` — `ODTOTVAT` is not a subfile field, so the footer `TOTVAT` is adjusted with a stale value on every delete (drifts until `F5`); `c04` — footer totals are not refreshed after an edit at all. Display-only: the confirmed order is built from the staging file, not from the footer.
+  - `c01` / `c14` — any non-zero customer id is accepted as given; no `ExistCus` / `IsCusDeleted` / `ExistArt` / credit / stock checks anywhere in the program (complete call list is 7 procedures, 4 files).
+- Correction to Phase A recorded in `c04`: there is no "F27"; indicator 27 is `CHANGE(27)` on `FMT02` (Enter with a modified field redisplays, Enter unmodified saves). Also `c01`: after the customer is chosen the program starts **in the add-line panel**, not the list. Evidence corrections: `CRTORD` call is `ORD100C.PGM.CLLE:12`; `CULIMCRE`/`CUCREDIT` are `CUSTOMER.PF:17-20`; `ORD701` body `ORD701.SQLTRG:5-16`.
 
 ## 3. Characterization
 
-`CHARACTERIZATION: deferred-waived` — note present at `discovery/cus-modules/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere.
+`CHARACTERIZATION: deferred-waived` — note present at `discovery/ord-entry-ord100/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere. Three runtime facts the future RECORD must settle are listed there (INDARA indicator refill → `SFLMSG` 35/36 persistence; the `F6` key paths; footer totals after edit/delete sequences).
 
 ## 4. COVERAGE / APP_MANIFEST / INDEX delta
 
-`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + `discovery_card` pointers only, via `overnight/tools/mark_documented.py --slice cus-modules`; no new surfaces/behaviours):
+`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + `discovery_card` pointers only, via `overnight/tools/mark_documented.py --slice ord-entry-ord100`; no new surfaces/behaviours):
 
 | Metric | before | after |
 | --- | ---: | ---: |
-| behaviours `documented` | 12 | 22 (`cus-interactive` 12 + `cus-modules` 10) |
-| behaviours `accepted` | 30 | 20 (`ord-entry-ord100` 12, `ord-trigger-ord700` 8) |
-| behaviours `candidate` | 92 | 92 (incl. 6 bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
+| behaviours `documented` | 22 | 34 (`cus-interactive` 12 + `cus-modules` 10 + `ord-entry-ord100` 12) |
+| behaviours `accepted` | 20 | 8 (`ord-trigger-ord700` 8) |
+| behaviours `candidate` | 92 | 92 (incl. bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
 | surfaces `accepted` / `deferred` | 12 / 2 | 12 / 2 (unchanged) |
 | legacy_green / parity_green / parity_waived | 0 / 0 / 0 | 0 / 0 / 0 |
 
-- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems). Per-slice row `cus-modules`: 11 behaviours, **10 documented**, weakest status `candidate` (that is `c10`, the needs-SME row — the weakest-wins column is doing its job, not a regression).
-- `docs/estate/INDEX.md`: row 2 `cus-modules` → **done** (cards written; SME sign-off pending); row 22 `srvpgm-fcustomer` notes where its export facts now live (cards `c01`/`c05`).
+- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems). Per-slice row `ord-entry-ord100`: 14 behaviours, **12 documented**, weakest status `candidate` (that is `c09`/`c11`, the needs-SME rows — weakest-wins column working as intended).
+- `docs/estate/INDEX.md`: row 5 `ord-entry-ord100` → **done** (cards written; SME sign-off pending) with the headline findings; header line notes run 3.
 
 ## 5. Remaining accepted undocumenteds (queue for next run)
 
-1. `ord-entry-ord100` — 12 accepted (+2 needs-SME).
-2. `ord-trigger-ord700` — 8 accepted (+3 needs-SME).
+1. `ord-trigger-ord700` — 8 accepted (+3 needs-SME). **Last one in the bind.**
 
-CUS prove path is now fully documented (`cus-interactive` + `cus-modules`); both await human SME sign-off in their `SME_BRIEF.md`. Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices. Unscanned seeds: 15 (see COVERAGE).
+CUS prove path (`cus-interactive`, `cus-modules`) and `ord-entry-ord100` all await human SME sign-off in their `SME_BRIEF.md`. Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices. Unscanned seeds: 15 (see COVERAGE).
 
 ## 6. Explicit non-claims
 
-- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` for later Architecture/Conversion stations (ROOM_OK still required there; job body says `ROOM_OK false`).
+- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` / the bound CUS PACK for later stations; ORD is not in that vertical (bind record). `ROOM_OK` was not needed for this station and is not claimed.
 - Did **not** generate tests, RECORD, REPLAY, goldens, or any waiver artefact.
-- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08; `c10` stays needs-SME). `inferred`/`needs-SME` rows in other slices were not promoted.
+- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08; `c09`, `c11` stay needs-SME). `inferred`/`needs-SME` rows in other slices were not promoted. `ORD901` / `ORD500` / `ORD200` / `ORD201` were cited as pointers or call sites only — their slices were not deepened.
 - Did **not** edit `ATU_SRC/**` or touch `master`.
 - No claim of parity, verification, or "% documented". Counts only.
 
 ## 7. Deviations recorded
 
-- FEATURE_IDs kept as `cus-modules-cNN` (same decision as run 1; bind record, `BIND.md` and APP_MANIFEST reference them). Open Field Guide decision, unchanged.
-- `srvpgm-fcustomer` was not given a separate feature/card: bind said fold; its export/signature facts sit inside `c01` (export surface section) and `c05`. `MANIFEST.yaml` `out_of_scope_hints` no longer lists it as out of scope; `bind_notes` records the fold.
-- `MANIFEST.yaml` summaries are now quoted strings (a `: ` inside an unquoted scalar broke PyYAML on first attempt; fixed before any tool ran).
+- FEATURE_IDs kept as `ord-entry-ord100-cNN` (same decision as runs 1–2; bind record, `BIND.md` and APP_MANIFEST reference them). Open Field Guide decision, unchanged.
+- The Cloud Agent VM checked out a scratch branch at `5ac7f0d`; switched to `cursor/atu-merlin-estate-discovery` (same SHA) before writing anything, as the job requires.
+- `c09` evidence line corrected (`ORD100C.PGM.CLLE:12`, was `:11`) without changing its status or confidence.
 - Pushed once at the end with `AGENT_JOB.md` already `DONE` (every push re-fires the automation; expect one no-op run).
 
 ## 8. completeness: incomplete
@@ -70,4 +68,4 @@ Human residual gate untouched. Estate scan still partial (`overnight/METHOD_COVE
 
 ## 9. Next action
 
-**Re-run this paste** (flip `overnight/AGENT_JOB.md` line 1 back to `RUN`) to document the next accepted slice — queue order says `ord-entry-ord100` next, then `ord-trigger-ord700`. In parallel, a human SME should work the sign-off checklists in `discovery/cus-interactive/SME_BRIEF.md` and `discovery/cus-modules/SME_BRIEF.md`; those signatures, not this brief, are what unlock Test generation for the CUS vertical.
+**Re-run this paste** (flip `overnight/AGENT_JOB.md` line 1 back to `RUN`) to document the last accepted slice, `ord-trigger-ord700`; after that the conveyor will report idle until more slices are bound from the Pack A radar. In parallel, a human SME should work the sign-off checklists in `discovery/cus-interactive/SME_BRIEF.md`, `discovery/cus-modules/SME_BRIEF.md` and now `discovery/ord-entry-ord100/SME_BRIEF.md`; those signatures, not this brief, are what unlock Test generation.

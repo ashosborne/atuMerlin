@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRE run 3 after run 2 DONE
 # Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
