@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRE after residual bind 2026-09-08
 # Bind tip: overnight/BIND_RECORD_RESIDUAL_2026-09-08.md @ d24702f — read BIND.md before deepen.
