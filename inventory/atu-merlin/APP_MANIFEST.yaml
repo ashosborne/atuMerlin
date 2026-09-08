@@ -10,7 +10,9 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 2 (2026-09-08): cus-modules 10/10 accepted behaviours documented (cards
   under discovery/cus-modules/features/); c10 stays needs-SME (inferred), no card. | Pack B run 3 (2026-09-08): ord-entry-ord100 12/12 accepted behaviours documented (cards under discovery/ord-entry-ord100/features/);
   c09, c11 stay needs-SME (inferred), no card. | Pack B run 4 (2026-09-08): ord-trigger-ord700 8/8 accepted behaviours documented (cards discovery/ord-trigger-ord700/features/); c01, c08, c11 stay needs-SME.
-  Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
+  Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 6 (2026-09-08): dat-utils 8/8 accepted behaviours documented (cards
+  discovery/dat-utils/features/); no needs-SME candidates; surfaces udf:ISOTODATE40 / udf:ISO_Num_To_Date candidate -> accepted (bind mirror). Remaining queue: cou-maintain FCOUNTRY c07-c12. CHARACTERIZATION:
+  deferred-waived. No conversion, no tests.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -405,7 +407,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
   repo_path: ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
-  status: candidate
+  status: accepted
   slice_id: dat-utils
   notes: 'SQL UDF ISOTODATE40 -> DAT002: 0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL; used by ORD200/ORD201'
   discovery_evidence:
@@ -415,7 +417,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
   repo_path: ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
-  status: candidate
+  status: accepted
   slice_id: dat-utils
   notes: 'SQL UDF ISO_Num_To_Date (SPECIFIC ISOTODATE) -> DAT001: plain conversion, 0 -> NULL; no caller in ATU_SRC'
   discovery_evidence:
@@ -3010,9 +3012,9 @@ behaviours:
 - behaviour_id: dat-utils-c01
   surface_id: udf:ISOTODATE40
   name: ISOTODATE40 sentinel conversion (0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL)
-  status: candidate
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3021,13 +3023,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; DAT002 special-cases 0 and *HIVAL, otherwise test(de) *iso + %date; invalid sets the null indicator; NULL in -> NULL out.'
+  notes: 'confidence: observed-in-code; DAT002: date_ind = 0, SQL_State = ''00000''; if dat8 = 0 -> D''1940-01-01''; elseif dat8 = *Hival (99999999 for 8 0) -> D''2039-12-31''; else test(de) *iso dat8 ->
+    %date(dat8:*iso) or date_ind = -1 (NULL, date untouched). NULL in never reaches the program (RETURNS NULL ON NULL INPUT). No range check; years 0001-9999 accepted. Derived: 1940-01-01 / 2039-12-31 are
+    *LOVAL / *HIVAL of RPG 2-digit-year date formats. In-tree writers produce only 0 or a valid date, so the 2039 branch is unreachable from in-tree data and has no MAPVAL (would display and count as ''closed'').
+    Callers fetch the result with no null indicator, so a NULL (invalid stored date) ends the ORD200/ORD201 list load silently (SQLCODE -305) - pointer to the caller slices, reachable only via out-of-tree
+    writes.'
 - behaviour_id: dat-utils-c02
   surface_id: udf:ISO_Num_To_Date
   name: ISO_Num_To_Date plain conversion (0 -> NULL)
-  status: candidate
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3036,13 +3042,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; DAT001 has no special values; 0 is an invalid ISO date and returns NULL.'
+  notes: 'confidence: observed-in-code; DAT001 is DAT002 without the if dat8 = 0 / elseif *Hival block: every argument goes to test(de) *iso, so 0 (month 00) and 99999999 (month 99) return NULL. Bodies
+    otherwise line-for-line identical (status DS, 8-parameter interface, *PSSR, return without *inlr). SPECIFIC ISOTODATE; ARCAD header author VTAQUIN 29/11/2016. No caller in ATU_SRC (c03); only possible
+    consumers are the QM queries with no source. Phase A recommended defer; room accepted for documentation.'
 - behaviour_id: dat-utils-c03
   surface_id: udf:ISOTODATE40
-  name: Callers - ISOTODATE40 from ORD200/ORD201; ISO_Num_To_Date unused
-  status: candidate
+  name: Callers - ISOTODATE40 from ORD200/ORD201 cursors; ISO_Num_To_Date unused
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3051,13 +3059,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ORDERCUS cursors in ORD200 and ORD201 wrap ORDATE/ORDATDEL/ORDATCLO; no caller of ISO_Num_To_Date in ATU_SRC.'
+  notes: 'confidence: observed-in-code; Exactly two call sites, both embedded-SQL cursors over ORDERCUS: ORD200 (WHERE orcuid = :cuid, loads all rows, order by datord desc) and ORD201 (all orders, 14 per
+    page, order by datord desc, orid desc). Each wraps ORDATE / ORDATDEL / ORDATCLO as DATORD / DATLIV / DATCLO and fetches into the display-file L fields (DATFMT(*JOB)) with no null indicators and only
+    a sqlcod = 0 check. After deliver/close the callers refresh the subfile dates with %date() directly (UDF not re-invoked until the list is rebuilt); *inzsr presets the three fields to d''1940-01-01''.
+    ISO_Num_To_Date has no occurrence outside its CREATE FUNCTION. Other programs showing the same columns (ORD202, ORD500, CUS200, ORD901) convert in RPG with %date(x:*iso) instead - two conversion paths
+    for one storage format (c07).'
 - behaviour_id: dat-utils-c04
   surface_id: udf:ISOTODATE40
-  name: UDF interface contract (PARAMETER STYLE SQL, DETERMINISTIC, NO SQL)
-  status: candidate
+  name: UDF interface contract (PARAMETER STYLE SQL, DETERMINISTIC, NO SQL) - 8 parameters
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3066,13 +3078,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; LANGUAGE RPGLE, DETERMINISTIC, NO SQL, NO EXTERNAL ACTION, RETURNS NULL ON NULL INPUT; 9-parameter external interface.'
+  notes: 'confidence: observed-in-code; Both functions: LANGUAGE RPGLE, DETERMINISTIC, NO SQL, RETURNS NULL ON NULL INPUT, NO EXTERNAL ACTION, PARAMETER STYLE SQL, EXTERNAL NAME DAT00n unqualified (resolved
+    via the library list), SPECIFIC = member name (ISOTODATE / ISOTODATE4). PARAMETER STYLE SQL with one argument gives an 8-parameter list (argument, result, argument null ind, result null ind, SQLSTATE
+    5, function name 139, specific name 128, message text 70 varying) - correction to Phase A ''9-parameter''; scratchpad / call type / dbinfo absent (no SCRATCHPAD / FINAL CALL / DBINFO). Declared twice
+    per member (pr extpgm + pi), no shared copybook. dat8_ind, Function_Name, Specific_Name and stPgmName never read. FENCED, ALLOW PARALLEL, PROGRAM TYPE (default MAIN) not specified. No build script creates
+    the functions (creation order / library are build metadata).'
 - behaviour_id: dat-utils-c05
   surface_id: udf:ISOTODATE40
   name: Error path SQLSTATE 38I02 with exception text
-  status: candidate
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3081,13 +3097,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; *PSSR sets SQL_State ''38I02'' and Msg_Text = first 70 chars of the program status exception text.'
+  notes: 'confidence: observed-in-code; *PSSR in both programs: SQL_State = ''38I02'', Msg_Text = %trimr(stExcText) (SDS positions 91-170, 80 chars, truncated to the 70-char VARYING parameter), return.
+    date_ind stays 0 and date untouched - DB2 discards the call because the SQLSTATE is an error class (SQL0443). An invalid date is NOT an error (test(de) -> NULL); *PSSR is reached only by unmonitored
+    exceptions - derived: effectively only a decimal-data error on a corrupt packed argument. Same SQLSTATE for every exception; exception id / program name not inspected. In ORD200/ORD201 an error surfaces
+    only as a non-zero sqlcod that ends the list load silently.'
 - behaviour_id: dat-utils-c06
   surface_id: udf:ISOTODATE40
-  name: Programs stay active between rows (return without *inlr)
-  status: candidate
+  name: Programs stay active between rows (return without *inlr); no state kept
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3096,13 +3115,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No state kept between calls.'
+  notes: 'confidence: observed-in-code; Every exit (normal and *PSSR) is return with *inlr off; no H spec, no F spec, no program globals besides the status DS. date_ind and SQL_State are reset at the top
+    of every call; the result parameter date is DB2''s storage, not the program''s (c08). Contrast the FVAT / FCUSTOMER getters where the same shape keeps a last-key buffer - here there is nothing to go
+    stale. DETERMINISTIC is truthful. Activation group / FENCED status are compile- and create-time options not in source.'
 - behaviour_id: dat-utils-c07
   surface_id: udf:ISOTODATE40
   name: 0 -> 1940-01-01 sentinel implemented three times across the estate
-  status: candidate
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3111,13 +3132,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; DAT002 (SQL), CUS200 (RPG, documented cus-interactive-c07), ORD202 (RPG, ord-maintain-ord202-c01); only the SQL variant also maps 99999999.'
+  notes: 'confidence: observed-in-code; Storage convention: 0 = no date (ORDER.ORDATDEL / ORDATCLO, CUSTOMER.CULASTORD); presentation: 0 -> 1940-01-01 -> DDS MAPVAL blank. The 0 -> 1940 step exists in DAT002
+    (SQL), CUS200 (explicit if CULASTORD = 0, cus-interactive-c07) and ORD202 (implicit: *inzsr presets d''1940-01-01'' and the field is simply not assigned when the numeric is 0 - correction to Phase A
+    wording for ord-maintain-ord202-c01, works because ORD202 ends with *inlr per order). Only DAT002 also maps 99999999 -> 2039-12-31; the RPG paths would raise an unmonitored date error on it. ORD200/ORD201
+    hold the same constant to COMPARE the UDF output (datclo > datBlank = already closed) - SQL sentinel and RPG constant must agree. The raw 0 is tested directly by ORD200/ORD201 (if ordatdel = 0), ORD202
+    / ORD901 (> 0) and ART801 (ORDATCLO = 0 = open). Each member declares its own d''1940-01-01''; no shared definition. ORD202 / ORD500 convert ORDATE with no guard (never 0 in-tree). Derived: the two
+    values are *LOVAL / *HIVAL of RPG 2-digit-year date formats (ORD202D shows the sentinel as 01/01/40 under *DMY).'
 - behaviour_id: dat-utils-c08
   surface_id: udf:ISOTODATE40
   name: Result value unassigned on invalid input (port trap)
-  status: candidate
+  status: documented
   slice_id: dat-utils
-  discovery_card: null
+  discovery_card: discovery/dat-utils/features/dat-utils-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3126,7 +3152,10 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Only the null indicator is set; the date parameter keeps whatever it held.'
+  notes: 'confidence: observed-in-code; On test(de) failure only date_ind = -1 is set; the date result parameter (DB2''s buffer, by reference) is not written and the program never initialises it. Correct
+    and invisible under SQL semantics; a port returning ''date + flag'' or reading the value before the flag would surface an undefined value. On the *PSSR path neither date nor date_ind is set (date_ind
+    stays 0) - DB2 discards the call via the SQLSTATE. Sentinel and valid paths always assign date and leave date_ind = 0. In the callers the un-indicated fetch fails, so the host variable is not updated
+    and the row is never written.'
 - behaviour_id: fam-maintain-c01
   surface_id: srvpgm:FFAMILLY
   name: GetArtFamDesc getter
@@ -4845,5 +4874,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T20:19:13Z'
+last_updated: '2026-09-08T20:43:21Z'
 updated_by: document-slices-conveyor

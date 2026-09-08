@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T20:19:13Z` by `document-slices-conveyor`
+- last_updated: `2026-09-08T20:43:21Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -12,19 +12,20 @@
   - Pack B run 2 (2026-09-08): cus-modules 10/10 accepted behaviours documented (cards under discovery/cus-modules/features/); c10 stays needs-SME (inferred), no card.
   - Pack B run 3 (2026-09-08): ord-entry-ord100 12/12 accepted behaviours documented (cards under discovery/ord-entry-ord100/features/); c09, c11 stay needs-SME (inferred), no card.
   - Pack B run 4 (2026-09-08): ord-trigger-ord700 8/8 accepted behaviours documented (cards discovery/ord-trigger-ord700/features/); c01, c08, c11 stay needs-SME. Bind queue now empty; conveyor idle until more slices are bound. CHARACTERIZATION: deferred-waived. No conversion, no tests.
+  - Pack B run 6 (2026-09-08): dat-utils 8/8 accepted behaviours documented (cards discovery/dat-utils/features/); no needs-SME candidates; surfaces udf:ISOTODATE40 / udf:ISO_Num_To_Date candidate -> accepted (bind mirror). Remaining queue: cou-maintain FCOUNTRY c07-c12. CHARACTERIZATION: deferred-waived. No conversion, no tests.
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 14 |
-| surfaces `candidate` | 48 |
+| surfaces `accepted` | 16 |
+| surfaces `candidate` | 46 |
 | surfaces `deferred` | 2 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 216 |
-| behaviours `documented` | 52 |
+| behaviours `candidate` | 208 |
+| behaviours `documented` | 60 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -42,7 +43,7 @@
 | `cou-maintain` | 4 | 13 | 0 | `candidate` |
 | `cus-interactive` | 4 | 12 | 12 | `documented` |
 | `cus-modules` | 3 | 11 | 10 | `candidate` |
-| `dat-utils` | 2 | 8 | 0 | `candidate` |
+| `dat-utils` | 2 | 8 | 8 | `documented` |
 | `fam-maintain` | 3 | 13 | 0 | `candidate` |
 | `log-programs` | 3 | 10 | 0 | `candidate` |
 | `menu-cmd-shell` | 4 | 9 | 0 | `candidate` |
