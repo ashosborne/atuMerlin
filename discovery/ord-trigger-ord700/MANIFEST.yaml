@@ -11,7 +11,7 @@ out_of_scope_hints:
   - writer programs' own behaviour
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T14:05:00Z
+updated_at: 2026-09-08T12:49:00Z
 bind_status: unbound
 
 features:

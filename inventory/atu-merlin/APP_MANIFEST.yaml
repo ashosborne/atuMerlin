@@ -1,0 +1,2362 @@
+schema_version: 1
+app_id: atu-merlin
+repo: https://github.com/ashosborne/atuMerlin
+status: in_progress
+completeness: incomplete
+scanned_seeds:
+- art-interactive
+- art-modules
+- cus-interactive
+- cus-modules
+- ord-batch-ord900
+- ord-entry-ord100
+- ord-entry-ord101
+- ord-maintain-ord200
+- ord-maintain-ord201
+- ord-maintain-ord202
+- ord-print-ord500
+- ord-trigger-ord700
+unscanned_hints:
+- 'seed pro-interactive: PRO200/PRO202/PRO203/PRO250 + PRO200D/201D/202D/250D (PRO200.ILEPGM binds XML srvpgm - source missing)'
+- 'seed pro-modules: PRO300/PRO301 + PRO301D (FPROVIDER body)'
+- 'seed pro-cobol-pro201: QCBLSRC/PRO201.CBL (only COBOL member; menu opt 5)'
+- 'seed fam-maintain: FAM300/FAM301 + FAM301D (FFAMILLY body; SltArtFam used by ART200/ART301)'
+- 'seed cou-maintain: COU200.RPG (OPM RPG, menu opt 21) + COU300/COU301 (FCOUNTRY body; used by CUS200/CUS250)'
+- 'seed par-maintain: PAR200 (menu opt 20) + PAR201 CL/ILEPGM (menu opt 83, WRKLNK on PATH) + PAR300 (FPARAMETER getParm*; PATH used by ORD500)'
+- 'seed vat-module: VAT300 (FVAT: CLCVat/GetVatRate used by ORD100/ORD101/ART250)'
+- 'seed log-programs: LOG100 (create SAMLOG user space) + LOG300 (AddLogEntry; used by ORD700 delete)'
+- 'seed dat-utils: DAT001/DAT002 (external programs behind SQL UDFs ISOTODATE/ISOTODATE40 used by ORD200/ORD201)'
+- 'seed srvpgm-fcustomer: FCUSTOMER binding/export view - recommend merging into cus-modules at bind'
+- 'seed srvpgm-farticle: FARTICLE binding/export view - recommend merging into art-modules at bind (ART302 gap)'
+- 'seed srvpgm-fprovider: FPROVIDER.ILESRVPGM + FPROVIDER.BND (versioned signatures *GEN/*PRV)'
+- 'seed srvpgm-supporting: FFAMILLY/FCOUNTRY/FPARAMETER/FVAT/LOG srvpgms + SAMPLE.BNDDIR (lists XML/ORDER/TXT/XSS srvpgms with no source)'
+- 'seed menu-cmd-shell: SAMMNU.MENU (entry map), SAMHELP.PNLGRP, SAMMSGF.MSGF, CVTSPLPDF.CMD; menu references QM queries CUSQRY/ARTQRY and ADSPUSRSPC not in tree'
+- 'seed sql-objects: ART801.SQLPRC (menu opt 82 reconciliation), ARTIINF.TABLE, ARTLSTDAT.VIEW, CUSSEQ.SQLSEQ, ISOTODATE/ISOTODATE4.SQLUDF, ORDERCUS.VIEW'
+- 'blind-spot: XML, ORDER, TXT, XSS *SRVPGM in SAMPLE.BNDDIR have no source under ATU_SRC (PRO200.ILEPGM binds XML; PRO202 /copy qprotosrc,xml missing)'
+- 'blind-spot: QM query objects CUSQRY, ARTQRY, form CUSQRYFMT (menu opts 12/13) not in tree'
+- 'blind-spot: CVTSPLPDF processing program and ADSPUSRSPC command not in tree'
+- 'blind-spot: CMD->PGM bindings (CRTORD) and trigger attachment are compiled-object/ARCAD metadata, not source'
+- 'unknown-surface: CUSTADRE.PF / ADDRESS.PF (multi-address model) referenced by no program in ATU_SRC'
+- 'unknown-surface: ARTIPROV link creation - no program found that writes new ARTIPROV rows'
+surfaces:
+- surface_id: pgm:ART200
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE
+  status: candidate
+  slice_id: art-interactive
+  notes: '*PGM SQLRPGLE - Work with Articles (menu opt 1); screen ART200D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ART200D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:84-87
+- surface_id: pgm:ART201
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE
+  status: candidate
+  slice_id: art-interactive
+  notes: '*PGM RPGLE - Providers of an article (called by ART200/ART250); screen ART201D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ART201D.DSPF
+- surface_id: pgm:ART202
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE
+  status: candidate
+  slice_id: art-interactive
+  notes: '*PGM RPGLE - Articles of a provider (called by PRO200/PRO250); screen ART202D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ART202D.DSPF
+- surface_id: pgm:ART250
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE
+  status: candidate
+  slice_id: art-interactive
+  notes: '*PGM SQLRPGLE - Article by id (menu opt 7); screen ART250D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ART250D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:108-111
+- surface_id: unknown:ARTIPRO2.LF
+  kind: other
+  locator: ATU_SRC/QDDSSRC/ARTIPRO2.LF
+  repo_path: ATU_SRC/QDDSSRC/ARTIPRO2.LF
+  status: unknown
+  slice_id: art-interactive
+  notes: Declared in ART250 but never read in the observed code.
+  discovery_evidence:
+  - ATU_SRC/QDDSSRC/ARTIPRO2.LF
+- surface_id: srvpgm:FARTICLE
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+  status: candidate
+  slice_id: art-modules
+  notes: '*SRVPGM MODULE(ART300 ART301) BNDSRVPGM(FFAMILLY); ART302 NOT listed'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FARTICLE.BND
+- surface_id: mod:ART300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART300.RPGLE
+  status: candidate
+  slice_id: art-modules
+  notes: '*MODULE nomain - GetArt* getters, ExistArt, IsArtDeleted'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART300.RPGLE
+- surface_id: mod:ART301
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART301.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART301.SQLRPGLE
+  status: candidate
+  slice_id: art-modules
+  notes: '*MODULE nomain - SltArticle selection window; screen ART301D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART301.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ART301D.DSPF
+- surface_id: mod:ART302
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ART302.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ART302.SQLRPGLE
+  status: candidate
+  slice_id: art-modules
+  notes: '*MODULE nomain - GetArtInfo (ARTIINF); binding into FARTICLE not in source'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ART302.SQLRPGLE
+- surface_id: pgm:CUS200
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
+  status: candidate
+  slice_id: cus-interactive
+  notes: '*PGM SQLRPGLE - Work with Customers (menu opt 2); screen CUS200D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/CUS200D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:88-91
+- surface_id: pgm:CUS250
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
+  status: candidate
+  slice_id: cus-interactive
+  notes: '*PGM RPGLE - Customer by id (menu opt 8); screen CUS250D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/CUS250D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:112-115
+- surface_id: unknown:CUSTADRE.PF
+  kind: other
+  locator: ATU_SRC/QDDSSRC/CUSTADRE.PF
+  repo_path: ATU_SRC/QDDSSRC/CUSTADRE.PF
+  status: unknown
+  slice_id: cus-interactive
+  notes: Not referenced by any program in ATU_SRC (structural grep); charter lists as dep.
+  discovery_evidence:
+  - ATU_SRC/QDDSSRC/CUSTADRE.PF
+- surface_id: unknown:ADDRESS.PF
+  kind: other
+  locator: ATU_SRC/QDDSSRC/ADDRESS.PF
+  repo_path: ATU_SRC/QDDSSRC/ADDRESS.PF
+  status: unknown
+  slice_id: cus-interactive
+  notes: Not referenced by any program in ATU_SRC (structural grep); charter lists as dep.
+  discovery_evidence:
+  - ATU_SRC/QDDSSRC/ADDRESS.PF
+- surface_id: srvpgm:FCUSTOMER
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+  status: candidate
+  slice_id: cus-modules
+  notes: '*SRVPGM MODULE(CUS300 CUS301); exports per FCUSTOMER.BND'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FCUSTOMER.BND
+- surface_id: mod:CUS300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/CUS300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/CUS300.RPGLE
+  status: candidate
+  slice_id: cus-modules
+  notes: '*MODULE nomain - GetCus* getters, ExistCus, IsCusDeleted'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/CUS300.RPGLE
+- surface_id: mod:CUS301
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+  status: candidate
+  slice_id: cus-modules
+  notes: '*MODULE nomain - SltCustomer selection window; screen CUS301D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+  - ATU_SRC/QDDSSRC/CUS301D.DSPF
+- surface_id: pgm:ORD900
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
+  status: candidate
+  slice_id: ord-batch-ord900
+  notes: '*PGM RPGLE - Reset LASTORDNO to max ORID (menu opt 80)'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:143-146
+- surface_id: pgm:ORD901
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
+  status: candidate
+  slice_id: ord-batch-ord900
+  notes: '*PGM SQLRPGLE - Shift order dates to today; resync years and CULASTORD (menu opt 81)'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:147-150
+- surface_id: pgm:ORD100
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
+  status: candidate
+  slice_id: ord-entry-ord100
+  notes: '*PGM RPGLE - Create customer order; screen ORD100D; needs TMPDETORD override'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD100D.DSPF
+- surface_id: cl:ORD100C
+  kind: other
+  locator: ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
+  repo_path: ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
+  status: candidate
+  slice_id: ord-entry-ord100
+  notes: '*PGM CLLE - stage QTEMP/DETORD then CRTORD CUID(&CUID)'
+  discovery_evidence:
+  - ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
+- surface_id: cl:ORD100C2
+  kind: other
+  locator: ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
+  repo_path: ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
+  status: candidate
+  slice_id: ord-entry-ord100
+  notes: '*PGM CLLE - stage QTEMP/DETORD then CALL ORD100 (menu opt 6)'
+  discovery_evidence:
+  - ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:104-107
+- surface_id: cmd:CRTORD
+  kind: other
+  locator: ATU_SRC/QCMDSRC/CRTORD.CMD
+  repo_path: ATU_SRC/QCMDSRC/CRTORD.CMD
+  status: candidate
+  slice_id: ord-entry-ord100
+  notes: '*CMD Create an Order (CUID); PGM binding not in source (inferred ORD100)'
+  discovery_evidence:
+  - ATU_SRC/QCMDSRC/CRTORD.CMD
+- surface_id: pgm:ORD101
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
+  status: candidate
+  slice_id: ord-entry-ord101
+  notes: '*PGM RPGLE - Maintain lines of an existing order (called by ORD200/ORD201 opt 2); screen ORD101D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD101D.DSPF
+- surface_id: pgm:ORD200
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE
+  status: candidate
+  slice_id: ord-maintain-ord200
+  notes: '*PGM SQLRPGLE - Orders of one customer (called by CUS200 opt 5); screen ORD200D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ORD200D.DSPF
+- surface_id: pgm:ORD201
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
+  status: candidate
+  slice_id: ord-maintain-ord201
+  notes: '*PGM SQLRPGLE - Work with Customer Orders (menu opt 3); screen ORD201D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ORD201D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:92-95
+- surface_id: pgm:ORD202
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
+  status: candidate
+  slice_id: ord-maintain-ord202
+  notes: '*PGM RPGLE - Display order (read-only; called by ORD200/ORD201 opt 5); screen ORD202D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD202D.DSPF
+- surface_id: pgm:ORD500
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+  status: candidate
+  slice_id: ord-print-ord500
+  notes: '*PGM RPGLE - Print order to spool ORD500O then call ORD500C'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD500O.PRTF
+- surface_id: cl:ORD500C
+  kind: other
+  locator: ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+  repo_path: ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+  status: candidate
+  slice_id: ord-print-ord500
+  notes: '*PGM CLLE - CVTSPLPDF spool to IFS PDF (command impl not in tree)'
+  discovery_evidence:
+  - ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+  - ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+- surface_id: trgpgm:ORD700
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
+  status: candidate
+  slice_id: ord-trigger-ord700
+  notes: '*PGM RPGLE - external trigger program on DETORD maintaining ARTICLE.ARCUSQTY'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
+- surface_id: trg:DETORD.ORD700_DETORD_ARTICLE_*
+  kind: other
+  locator: ATU_SRC/QTRGSRC/ORD700A.SYSTRG
+  repo_path: ATU_SRC/QTRGSRC/ORD700A.SYSTRG
+  status: candidate
+  slice_id: ord-trigger-ord700
+  notes: ADDPFTRG x3 (*AFTER insert/delete/update) on DETORD -> ORD700; attachment on box inferred
+  discovery_evidence:
+  - ATU_SRC/QTRGSRC/ORD700A.SYSTRG
+  - ATU_SRC/QTRGSRC/ORD700D.SYSTRG
+  - ATU_SRC/QTRGSRC/ORD700U.SYSTRG
+- surface_id: trg:ORDER.ORD701_Insert_order
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ORD701.SQLTRG
+  repo_path: ATU_SRC/QSQLSRC/ORD701.SQLTRG
+  status: candidate
+  slice_id: ord-trigger-ord700
+  notes: SQL AFTER INSERT trigger on ORDER -> CUSTOMER.CULASTORD
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ORD701.SQLTRG
+behaviours:
+- behaviour_id: art-interactive-c01
+  surface_id: pgm:ART200
+  name: List articles by description with position-to and paging
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Subfile over ARTICLE2 (ARDESC, ARID), 14 rows per load, position-to by description.'
+- behaviour_id: art-interactive-c02
+  surface_id: pgm:ART200
+  name: Create article with max+1 id and duplicate retry
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; New id = highest ARID + 1 (edited ''X''); on duplicate-key write error increments and retries.'
+- behaviour_id: art-interactive-c03
+  surface_id: pgm:ART200
+  name: Update article (option 2)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 2 loads FMT02 with family description; Enter updates FARTI.'
+- behaviour_id: art-interactive-c04
+  surface_id: pgm:ART200
+  name: Article info free text via ARTIINF SQL table (option 3)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Reads ARTICLE_INFORMATION; insert if absent, update if present; text trimmed.'
+- behaviour_id: art-interactive-c05
+  surface_id: pgm:ART200
+  name: Soft delete article (option 4)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Sets ARDEL = ''X'', ARMOD, ARMODID and updates; row stays in file.'
+- behaviour_id: art-interactive-c06
+  surface_id: pgm:ART200
+  name: Navigate to providers of article (option 6 -> ART201)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Calls ART201(arid).'
+- behaviour_id: art-interactive-c07
+  surface_id: pgm:ART200
+  name: Article validation (description mandatory, family exists, F4 family prompt)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; errDesc when ARDESC blank; errFamilly when not ExistArtFam(ARTIFA); F4 -> SltArtFam.'
+- behaviour_id: art-interactive-c08
+  surface_id: pgm:ART200
+  name: List option validation (2,3,4,6 allowed)
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Options >6, 1 and 5 flagged invalid with SFLMSG.'
+- behaviour_id: art-interactive-c09
+  surface_id: pgm:ART201
+  name: ART201 providers of an article with link edit
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Lists ARTIPRO1 rows for ARID with GetProName; option 2 edits APPRICE/APREF and stamps APMOD/APMODID.'
+- behaviour_id: art-interactive-c10
+  surface_id: pgm:ART202
+  name: ART202 articles of a provider with link edit
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Lists ARTIPROV rows for PRID with GetArtDesc; option 2 edits link row.'
+- behaviour_id: art-interactive-c11
+  surface_id: pgm:ART250
+  name: ART250 article by id with derived detail
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F4 SltArticle; detail computes VATINCL = CLCVat(ARVATCD, ARSALEPR), STOPRICE = ARSTOCK*ARWHSPR, info = GetArtInfo(arid).'
+- behaviour_id: art-interactive-c12
+  surface_id: pgm:ART250
+  name: ART250 not-found LIKE search fallback
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Unknown id opens panel 3: SQL cursor ARID LIKE ''%id%'', 16 rows per page, option 1 opens detail; zero rows -> NotFound.'
+- behaviour_id: art-interactive-c13
+  surface_id: pgm:ART201
+  name: ART250 F7 show providers
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DspProvider indicator calls ART201(arid) from detail.'
+- behaviour_id: art-interactive-c14
+  surface_id: pgm:ART200
+  name: Audit stamping on article and link saves
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ARMOD/ARMODID always, ARCREA on create; APMOD/APMODID on ARTIPROV update.'
+- behaviour_id: art-interactive-c15
+  surface_id: pgm:ART200
+  name: Quirk - sflend uses %eof(article1) while reading article2
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; End-of-subfile indicator is taken from a file not read in the loop; likely always off.'
+- behaviour_id: art-interactive-c16
+  surface_id: pgm:ART200
+  name: Call-graph fact - ART201 invoked from ART200 and ART250
+  status: candidate
+  slice_id: art-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Two callers pass ARID; ART201 has no menu entry.'
+- behaviour_id: art-modules-c01
+  surface_id: srvpgm:FARTICLE
+  name: Article getter family (GetArt*)
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Seven exported getters over one cached ARTICLE1 chain.'
+- behaviour_id: art-modules-c02
+  surface_id: srvpgm:FARTICLE
+  name: ExistArt / IsArtDeleted
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ExistArt = found and ARDEL <> ''X''; IsArtDeleted = ARDEL = ''X''.'
+- behaviour_id: art-modules-c03
+  surface_id: mod:ART300
+  name: Lazy open and last-key cache in chainARTICLE1
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Same pattern as CUS300; missing ids return cleared buffer values.'
+- behaviour_id: art-modules-c04
+  surface_id: mod:ART301
+  name: SltArticle selection window
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Dynamic SQL over ARTICLE by description LIKE and/or family; ORDER BY ARDESC; 14 rows/page; F4 prompts family via FFAMILLY; returns ARID or default.'
+- behaviour_id: art-modules-c05
+  surface_id: mod:ART301
+  name: Selection rules and criteria-change reload
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 1 only; one selection; changed criteria re-prepare the cursor.'
+- behaviour_id: art-modules-c06
+  surface_id: srvpgm:FARTICLE
+  name: Binding gap - ART302/GetArtInfo not bound into FARTICLE
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FARTICLE.ILESRVPGM lists MODULE(ART300 ART301); FARTICLE.BND has no GETARTINFO; ART250 calls GetArtInfo.'
+- behaviour_id: art-modules-c07
+  surface_id: mod:ART302
+  name: GetArtInfo cached SQL read of ARTIINF
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Selects ARTINF once per distinct ARID; returns cached text otherwise.'
+- behaviour_id: art-modules-c08
+  surface_id: mod:ART301
+  name: Dynamic SQL string concatenation of user input
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Search description/family are concatenated into the statement text.'
+- behaviour_id: art-modules-c09
+  surface_id: mod:ART301
+  name: Selector does not filter soft-deleted articles
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No ARDEL predicate in the dynamic statement.'
+- behaviour_id: art-modules-c10
+  surface_id: srvpgm:FARTICLE
+  name: CloseARTICLE1 prototyped but not exported
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Procedure exists; not in FARTICLE.BND.'
+- behaviour_id: art-modules-c11
+  surface_id: mod:ART301
+  name: Family prompt help text default in selector
+  status: candidate
+  slice_id: art-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; famdesc initialised to ''<F4> to select.'' until a family is chosen.'
+- behaviour_id: cus-interactive-c01
+  surface_id: pgm:CUS200
+  name: List customers by name with position-to and paging
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Subfile over CUSTOME2 (CUSTNM, CUID); loads 14 rows per page; position-to by name; restores last read on page down.'
+- behaviour_id: cus-interactive-c02
+  surface_id: pgm:CUS200
+  name: Create customer with id from CUSSEQ sequence
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F6 resets FCUST, sets CUID = NEXT VALUE FOR CUSSEQ, then writes on save.'
+- behaviour_id: cus-interactive-c03
+  surface_id: pgm:CUS200
+  name: Update customer (option 2)
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 2 chains CUSTOME1, shows FMT02, updates FCUST on Enter after validation.'
+- behaviour_id: cus-interactive-c04
+  surface_id: pgm:CUS200
+  name: Customer validation rules
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Country must exist (FCOUNTRY); name mandatory; phone mandatory and numeric; duplicate UPPER(name)+phone rejected (create dup>0, update dup>1).'
+- behaviour_id: cus-interactive-c05
+  surface_id: pgm:CUS200
+  name: Country prompt via FCOUNTRY selector
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F4 on FMT02 calls SltCountry then GetCountryName.'
+- behaviour_id: cus-interactive-c06
+  surface_id: pgm:CUS200
+  name: Navigate to customer's orders (option 5 -> ORD200)
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 5 calls ORD200(cuid) as external program.'
+- behaviour_id: cus-interactive-c07
+  surface_id: pgm:CUS200
+  name: Sentinel last-order date (0 -> 1940-01-01)
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CULASTORD numeric 0 displayed as date constant d''1940-01-01''.'
+- behaviour_id: cus-interactive-c08
+  surface_id: pgm:CUS200
+  name: Audit stamping on save
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CUMOD timestamp and CUMODID user on every save; CUCREA date set at program init.'
+- behaviour_id: cus-interactive-c09
+  surface_id: pgm:CUS250
+  name: Customer-by-id inquiry with prompt and not-found message
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CUS250 FMT01 takes CUID; F4 calls SltCustomer; chain CUSTOME1; not found -> ERR0103 with edited id.'
+- behaviour_id: cus-interactive-c10
+  surface_id: pgm:CUS250
+  name: Customer detail display with country name
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CUS250 FMT02 shows the chained record with GetCountryName(CUCOUN).'
+- behaviour_id: cus-interactive-c11
+  surface_id: pgm:CUS200
+  name: No delete path for customers in this seam (CUDEL never set)
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CUSTOMER.PF has CUDEL; CUS200 allows options 2 and 5 only. Deletion surface unknown.'
+- behaviour_id: cus-interactive-c12
+  surface_id: pgm:CUS200
+  name: Subfile option validation (2, 5 only)
+  status: candidate
+  slice_id: cus-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Invalid options reverse-imaged with SFLMSG ''Invalid Option''; cursor positioned to first error row.'
+- behaviour_id: cus-modules-c01
+  surface_id: srvpgm:FCUSTOMER
+  name: Customer getter family (GetCus*)
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Eleven exported procedures each chain CUSTOME1 by CUID and return one column.'
+- behaviour_id: cus-modules-c02
+  surface_id: srvpgm:FCUSTOMER
+  name: ExistCus (found and not deleted)
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Returns %found(CUSTOME1) and CUDEL <> ''X''.'
+- behaviour_id: cus-modules-c03
+  surface_id: srvpgm:FCUSTOMER
+  name: IsCusDeleted
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Returns CUDEL = ''X'' after chain.'
+- behaviour_id: cus-modules-c04
+  surface_id: mod:CUS300
+  name: Lazy open and last-key cache in chainCUSTOME1
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Opens CUSTOME1 on first use; skips chain when the requested CUID equals the buffered CUID; clears buffer before chain so missing ids yield blanks/zeros.'
+- behaviour_id: cus-modules-c05
+  surface_id: srvpgm:FCUSTOMER
+  name: CloseCUSTOME1 prototyped but not exported
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Procedure exists and is in the include, but FCUSTOMER.BND does not export it.'
+- behaviour_id: cus-modules-c06
+  surface_id: mod:CUS301
+  name: SltCustomer selection window
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Dynamic SQL over CUSTOMER filtered by name and/or city LIKE, ordered by name, paged 14; returns selected CUID or the passed default.'
+- behaviour_id: cus-modules-c07
+  surface_id: mod:CUS301
+  name: Selection rules (option 1 only, single selection)
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Non-1 options and second selections are flagged with SFLMSG and reverse image; cursor to first error.'
+- behaviour_id: cus-modules-c08
+  surface_id: mod:CUS301
+  name: Criteria change re-prepares; F3/F12 return default
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; If search fields changed since last load the cursor is closed and rebuilt; exit/cancel return the input default unchanged.'
+- behaviour_id: cus-modules-c09
+  surface_id: mod:CUS301
+  name: Dynamic SQL string concatenation of user input
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Search text is trimmed and concatenated into the SELECT; single quotes in input would break or alter the statement.'
+- behaviour_id: cus-modules-c10
+  surface_id: mod:CUS300
+  name: Dormant GetCusLastOrdDate scaffold
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Commented-out procedure and prototype left as a training exercise; not compiled, not exported.'
+- behaviour_id: cus-modules-c11
+  surface_id: mod:CUS301
+  name: Blank criteria list-all semantics
+  status: candidate
+  slice_id: cus-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; With both search fields blank the city branch is taken and LIKE ''%%'' matches every customer.'
+- behaviour_id: ord-batch-ord900-c01
+  surface_id: pgm:ORD900
+  name: ORD900 reset LASTORDNO to max order id
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Reads last ORDER1 key, locks data area, writes ORID.'
+- behaviour_id: ord-batch-ord900-c02
+  surface_id: pgm:ORD901
+  name: ORD901 early exit when no orders
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; select max(ordate) = 0 -> return.'
+- behaviour_id: ord-batch-ord900-c03
+  surface_id: pgm:ORD901
+  name: ORD901 shift order dates so newest = today
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; days = today - max(ORDATE); ORDATE += days; ORYEAR recomputed.'
+- behaviour_id: ord-batch-ord900-c04
+  surface_id: pgm:ORD901
+  name: ORD901 derived delivery/close date rules
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Shift ORDATDEL/ORDATCLO; future -> 0; delivered >10 days ago and not closed -> ORDATCLO = ORDATDEL + 10.'
+- behaviour_id: ord-batch-ord900-c05
+  surface_id: pgm:ORD901
+  name: ORD901 resync DETORD.ODYEAR and CUSTOMER.CULASTORD
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Two SQL UPDATEs after the loop.'
+- behaviour_id: ord-batch-ord900-c06
+  surface_id: pgm:ORD901
+  name: ORD901 whole-file rewrite without commitment control
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Arrival-sequence read/update of every ORDER row.'
+- behaviour_id: ord-batch-ord900-c07
+  surface_id: pgm:ORD900
+  name: Purpose - demo-data refresh utilities
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Menu ''Utilities'' group and ''Reset ...'' texts suggest sample maintenance, not business batch.'
+- behaviour_id: ord-batch-ord900-c08
+  surface_id: pgm:ORD900
+  name: No scheduling or parameters (absence)
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Menu CALL only; no CL wrappers or job schedule entries in tree.'
+- behaviour_id: ord-batch-ord900-c09
+  surface_id: pgm:ORD901
+  name: Variable reuse trap in ORD901
+  status: candidate
+  slice_id: ord-batch-ord900
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; lastdate is reassigned to today-10 after computing the shift.'
+- behaviour_id: ord-entry-ord100-c01
+  surface_id: pgm:ORD100
+  name: Customer selection at entry
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Optional CUID parameter; when absent or zero, SltCustomer(0) is shown and a zero result aborts; header shows GetCusName.'
+- behaviour_id: ord-entry-ord100-c02
+  surface_id: pgm:ORD100
+  name: Lines staged in QTEMP copy of DETORD (triggers/constraints off)
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CL wrappers DLTF + CRTDUPOBJ DETORD to QTEMP with CST(*NO) TRG(*NO) and OVRDBF TMPDETORD before calling the program.'
+- behaviour_id: ord-entry-ord100-c03
+  surface_id: pgm:ORD100
+  name: Add order line with article prompt and default pricing
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F6 prompts SltArticle; qty 1; price GetArtRefSalPrice; VAT CLCVat(GetArtVatCode); rate GetVatRate.'
+- behaviour_id: ord-entry-ord100-c04
+  surface_id: pgm:ORD100
+  name: Edit staged line and recompute totals
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ODTOT = qty*price; VAT recomputed; F27 redisplays without saving.'
+- behaviour_id: ord-entry-ord100-c05
+  surface_id: pgm:ORD100
+  name: Delete staged line
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 4 deletes from temp file, adjusts running totals, marks row ''**** Delete ***''.'
+- behaviour_id: ord-entry-ord100-c06
+  surface_id: pgm:ORD100
+  name: Confirm blocked while options pending
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F8 with any row option 2/4 shows SFLMSG 36 and does not confirm.'
+- behaviour_id: ord-entry-ord100-c07
+  surface_id: pgm:ORD100
+  name: Confirm writes ORDER header and DETORD lines
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; LASTORDNO incremented under *lock; ORYEAR=*year; ORDATE=today; delivery/close 0; staged lines copied with ODLINE renumbered 1..n.'
+- behaviour_id: ord-entry-ord100-c08
+  surface_id: pgm:ORD100
+  name: Print and acknowledge after confirm
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Calls ORD500(orid), shows FMT03, ends program.'
+- behaviour_id: ord-entry-ord100-c09
+  surface_id: pgm:ORD100
+  name: CRTORD command facade
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; CRTORD takes CUID (default 0); ORD100C runs CRTORD CUID(&CUID). Command-to-program binding is not in source.'
+- behaviour_id: ord-entry-ord100-c10
+  surface_id: pgm:ORD100
+  name: Entry paths into order creation
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Menu opt 6 -> ORD100C2; ORD200 F6 -> ORD100C(cuid); ORD201 F6 -> ORD100C2.'
+- behaviour_id: ord-entry-ord100-c11
+  surface_id: pgm:ORD100
+  name: Trigger side effects on confirm (pointer)
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; DETORD writes fire ORD700 (ARCUSQTY), ORDER write fires ORD701 (CULASTORD) if triggers are attached on the box.'
+- behaviour_id: ord-entry-ord100-c12
+  surface_id: pgm:ORD100
+  name: Staged line numbering gaps until confirm
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; count increments on add, not decremented on delete; confirm renumbers.'
+- behaviour_id: ord-entry-ord100-c13
+  surface_id: pgm:ORD100
+  name: Abandon before confirm writes nothing
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F3/F12 exit without writing ORDER/DETORD; QTEMP copy discarded on next run.'
+- behaviour_id: ord-entry-ord100-c14
+  surface_id: pgm:ORD100
+  name: No stock / credit / date checks at entry (absence)
+  status: candidate
+  slice_id: ord-entry-ord100
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CULIMCRE, CUCREDIT, ARSTOCK are never read by ORD100.'
+- behaviour_id: ord-entry-ord101-c01
+  surface_id: pgm:ORD101
+  name: Load order lines with totals
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Reads DETORD1 by ORID; sums ODTOT / ODTOTVAT; article description via GetArtDesc.'
+- behaviour_id: ord-entry-ord101-c02
+  surface_id: pgm:ORD101
+  name: Header context from ORDER1 and customer name
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Chains ORDER1 by id; GetCusName(orcuid).'
+- behaviour_id: ord-entry-ord101-c03
+  surface_id: pgm:ORD101
+  name: Edit line quantities and price
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 2 edits ODQTY, ODQTYLIV, ODPRICE via display copies; recomputes ODTOT and ODTOTVAT; updates FDETO.'
+- behaviour_id: ord-entry-ord101-c04
+  surface_id: pgm:ORD101
+  name: Quantity validation (delivered vs ordered)
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ERR1001 if delivered > ordered; ERR1002 if ordered < delivered.'
+- behaviour_id: ord-entry-ord101-c05
+  surface_id: pgm:ORD101
+  name: Delete blocked when line has deliveries
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 4 with ODQTYLIV > 0 is rejected with SFLMSG 36.'
+- behaviour_id: ord-entry-ord101-c06
+  surface_id: pgm:ORD101
+  name: Delete line
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 4 deletes DETORD1 (id, odline), adjusts totals, shows ''**** Delete ***''.'
+- behaviour_id: ord-entry-ord101-c07
+  surface_id: pgm:ORD101
+  name: Dead option 6
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 6 accepted by validation but no action branch exists.'
+- behaviour_id: ord-entry-ord101-c08
+  surface_id: pgm:ORD101
+  name: Unused ORD500 prototype and create indicator
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Declared but never referenced; DSPF has no CF06.'
+- behaviour_id: ord-entry-ord101-c09
+  surface_id: pgm:ORD101
+  name: Callers ORD200 / ORD201 option 2
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Both list programs call ORD101(orid) on option 2.'
+- behaviour_id: ord-entry-ord101-c10
+  surface_id: pgm:ORD101
+  name: No add-line path for existing orders (absence)
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Only exit/cancel/refresh keys; lines are added only at creation.'
+- behaviour_id: ord-entry-ord101-c11
+  surface_id: pgm:ORD101
+  name: Trigger side effects on update/delete (pointer)
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; ORD700U / ORD700D fire on DETORD changes if attached.'
+- behaviour_id: ord-entry-ord101-c12
+  surface_id: pgm:ORD101
+  name: Closed-order guard lives in callers
+  status: candidate
+  slice_id: ord-entry-ord101
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD101 has no ORDATCLO check; ORD200/201 refuse option 2 on closed orders.'
+- behaviour_id: ord-maintain-ord200-c01
+  surface_id: pgm:ORD200
+  name: List customer's orders from ORDERCUS view
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SQL cursor over ORDERCUS where orcuid = cuid, ISOTODATE40 on three dates, TOTVAL; ordered by order date desc; loads all rows.'
+- behaviour_id: ord-maintain-ord200-c02
+  surface_id: pgm:ORD200
+  name: F6 create order for customer -> ORD100C
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Calls ORD100C(cuid) then reloads.'
+- behaviour_id: ord-maintain-ord200-c03
+  surface_id: pgm:ORD200
+  name: Option 2 update lines -> ORD101
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Calls ORD101(orid). Note c09 - this branch is unreachable in ORD200 as coded.'
+- behaviour_id: ord-maintain-ord200-c04
+  surface_id: pgm:ORD200
+  name: Option 4 delete order and lines
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Deletes ORDER1 row then loop-deletes DETORD1 rows by ORID.'
+- behaviour_id: ord-maintain-ord200-c05
+  surface_id: pgm:ORD200
+  name: Option 5 display / option 6 print
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD202(orid) and ORD500(orid).'
+- behaviour_id: ord-maintain-ord200-c06
+  surface_id: pgm:ORD200
+  name: Option 7 close order
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORDATCLO = today; ORDATDEL = today if zero.'
+- behaviour_id: ord-maintain-ord200-c07
+  surface_id: pgm:ORD200
+  name: Option 8 deliver order
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORDATDEL = today; lines with ODQTYLIV = 0 get ODQTYLIV = ODQTY; others unlocked.'
+- behaviour_id: ord-maintain-ord200-c08
+  surface_id: pgm:ORD200
+  name: Option guards
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 7 blocked if closed; 8 blocked if delivered; 4 blocked if any line delivered; 1,3,>8 invalid.'
+- behaviour_id: ord-maintain-ord200-c09
+  surface_id: pgm:ORD200
+  name: Precedence quirk - option 2 always rejected
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Missing parentheses make ''opt01 = 2'' unconditionally trigger the closed-order message; ORD201 has the corrected form.'
+- behaviour_id: ord-maintain-ord200-c10
+  surface_id: pgm:ORD200
+  name: Caller CUS200 option 5
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Only caller found in ATU_SRC.'
+- behaviour_id: ord-maintain-ord200-c11
+  surface_id: pgm:ORD200
+  name: Header context and sentinel dates
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Chains CUSTOME1; dates initialised to 1940-01-01 sentinel.'
+- behaviour_id: ord-maintain-ord200-c12
+  surface_id: pgm:ORD200
+  name: Delete leaves CULASTORD stale (consequence)
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; ORD701 only fires on insert; deleting the latest order leaves CUSTOMER.CULASTORD pointing at it until ART801/ORD901 recompute.'
+- behaviour_id: ord-maintain-ord200-c13
+  surface_id: pgm:ORD200
+  name: Delete ordering differs from ORD201
+  status: candidate
+  slice_id: ord-maintain-ord200
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD200 deletes header then lines; ORD201 deletes lines then header.'
+- behaviour_id: ord-maintain-ord201-c01
+  surface_id: pgm:ORD201
+  name: List all orders paged from ORDERCUS
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SQL cursor over ORDERCUS with customer id/name; 14 rows per load; ordered by date desc, id desc.'
+- behaviour_id: ord-maintain-ord201-c02
+  surface_id: pgm:ORD201
+  name: F6 create -> ORD100C2
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Calls ORD100C2 (no customer parm); closes cursor and reloads.'
+- behaviour_id: ord-maintain-ord201-c03
+  surface_id: pgm:ORD201
+  name: Option 2 update -> ORD101 with correct closed guard
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; (opt 2 or 4) and closed -> rejected; otherwise ORD101(orid).'
+- behaviour_id: ord-maintain-ord201-c04
+  surface_id: pgm:ORD201
+  name: Option 4 delete lines then header
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Loop-delete DETORD1 by ORID, then delete ORDER1; clears row ids.'
+- behaviour_id: ord-maintain-ord201-c05
+  surface_id: pgm:ORD201
+  name: Option 5 display / option 6 print
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD202(orid), ORD500(orid).'
+- behaviour_id: ord-maintain-ord201-c06
+  surface_id: pgm:ORD201
+  name: Option 7 close / option 8 deliver (shared with ORD200)
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Same rules as ord-maintain-ord200-c06/c07.'
+- behaviour_id: ord-maintain-ord201-c07
+  surface_id: pgm:ORD201
+  name: Option guards and dead option 3
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 7 if closed, 8 if delivered, 4 if any delivered line, 1 / >8 invalid; option 3 passes validation with no action.'
+- behaviour_id: ord-maintain-ord201-c08
+  surface_id: pgm:ORD201
+  name: F5 refresh
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Closes cursor and reloads from the first row.'
+- behaviour_id: ord-maintain-ord201-c09
+  surface_id: pgm:ORD201
+  name: Menu entry option 3
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SAMMNU ''Work with Customer Orders'' calls ORD201.'
+- behaviour_id: ord-maintain-ord201-c10
+  surface_id: pgm:ORD201
+  name: Unused file declarations CUSTOME1, ARTICLE1
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Declared in F-specs; no I/O observed.'
+- behaviour_id: ord-maintain-ord201-c11
+  surface_id: pgm:ORD201
+  name: Cursor closed at end
+  status: candidate
+  slice_id: ord-maintain-ord201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; pnl00 closes c1 before *inlr; ORD200 does not.'
+- behaviour_id: ord-maintain-ord202-c01
+  surface_id: pgm:ORD202
+  name: Order header display with sentinel dates
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Chains ORDER1 and CUSTOME1; converts ISO numeric dates; zero -> 1940-01-01.'
+- behaviour_id: ord-maintain-ord202-c02
+  surface_id: pgm:ORD202
+  name: Order lines display with totals
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DETORD1 by ORID; article description via ARTICLE1 chain; sums ODTOT and ODTOTVAT.'
+- behaviour_id: ord-maintain-ord202-c03
+  surface_id: pgm:ORD202
+  name: Read-only exit on any key
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F3, F12 and Enter all end the program.'
+- behaviour_id: ord-maintain-ord202-c04
+  surface_id: pgm:ORD202
+  name: Callers ORD200 / ORD201 option 5
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Both list programs call ORD202(orid).'
+- behaviour_id: ord-maintain-ord202-c05
+  surface_id: pgm:ORD202
+  name: Dead keys and no paging in display
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DSPF has CF06/CA05 and option field unused by program; SFLSIZ 7 / SFLPAG 6 without page-down handling.'
+- behaviour_id: ord-maintain-ord202-c06
+  surface_id: pgm:ORD202
+  name: Direct ARTICLE1 access bypasses FARTICLE
+  status: candidate
+  slice_id: ord-maintain-ord202
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Unlike ORD100/ORD101, article description is read by chain, not GetArtDesc.'
+- behaviour_id: ord-print-ord500-c01
+  surface_id: pgm:ORD500
+  name: Print order document to spool
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Header formats, one DETAIL per line, page break every 14 details, TOTAL (net, VAT, total), FOOTER.'
+- behaviour_id: ord-print-ord500-c02
+  surface_id: pgm:ORD500
+  name: Resolve IFS path from PATH parameter and hand off to PDF step
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; getParm2(''PATH'','' '') then ORD500C(orid, path).'
+- behaviour_id: ord-print-ord500-c03
+  surface_id: pgm:ORD500
+  name: Spool to PDF via CVTSPLPDF
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Custord<orid>.pdf in &PATH, last spool, replace, A4 portrait, Courier 11, no bookmarks.'
+- behaviour_id: ord-print-ord500-c04
+  surface_id: pgm:ORD500
+  name: CVTSPLPDF implementation not in tree
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Command definition present; processing program absent from ATU_SRC.'
+- behaviour_id: ord-print-ord500-c05
+  surface_id: pgm:ORD500
+  name: Callers of ORD500
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD100 after confirm; ORD200/ORD201 option 6; ORD101 declares only.'
+- behaviour_id: ord-print-ord500-c06
+  surface_id: pgm:ORD500
+  name: Direct file access instead of service programs
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ARTICLE1 and CUSTOME1 chained directly; only FPARAMETER used.'
+- behaviour_id: ord-print-ord500-c07
+  surface_id: pgm:ORD500
+  name: Code quirks (datord overwrite, unused oflind, early *inlr)
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Harmless as-is oddities to document rather than replicate blindly.'
+- behaviour_id: ord-print-ord500-c08
+  surface_id: pgm:ORD500
+  name: Unknown order id prints blank document
+  status: candidate
+  slice_id: ord-print-ord500
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No %found check after chain ORDER1.'
+- behaviour_id: ord-trigger-ord700-c01
+  surface_id: trgpgm:ORD700
+  name: Trigger registration on DETORD
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES). Definitions observed; attachment on the box inferred.'
+- behaviour_id: ord-trigger-ord700-c02
+  surface_id: trgpgm:ORD700
+  name: Insert adds ordered quantity to article customer-order quantity
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ARCUSQTY += new.ODQTY.'
+- behaviour_id: ord-trigger-ord700-c03
+  surface_id: trgpgm:ORD700
+  name: Delete subtracts outstanding quantity and logs
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ARCUSQTY -= (old.ODQTY - old.ODQTYLIV); AddLogEntry with order/line/article/qty; log errors swallowed.'
+- behaviour_id: ord-trigger-ord700-c04
+  surface_id: trgpgm:ORD700
+  name: Update applies outstanding-quantity delta, handles article change
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Same article -> (dQty - dDelivered); changed article -> subtract old outstanding, add new outstanding.'
+- behaviour_id: ord-trigger-ord700-c05
+  surface_id: trgpgm:ORD700
+  name: Silent no-op on zero delta or unknown article
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; UpdArt returns without error.'
+- behaviour_id: ord-trigger-ord700-c06
+  surface_id: trgpgm:ORD700
+  name: Trigger buffer mechanics
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Standard PARM1 layout with old/new offsets; %parms = 0 early return.'
+- behaviour_id: ord-trigger-ord700-c07
+  surface_id: trg:ORDER.ORD701_Insert_order
+  name: ORD701 sets customer last-order date on order insert
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SQL AFTER INSERT trigger updates CUSTOMER.CULASTORD = new.ORDATE.'
+- behaviour_id: ord-trigger-ord700-c08
+  surface_id: trg:ORDER.ORD701_Insert_order
+  name: Trigger asymmetry leaves CULASTORD stale on delete
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; No delete/update trigger on ORDER; ART801/ORD901 recompute later.'
+- behaviour_id: ord-trigger-ord700-c09
+  surface_id: trgpgm:ORD700
+  name: Staging copy excludes triggers
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORD100C creates QTEMP/DETORD with TRG(*NO); only final writes fire ORD700.'
+- behaviour_id: ord-trigger-ord700-c10
+  surface_id: trgpgm:ORD700
+  name: ART801 batch reconciliation (related surface)
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SQL procedure recomputes ARCUSQTY, CUCREDIT, CULASTORD from open orders; menu opt 82.'
+- behaviour_id: ord-trigger-ord700-c11
+  surface_id: trgpgm:ORD700
+  name: Possible arithmetic divergence between trigger and reconciliation
+  status: candidate
+  slice_id: ord-trigger-ord700
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.'
+last_updated: '2026-09-08T12:49:40Z'
+updated_by: estate-discovery-loop
+notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are
+  evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.'

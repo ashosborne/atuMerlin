@@ -9,7 +9,7 @@ out_of_scope_hints:
   - PDF rendering internals (processing program not in tree)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T13:55:00Z
+updated_at: 2026-09-08T12:49:00Z
 bind_status: unbound
 
 features:
