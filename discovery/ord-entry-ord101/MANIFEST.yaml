@@ -1,0 +1,145 @@
+slice_id: ord-entry-ord101
+seed: "Order line maintenance for an existing order - ORD101(orid)"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD101D.DSPF
+out_of_scope_hints:
+  - ORD100 creation, ORD200/201 lists, ORD202 display
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T13:25:00Z
+bind_status: unbound
+
+features:
+  - id: ord-entry-ord101-c01
+    name: Load order lines with totals
+    status: candidate
+    confidence: observed-in-code
+    summary: Reads DETORD1 by ORID; sums ODTOT / ODTOTVAT; article description via GetArtDesc.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 CTL01/SFL01
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:105-120"]
+    dependencies: [DETORD1.LF, FARTICLE.ILESRVPGM]
+    open_questions: []
+  - id: ord-entry-ord101-c02
+    name: Header context from ORDER1 and customer name
+    status: candidate
+    confidence: observed-in-code
+    summary: Chains ORDER1 by id; GetCusName(orcuid).
+    entrypoints:
+      - kind: other
+        locator: ORD101 *inzsr
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:281-283"]
+    dependencies: [ORDER1.LF, FCUSTOMER.ILESRVPGM]
+    open_questions: []
+  - id: ord-entry-ord101-c03
+    name: Edit line quantities and price
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 2 edits ODQTY, ODQTYLIV, ODPRICE via display copies; recomputes ODTOT and ODTOTVAT; updates FDETO.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 opt 2 -> FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:218-228", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:258-275"]
+    dependencies: [DETORD1.LF, FVAT.ILESRVPGM]
+    open_questions: []
+  - id: ord-entry-ord101-c04
+    name: Quantity validation (delivered vs ordered)
+    status: candidate
+    confidence: observed-in-code
+    summary: ERR1001 if delivered > ordered; ERR1002 if ordered < delivered.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 S02chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:250-257", "ATU_SRC/QDDSSRC/ORD101D.DSPF:120", "ATU_SRC/QDDSSRC/ORD101D.DSPF:138"]
+    dependencies: [SAMMSGF.MSGF]
+    open_questions: ["Both checks compare new ordered vs old delivered and new delivered vs old ordered — confirm the intended pairing."]
+  - id: ord-entry-ord101-c05
+    name: Delete blocked when line has deliveries
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 4 with ODQTYLIV > 0 is rejected with SFLMSG 36.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:164-172", "ATU_SRC/QDDSSRC/ORD101D.DSPF:40"]
+    dependencies: []
+    open_questions: []
+  - id: ord-entry-ord101-c06
+    name: Delete line
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 4 deletes DETORD1 (id, odline), adjusts totals, shows '**** Delete ***'.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:188-199"]
+    dependencies: [DETORD1.LF]
+    open_questions: []
+  - id: ord-entry-ord101-c07
+    name: Dead option 6
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 6 accepted by validation but no action branch exists.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 S01chk / S01act
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:155", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:182-199"]
+    dependencies: []
+    open_questions: ["Was 6 meant to print (ORD500 prototype declared but unused)?"]
+  - id: ord-entry-ord101-c08
+    name: Unused ORD500 prototype and create indicator
+    status: candidate
+    confidence: observed-in-code
+    summary: Declared but never referenced; DSPF has no CF06.
+    entrypoints:
+      - kind: other
+        locator: ORD101 declarations
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:27-28", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:38"]
+    dependencies: []
+    open_questions: []
+  - id: ord-entry-ord101-c09
+    name: Callers ORD200 / ORD201 option 2
+    status: candidate
+    confidence: observed-in-code
+    summary: Both list programs call ORD101(orid) on option 2.
+    entrypoints:
+      - kind: other
+        locator: extpgm ORD101
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:229-232"]
+    dependencies: []
+    open_questions: []
+  - id: ord-entry-ord101-c10
+    name: No add-line path for existing orders (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: Only exit/cancel/refresh keys; lines are added only at creation.
+    entrypoints:
+      - kind: screen
+        locator: ORD101 S01key
+        evidence: ["ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:134-146"]
+    dependencies: []
+    open_questions: []
+  - id: ord-entry-ord101-c11
+    name: Trigger side effects on update/delete (pointer)
+    status: candidate
+    confidence: inferred
+    summary: ORD700U / ORD700D fire on DETORD changes if attached.
+    entrypoints:
+      - kind: other
+        locator: DETORD triggers
+        evidence: ["ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7"]
+    dependencies: [ORD700.PGM.RPGLE]
+    open_questions: []
+  - id: ord-entry-ord101-c12
+    name: Closed-order guard lives in callers
+    status: candidate
+    confidence: observed-in-code
+    summary: ORD101 has no ORDATCLO check; ORD200/201 refuse option 2 on closed orders.
+    entrypoints:
+      - kind: other
+        locator: ORD101 (absence) / ORD201 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191-199"]
+    dependencies: []
+    open_questions: ["Direct call to ORD101 on a closed order would allow edits — acceptable?"]
