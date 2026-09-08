@@ -6,7 +6,8 @@ built under Architecture pack **`atu-merlin-ts-cus-v1@1`** (`architecture/atu-me
 
 This is a **pathfinder**, not "Merlin migrated". ORD, ART and everything else stays on IBM i.
 Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`;
-behaviour is compared at the TypeScript API only. **PARITY=UNVERIFIED** — Verification has not run.
+behaviour is compared at the TypeScript API only. **parity: TS_BOUNDARY_GREEN** under the waiver
+(`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`) — evidence at the TS boundary, **not** parity against IBM i.
 
 ## Stack (from the pack)
 
