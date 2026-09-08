@@ -1,0 +1,79 @@
+slice_id: ord-maintain-ord202
+seed: "Display one order (read-only) - ORD202(orid)"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/ORD202D.DSPF
+out_of_scope_hints:
+  - update behaviour (none present)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T13:50:00Z
+bind_status: unbound
+
+features:
+  - id: ord-maintain-ord202-c01
+    name: Order header display with sentinel dates
+    status: candidate
+    confidence: observed-in-code
+    summary: Chains ORDER1 and CUSTOME1; converts ISO numeric dates; zero -> 1940-01-01.
+    entrypoints:
+      - kind: screen
+        locator: ORD202 CTL01 header
+        evidence: ["ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:82-91", "ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:147-150"]
+    dependencies: [ORDER1.LF, CUSTOME1.LF]
+    open_questions: []
+  - id: ord-maintain-ord202-c02
+    name: Order lines display with totals
+    status: candidate
+    confidence: observed-in-code
+    summary: DETORD1 by ORID; article description via ARTICLE1 chain; sums ODTOT and ODTOTVAT.
+    entrypoints:
+      - kind: screen
+        locator: ORD202 SFL01
+        evidence: ["ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:99-115"]
+    dependencies: [DETORD1.LF, ARTICLE1.LF]
+    open_questions: []
+  - id: ord-maintain-ord202-c03
+    name: Read-only exit on any key
+    status: candidate
+    confidence: observed-in-code
+    summary: F3, F12 and Enter all end the program.
+    entrypoints:
+      - kind: screen
+        locator: ORD202 S01key / S01act
+        evidence: ["ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:129-144"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord202-c04
+    name: Callers ORD200 / ORD201 option 5
+    status: candidate
+    confidence: observed-in-code
+    summary: Both list programs call ORD202(orid).
+    entrypoints:
+      - kind: other
+        locator: extpgm ORD202
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:236-239", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:242-245"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord202-c05
+    name: Dead keys and no paging in display
+    status: candidate
+    confidence: observed-in-code
+    summary: DSPF has CF06/CA05 and option field unused by program; SFLSIZ 7 / SFLPAG 6 without page-down handling.
+    entrypoints:
+      - kind: screen
+        locator: ORD202D CTL01
+        evidence: ["ATU_SRC/QDDSSRC/ORD202D.DSPF:31-40", "ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:129-139"]
+    dependencies: []
+    open_questions: ["Orders with more than 7 lines - what does the user see? Runtime confirmation needed."]
+  - id: ord-maintain-ord202-c06
+    name: Direct ARTICLE1 access bypasses FARTICLE
+    status: candidate
+    confidence: observed-in-code
+    summary: Unlike ORD100/ORD101, article description is read by chain, not GetArtDesc.
+    entrypoints:
+      - kind: other
+        locator: ORD202 F-spec ARTICLE1
+        evidence: ["ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:8", "ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:108"]
+    dependencies: [ARTICLE1.LF]
+    open_questions: []
