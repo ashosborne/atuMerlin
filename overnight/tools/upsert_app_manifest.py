@@ -260,11 +260,21 @@ def main() -> int:
         manifest["completeness"] = "incomplete"
     manifest["last_updated"] = now
     manifest["updated_by"] = args.updated_by
-    manifest["notes"] = (
+    radar_note = (
         "estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. "
         "Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. "
         "kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required."
     )
+    # notes is string|null per schema; later stations (bind, Pack B) append " | "-separated entries — never clobber them
+    existing = manifest.get("notes")
+    if isinstance(existing, list):
+        existing = " | ".join(str(n) for n in existing)
+    if not existing:
+        manifest["notes"] = radar_note
+    elif radar_note not in existing:
+        manifest["notes"] = f"{radar_note} | {existing}"
+    else:
+        manifest["notes"] = existing
 
     mpath.write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True, width=200))
     print(f"surfaces +{added_s} (total {len(manifest['surfaces'])}); behaviours +{added_b} ~{updated_b} (total {len(manifest['behaviours'])}); "

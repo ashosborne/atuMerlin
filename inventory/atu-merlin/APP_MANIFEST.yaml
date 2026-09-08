@@ -3,8 +3,11 @@ app_id: atu-merlin
 repo: https://github.com/ashosborne/atuMerlin
 status: in_progress
 completeness: incomplete
-notes:
-- 'Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.'
+notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are
+  evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required. | Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold
+  srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only. | Pack B run
+  1 (2026-09-08): cus-interactive 12/12 accepted behaviours documented (cards under discovery/cus-interactive/features/); bind statuses (accepted/deferred) mirrored from slice MANIFESTs for cus-modules,
+  ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -134,7 +137,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
   repo_path: ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
-  status: candidate
+  status: accepted
   slice_id: cus-interactive
   notes: '*PGM SQLRPGLE - Work with Customers (menu opt 2); screen CUS200D'
   discovery_evidence:
@@ -145,7 +148,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: cus-interactive
   notes: '*PGM RPGLE - Customer by id (menu opt 8); screen CUS250D'
   discovery_evidence:
@@ -174,7 +177,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
   repo_path: ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   notes: '*SRVPGM MODULE(CUS300 CUS301); exports per FCUSTOMER.BND'
   discovery_evidence:
@@ -184,7 +187,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/CUS300.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/CUS300.RPGLE
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   notes: '*MODULE nomain - GetCus* getters, ExistCus, IsCusDeleted'
   discovery_evidence:
@@ -193,7 +196,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
   repo_path: ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   notes: '*MODULE nomain - SltCustomer selection window; screen CUS301D'
   discovery_evidence:
@@ -203,7 +206,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
-  status: candidate
+  status: deferred
   slice_id: ord-batch-ord900
   notes: '*PGM RPGLE - Reset LASTORDNO to max ORID (menu opt 80)'
   discovery_evidence:
@@ -213,7 +216,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
-  status: candidate
+  status: deferred
   slice_id: ord-batch-ord900
   notes: '*PGM SQLRPGLE - Shift order dates to today; resync years and CULASTORD (menu opt 81)'
   discovery_evidence:
@@ -223,7 +226,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   notes: '*PGM RPGLE - Create customer order; screen ORD100D; needs TMPDETORD override'
   discovery_evidence:
@@ -233,7 +236,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
   repo_path: ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   notes: '*PGM CLLE - stage QTEMP/DETORD then CRTORD CUID(&CUID)'
   discovery_evidence:
@@ -242,7 +245,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
   repo_path: ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   notes: '*PGM CLLE - stage QTEMP/DETORD then CALL ORD100 (menu opt 6)'
   discovery_evidence:
@@ -252,7 +255,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QCMDSRC/CRTORD.CMD
   repo_path: ATU_SRC/QCMDSRC/CRTORD.CMD
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   notes: '*CMD Create an Order (CUID); PGM binding not in source (inferred ORD100)'
   discovery_evidence:
@@ -322,7 +325,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   notes: '*PGM RPGLE - external trigger program on DETORD maintaining ARTICLE.ARCUSQTY'
   discovery_evidence:
@@ -331,7 +334,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QTRGSRC/ORD700A.SYSTRG
   repo_path: ATU_SRC/QTRGSRC/ORD700A.SYSTRG
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   notes: ADDPFTRG x3 (*AFTER insert/delete/update) on DETORD -> ORD700; attachment on box inferred
   discovery_evidence:
@@ -342,7 +345,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ORD701.SQLTRG
   repo_path: ATU_SRC/QSQLSRC/ORD701.SQLTRG
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   notes: SQL AFTER INSERT trigger on ORDER -> CUSTOMER.CULASTORD
   discovery_evidence:
@@ -756,9 +759,9 @@ behaviours:
 - behaviour_id: cus-interactive-c01
   surface_id: pgm:CUS200
   name: List customers by name with position-to and paging
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -767,13 +770,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Subfile over CUSTOME2 (CUSTNM, CUID); loads 14 rows per page; position-to by name; restores last read on page down.'
+  notes: 'confidence: observed-in-code; Subfile over CUSTOME2 (CUSTNM, CUID); loads 14 rows per load (SFLPAG 7); 10-char position-to by name prefix; page down resumes from saved last-read key; F12 on the
+    list ends the program; rows never refreshed after save.'
 - behaviour_id: cus-interactive-c02
   surface_id: pgm:CUS200
   name: Create customer with id from CUSSEQ sequence
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -782,13 +786,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; F6 resets FCUST, sets CUID = NEXT VALUE FOR CUSSEQ, then writes on save.'
+  notes: 'confidence: observed-in-code; F6 resets FCUST (to *INZSR values), sets CUID = NEXT VALUE FOR CUSSEQ, skips S02prp and shows FMT02 in CRT mode; Enter writes on clean check. Sequence value consumed
+    even if cancelled; CUCREA = program start date.'
 - behaviour_id: cus-interactive-c03
   surface_id: pgm:CUS200
   name: Update customer (option 2)
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -797,13 +802,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 2 chains CUSTOME1, shows FMT02, updates FCUST on Enter after validation.'
+  notes: 'confidence: observed-in-code; Option 2 chains CUSTOME1 (record locked across the screen, %found not tested), shows FMT02 in UPD mode, updates FCUST on Enter after validation; multiple option-2
+    rows processed one after another.'
 - behaviour_id: cus-interactive-c04
   surface_id: pgm:CUS200
   name: Customer validation rules
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -812,13 +818,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Country must exist (FCOUNTRY); name mandatory; phone mandatory and numeric; duplicate UPPER(name)+phone rejected (create dup>0, update dup>1).'
+  notes: 'confidence: observed-in-code; Country must exist (FCOUNTRY.ExistCountry); name mandatory; phone mandatory, trimmed in place, digits only; duplicate UPPER(name)+phone via SQL count (CRT dup>0,
+    UPD dup>1). All rules evaluated in one pass. Other fields unvalidated. UPD duplicate check passes when values change to collide with exactly one other row.'
 - behaviour_id: cus-interactive-c05
   surface_id: pgm:CUS200
   name: Country prompt via FCOUNTRY selector
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -827,13 +834,13 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; F4 on FMT02 calls SltCountry then GetCountryName.'
+  notes: 'confidence: observed-in-code; F4 on FMT02 calls SltCountry(cucoun) (returns default on cancel), then GetCountryName (blank if unknown); redisplays without validation.'
 - behaviour_id: cus-interactive-c06
   surface_id: pgm:CUS200
   name: Navigate to customer's orders (option 5 -> ORD200)
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -842,13 +849,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Option 5 calls ORD200(cuid) as external program.'
+  notes: 'confidence: observed-in-code; Option 5 calls ORD200(cuid) synchronously as external program (5P 0 parameter, *LIBL resolution); option cleared on return; list not re-read. Seam edge only — ORD200
+    behaviour stays in ord-maintain-ord200.'
 - behaviour_id: cus-interactive-c07
   surface_id: pgm:CUS200
-  name: Sentinel last-order date (0 -> 1940-01-01)
-  status: candidate
+  name: Sentinel last-order date (0 -> 1940-01-01 -> blank)
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -857,13 +865,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CULASTORD numeric 0 displayed as date constant d''1940-01-01''.'
+  notes: 'confidence: observed-in-code; CUS200 maps CULASTORD 0 to d''1940-01-01'', which DDS MAPVAL renders blank; non-zero shown as *JOB date. CUS250 shows the raw 8-digit numeric. LASTORD is screen-only;
+    CULASTORD written only by ORD701/ORD901/ART801.'
 - behaviour_id: cus-interactive-c08
   surface_id: pgm:CUS200
   name: Audit stamping on save
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -872,13 +881,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CUMOD timestamp and CUMODID user on every save; CUCREA date set at program init.'
+  notes: 'confidence: observed-in-code; CUMOD = %timestamp() on every save. CUMODID (*USER) and CUCREA (%date) are set once at *INZSR and reach the row on create only; on update the chain reloads stored
+    CUMODID/CUCREA, so CUMODID is NOT refreshed and CUCREA is preserved. (Corrects Phase A summary.)'
 - behaviour_id: cus-interactive-c09
   surface_id: pgm:CUS250
   name: Customer-by-id inquiry with prompt and not-found message
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -887,13 +897,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CUS250 FMT01 takes CUID; F4 calls SltCustomer; chain CUSTOME1; not found -> ERR0103 with edited id.'
+  notes: 'confidence: observed-in-code; CUS250 FMT01 takes CUID; F4 calls SltCustomer (default returned on cancel) then checks immediately; chain CUSTOME1 input-only; not found -> ERR0103 with %editc(id:''Z'');
+    F12 on FMT01 ends the program; no CUDEL test.'
 - behaviour_id: cus-interactive-c10
   surface_id: pgm:CUS250
   name: Customer detail display with country name
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -902,13 +913,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CUS250 FMT02 shows the chained record with GetCountryName(CUCOUN).'
+  notes: 'confidence: observed-in-code; CUS250 FMT02 shows the chained record read-only with GetCountryName(CUCOUN); Enter, F3 and F12 all return to FMT01 (F3 does not exit); audit fields and CUDEL not
+    shown.'
 - behaviour_id: cus-interactive-c11
   surface_id: pgm:CUS200
   name: No delete path for customers in this seam (CUDEL never set)
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c11.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -917,13 +929,14 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CUSTOMER.PF has CUDEL; CUS200 allows options 2 and 5 only. Deletion surface unknown.'
+  notes: 'confidence: observed-in-code; CUSTOMER.PF has CUDEL (''X'' = deleted); CUS200 allows options 2 and 5 only, lists and edits flagged rows unfiltered; CUS250 displays them. FCUSTOMER.ExistCus excludes
+    ''X'' rows (asymmetry). No writer of CUDEL found under ATU_SRC.'
 - behaviour_id: cus-interactive-c12
   surface_id: pgm:CUS200
   name: Subfile option validation (2, 5 only)
-  status: candidate
+  status: documented
   slice_id: cus-interactive
-  discovery_card: null
+  discovery_card: discovery/cus-interactive/features/cus-interactive-c12.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -932,11 +945,12 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Invalid options reverse-imaged with SFLMSG ''Invalid Option''; cursor positioned to first error row.'
+  notes: 'confidence: observed-in-code; Invalid options reverse-imaged (DSPATR RI/PC) with SFLMSG ''Invalid Option''; cursor to first error row; all changed rows re-marked via SFLNXTCHG; actions run only
+    when every option is valid.'
 - behaviour_id: cus-modules-c01
   surface_id: srvpgm:FCUSTOMER
   name: Customer getter family (GetCus*)
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -951,7 +965,7 @@ behaviours:
 - behaviour_id: cus-modules-c02
   surface_id: srvpgm:FCUSTOMER
   name: ExistCus (found and not deleted)
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -966,7 +980,7 @@ behaviours:
 - behaviour_id: cus-modules-c03
   surface_id: srvpgm:FCUSTOMER
   name: IsCusDeleted
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -981,7 +995,7 @@ behaviours:
 - behaviour_id: cus-modules-c04
   surface_id: mod:CUS300
   name: Lazy open and last-key cache in chainCUSTOME1
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -996,7 +1010,7 @@ behaviours:
 - behaviour_id: cus-modules-c05
   surface_id: srvpgm:FCUSTOMER
   name: CloseCUSTOME1 prototyped but not exported
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1011,7 +1025,7 @@ behaviours:
 - behaviour_id: cus-modules-c06
   surface_id: mod:CUS301
   name: SltCustomer selection window
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1026,7 +1040,7 @@ behaviours:
 - behaviour_id: cus-modules-c07
   surface_id: mod:CUS301
   name: Selection rules (option 1 only, single selection)
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1041,7 +1055,7 @@ behaviours:
 - behaviour_id: cus-modules-c08
   surface_id: mod:CUS301
   name: Criteria change re-prepares; F3/F12 return default
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1056,7 +1070,7 @@ behaviours:
 - behaviour_id: cus-modules-c09
   surface_id: mod:CUS301
   name: Dynamic SQL string concatenation of user input
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1086,7 +1100,7 @@ behaviours:
 - behaviour_id: cus-modules-c11
   surface_id: mod:CUS301
   name: Blank criteria list-all semantics
-  status: candidate
+  status: accepted
   slice_id: cus-modules
   discovery_card: null
   traceability: null
@@ -1236,7 +1250,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c01
   surface_id: pgm:ORD100
   name: Customer selection at entry
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1251,7 +1265,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c02
   surface_id: pgm:ORD100
   name: Lines staged in QTEMP copy of DETORD (triggers/constraints off)
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1266,7 +1280,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c03
   surface_id: pgm:ORD100
   name: Add order line with article prompt and default pricing
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1281,7 +1295,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c04
   surface_id: pgm:ORD100
   name: Edit staged line and recompute totals
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1296,7 +1310,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c05
   surface_id: pgm:ORD100
   name: Delete staged line
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1311,7 +1325,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c06
   surface_id: pgm:ORD100
   name: Confirm blocked while options pending
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1326,7 +1340,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c07
   surface_id: pgm:ORD100
   name: Confirm writes ORDER header and DETORD lines
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1341,7 +1355,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c08
   surface_id: pgm:ORD100
   name: Print and acknowledge after confirm
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1371,7 +1385,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c10
   surface_id: pgm:ORD100
   name: Entry paths into order creation
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1401,7 +1415,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c12
   surface_id: pgm:ORD100
   name: Staged line numbering gaps until confirm
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1416,7 +1430,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c13
   surface_id: pgm:ORD100
   name: Abandon before confirm writes nothing
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -1431,7 +1445,7 @@ behaviours:
 - behaviour_id: ord-entry-ord100-c14
   surface_id: pgm:ORD100
   name: No stock / credit / date checks at entry (absence)
-  status: candidate
+  status: accepted
   slice_id: ord-entry-ord100
   discovery_card: null
   traceability: null
@@ -2211,7 +2225,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c02
   surface_id: trgpgm:ORD700
   name: Insert adds ordered quantity to article customer-order quantity
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2226,7 +2240,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c03
   surface_id: trgpgm:ORD700
   name: Delete subtracts outstanding quantity and logs
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2241,7 +2255,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c04
   surface_id: trgpgm:ORD700
   name: Update applies outstanding-quantity delta, handles article change
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2256,7 +2270,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c05
   surface_id: trgpgm:ORD700
   name: Silent no-op on zero delta or unknown article
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2271,7 +2285,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c06
   surface_id: trgpgm:ORD700
   name: Trigger buffer mechanics
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2286,7 +2300,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c07
   surface_id: trg:ORDER.ORD701_Insert_order
   name: ORD701 sets customer last-order date on order insert
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2316,7 +2330,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c09
   surface_id: trgpgm:ORD700
   name: Staging copy excludes triggers
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2331,7 +2345,7 @@ behaviours:
 - behaviour_id: ord-trigger-ord700-c10
   surface_id: trgpgm:ORD700
   name: ART801 batch reconciliation (related surface)
-  status: candidate
+  status: accepted
   slice_id: ord-trigger-ord700
   discovery_card: null
   traceability: null
@@ -2358,7 +2372,5 @@ behaviours:
   parity_green: false
   waiver: null
   notes: 'confidence: inferred; ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.'
-last_updated: '2026-09-08T12:49:40Z'
-updated_by: estate-discovery-loop
-notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are
-  evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.'
+last_updated: '2026-09-08T13:41:45Z'
+updated_by: document-slices-conveyor

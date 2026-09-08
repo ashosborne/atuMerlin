@@ -4,18 +4,25 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T12:49:40Z` by `estate-discovery-loop`
-- notes: estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
+- last_updated: `2026-09-08T13:41:45Z` by `document-slices-conveyor`
+- notes:
+  - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
+  - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
+  - Pack B run 1 (2026-09-08): cus-interactive 12/12 accepted behaviours documented (cards under discovery/cus-interactive/features/); bind statuses (accepted/deferred) mirrored from slice MANIFESTs for cus-modules, ord-entry-ord100, ord-trigger-ord700, ord-batch-ord900. CHARACTERIZATION: deferred-waived. No conversion, no tests.
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 31 |
-| surfaces `candidate` | 28 |
+| surfaces `accepted` | 12 |
+| surfaces `candidate` | 14 |
+| surfaces `deferred` | 2 |
 | surfaces `unknown` | 3 |
 | behaviours_known | 134 |
-| behaviours `candidate` | 134 |
+| behaviours `accepted` | 30 |
+| behaviours `candidate` | 92 |
+| behaviours `documented` | 12 |
 | behaviours confidence `inferred` | 10 |
 | behaviours confidence `observed-in-code` | 124 |
 | scanned_seeds | 12 |
@@ -24,22 +31,22 @@
 | parity_green | 0 |
 | parity_waived | 0 |
 
-## Per slice (candidates only — nothing bound)
+## Per slice (counts, not progress — weakest status wins)
 
-| slice_id | surfaces | behaviours | weakest status |
-| --- | ---: | ---: | --- |
-| `art-interactive` | 5 | 16 | `candidate` |
-| `art-modules` | 4 | 11 | `candidate` |
-| `cus-interactive` | 4 | 12 | `candidate` |
-| `cus-modules` | 3 | 11 | `candidate` |
-| `ord-batch-ord900` | 2 | 9 | `candidate` |
-| `ord-entry-ord100` | 4 | 14 | `candidate` |
-| `ord-entry-ord101` | 1 | 12 | `candidate` |
-| `ord-maintain-ord200` | 1 | 13 | `candidate` |
-| `ord-maintain-ord201` | 1 | 11 | `candidate` |
-| `ord-maintain-ord202` | 1 | 6 | `candidate` |
-| `ord-print-ord500` | 2 | 8 | `candidate` |
-| `ord-trigger-ord700` | 3 | 11 | `candidate` |
+| slice_id | surfaces | behaviours | documented | weakest status |
+| --- | ---: | ---: | ---: | --- |
+| `art-interactive` | 5 | 16 | 0 | `candidate` |
+| `art-modules` | 4 | 11 | 0 | `candidate` |
+| `cus-interactive` | 4 | 12 | 12 | `documented` |
+| `cus-modules` | 3 | 11 | 0 | `candidate` |
+| `ord-batch-ord900` | 2 | 9 | 0 | `candidate` |
+| `ord-entry-ord100` | 4 | 14 | 0 | `candidate` |
+| `ord-entry-ord101` | 1 | 12 | 0 | `candidate` |
+| `ord-maintain-ord200` | 1 | 13 | 0 | `candidate` |
+| `ord-maintain-ord201` | 1 | 11 | 0 | `candidate` |
+| `ord-maintain-ord202` | 1 | 6 | 0 | `candidate` |
+| `ord-print-ord500` | 2 | 8 | 0 | `candidate` |
+| `ord-trigger-ord700` | 3 | 11 | 0 | `candidate` |
 
 ## Scanned seeds
 

@@ -107,7 +107,15 @@ def render(manifest: dict, counts: dict, problems: list[str]) -> str:
     out.append("")
     out.append(f"- app status: `{manifest['status']}` · completeness: `{manifest['completeness']}` (human residual gate)")
     out.append(f"- last_updated: `{manifest['last_updated']}` by `{manifest.get('updated_by')}`")
-    out.append(f"- notes: {manifest.get('notes') or '—'}")
+    notes = manifest.get("notes")
+    if isinstance(notes, list):
+        problems.append("notes must be a string (schema: string|null)")
+    parts = [p.strip() for p in str(notes or "").split(" | ") if p.strip()]
+    if len(parts) > 1:
+        out.append("- notes:")
+        out.extend(f"  - {p}" for p in parts)
+    else:
+        out.append(f"- notes: {notes or '—'}")
     out.append("")
     out.append("## Histogram")
     out.append("")
@@ -127,15 +135,16 @@ def render(manifest: dict, counts: dict, problems: list[str]) -> str:
     out.append(f"| parity_green | {counts['parity_green']} |")
     out.append(f"| parity_waived | {counts['parity_waived']} |")
     out.append("")
-    out.append("## Per slice (candidates only — nothing bound)")
+    out.append("## Per slice (counts, not progress — weakest status wins)")
     out.append("")
-    out.append("| slice_id | surfaces | behaviours | weakest status |")
-    out.append("| --- | ---: | ---: | --- |")
+    out.append("| slice_id | surfaces | behaviours | documented | weakest status |")
+    out.append("| --- | ---: | ---: | ---: | --- |")
     order = ["candidate", "unknown", "deferred", "rejected", "accepted", "documented", "converted", "verified"]
     for slice_id in sorted(set(by_slice) | set(surfaces_by_slice)):
         statuses = [b["status"] for b in behaviours if (b.get("slice_id") or "(none)") == slice_id]
         weakest = min(statuses, key=lambda s: order.index(s) if s in order else 99) if statuses else "—"
-        out.append(f"| `{slice_id}` | {surfaces_by_slice.get(slice_id, 0)} | {by_slice.get(slice_id, 0)} | `{weakest}` |")
+        documented = sum(1 for s in statuses if s in ("documented", "converted", "verified"))
+        out.append(f"| `{slice_id}` | {surfaces_by_slice.get(slice_id, 0)} | {by_slice.get(slice_id, 0)} | {documented} | `{weakest}` |")
     out.append("")
     out.append("## Scanned seeds")
     out.append("")
