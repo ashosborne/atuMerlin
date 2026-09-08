@@ -24,28 +24,36 @@ scanned_seeds:
 - ord-maintain-ord202
 - ord-print-ord500
 - ord-trigger-ord700
+- cou-maintain
+- dat-utils
+- fam-maintain
+- log-programs
+- menu-cmd-shell
+- par-maintain
+- pro-cobol-pro201
+- pro-interactive
+- pro-modules
+- sql-objects
+- srvpgm-supporting
+- vat-module
 unscanned_hints:
-- 'seed pro-interactive: PRO200/PRO202/PRO203/PRO250 + PRO200D/201D/202D/250D (PRO200.ILEPGM binds XML srvpgm - source missing)'
-- 'seed pro-modules: PRO300/PRO301 + PRO301D (FPROVIDER body)'
-- 'seed pro-cobol-pro201: QCBLSRC/PRO201.CBL (only COBOL member; menu opt 5)'
-- 'seed fam-maintain: FAM300/FAM301 + FAM301D (FFAMILLY body; SltArtFam used by ART200/ART301)'
-- 'seed cou-maintain: COU200.RPG (OPM RPG, menu opt 21) + COU300/COU301 (FCOUNTRY body; used by CUS200/CUS250)'
-- 'seed par-maintain: PAR200 (menu opt 20) + PAR201 CL/ILEPGM (menu opt 83, WRKLNK on PATH) + PAR300 (FPARAMETER getParm*; PATH used by ORD500)'
-- 'seed vat-module: VAT300 (FVAT: CLCVat/GetVatRate used by ORD100/ORD101/ART250)'
-- 'seed log-programs: LOG100 (create SAMLOG user space) + LOG300 (AddLogEntry; used by ORD700 delete)'
-- 'seed dat-utils: DAT001/DAT002 (external programs behind SQL UDFs ISOTODATE/ISOTODATE40 used by ORD200/ORD201)'
-- 'seed srvpgm-fcustomer: FCUSTOMER binding/export view - recommend merging into cus-modules at bind'
-- 'seed srvpgm-farticle: FARTICLE binding/export view - recommend merging into art-modules at bind (ART302 gap)'
-- 'seed srvpgm-fprovider: FPROVIDER.ILESRVPGM + FPROVIDER.BND (versioned signatures *GEN/*PRV)'
-- 'seed srvpgm-supporting: FFAMILLY/FCOUNTRY/FPARAMETER/FVAT/LOG srvpgms + SAMPLE.BNDDIR (lists XML/ORDER/TXT/XSS srvpgms with no source)'
-- 'seed menu-cmd-shell: SAMMNU.MENU (entry map), SAMHELP.PNLGRP, SAMMSGF.MSGF, CVTSPLPDF.CMD; menu references QM queries CUSQRY/ARTQRY and ADSPUSRSPC not in tree'
-- 'seed sql-objects: ART801.SQLPRC (menu opt 82 reconciliation), ARTIINF.TABLE, ARTLSTDAT.VIEW, CUSSEQ.SQLSEQ, ISOTODATE/ISOTODATE4.SQLUDF, ORDERCUS.VIEW'
 - 'blind-spot: XML, ORDER, TXT, XSS *SRVPGM in SAMPLE.BNDDIR have no source under ATU_SRC (PRO200.ILEPGM binds XML; PRO202 /copy qprotosrc,xml missing)'
 - 'blind-spot: QM query objects CUSQRY, ARTQRY, form CUSQRYFMT (menu opts 12/13) not in tree'
 - 'blind-spot: CVTSPLPDF processing program and ADSPUSRSPC command not in tree'
 - 'blind-spot: CMD->PGM bindings (CRTORD) and trigger attachment are compiled-object/ARCAD metadata, not source'
 - 'unknown-surface: CUSTADRE.PF / ADDRESS.PF (multi-address model) referenced by no program in ATU_SRC'
 - 'unknown-surface: ARTIPROV link creation - no program found that writes new ARTIPROV rows'
+- 'folded: srvpgm-fcustomer -> cus-modules (room bind 2026-09-08; export facts in cus-modules-c01/c05)'
+- 'folded: srvpgm-farticle -> art-modules (recommendation; surface srvpgm:FARTICLE + art-modules-c06/c10 carry the export facts and the ART302 gap)'
+- 'folded: srvpgm-fprovider -> pro-modules (residual run 2026-09-08; pro-modules-c11/c12)'
+- 'unknown-surface: ARTICLE.ARPURQTY (purchase order qty) has no writer in ATU_SRC; PRO202 XML export does not update it'
+- 'unknown-surface: PROVIDE2.LF keyed on PROVA1 (not a PROVIDER field) and referenced by no program - stale / uncompilable'
+- 'unknown-surface: no create or delete path for PROVIDER, COUNTRY, FAMILLY, VATDEF rows; PRDEL / FADEL / VATDEL have no writer'
+- 'blind-spot: PRO203, ORD500, ORD700, LOG100 compile dftactgrp(*no) with no bnddir and no .ILEPGM - import resolution is ARCAD/elias build metadata'
+- 'blind-spot: qprotosrc XML / XSS copybooks missing - PRO202 and PRO203 cannot be compiled from the tree'
+- 'blind-spot: ORDER and TXT *SRVPGM in SAMPLE.BNDDIR referenced by nothing - possibly dead entries'
+- 'runtime-only: SAMLOG user space is 5000 bytes without auto-extend - overflow behaviour and ADSPUSRSPC reader unknown'
+- 'unknown-surface: ARTLSTDAT view and ISO_Num_To_Date UDF have no consumer in ATU_SRC (QM query ARTQRY probable)'
 surfaces:
 - surface_id: pgm:ART200
   kind: other
@@ -353,6 +361,393 @@ surfaces:
   notes: SQL AFTER INSERT trigger on ORDER -> CUSTOMER.CULASTORD
   discovery_evidence:
   - ATU_SRC/QSQLSRC/ORD701.SQLTRG
+- surface_id: pgm:COU200
+  kind: other
+  locator: ATU_SRC/QRPGSRC/COU200.RPG
+  repo_path: ATU_SRC/QRPGSRC/COU200.RPG
+  status: candidate
+  slice_id: cou-maintain
+  notes: '*PGM RPG III OPM (only OPM member) - Work with Countries, edit name/ISO only (menu opt 21); screen COU200D'
+  discovery_evidence:
+  - ATU_SRC/QRPGSRC/COU200.RPG
+  - ATU_SRC/QDDSSRC/COU200D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142
+- surface_id: srvpgm:FCOUNTRY
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+  status: candidate
+  slice_id: cou-maintain
+  notes: '*SRVPGM MODULE(COU300 COU301); 4 exports; used by CUS200/CUS250/PRO200/PRO250'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FCOUNTRY.BND
+- surface_id: mod:COU300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/COU300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/COU300.RPGLE
+  status: candidate
+  slice_id: cou-maintain
+  notes: '*MODULE nomain - GetCountryName, GetCountryIso3 (unused), ExistCountry'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/COU300.RPGLE
+- surface_id: mod:COU301
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/COU301.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/COU301.RPGLE
+  status: candidate
+  slice_id: cou-maintain
+  notes: '*MODULE nomain - SltCountry keyed-read selection window; screen COU301D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/COU301.RPGLE
+  - ATU_SRC/QDDSSRC/COU301D.DSPF
+- surface_id: udf:ISOTODATE40
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
+  repo_path: ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
+  status: candidate
+  slice_id: dat-utils
+  notes: 'SQL UDF ISOTODATE40 -> DAT002: 0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL; used by ORD200/ORD201'
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
+  - ATU_SRC/QRPGLESRC/DAT002.PGM.RPGLE
+- surface_id: udf:ISO_Num_To_Date
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
+  repo_path: ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
+  status: candidate
+  slice_id: dat-utils
+  notes: 'SQL UDF ISO_Num_To_Date (SPECIFIC ISOTODATE) -> DAT001: plain conversion, 0 -> NULL; no caller in ATU_SRC'
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
+  - ATU_SRC/QRPGLESRC/DAT001.PGM.RPGLE
+- surface_id: srvpgm:FFAMILLY
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+  status: candidate
+  slice_id: fam-maintain
+  notes: '*SRVPGM MODULE(FAM300 FAM301); 4 exports; no family maintenance program exists (slice id is a charter misnomer)'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FFAMILLY.BND
+- surface_id: mod:FAM300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/FAM300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/FAM300.RPGLE
+  status: candidate
+  slice_id: fam-maintain
+  notes: '*MODULE nomain - GetArtFamDesc, ExistArtFam (ignores FADEL), IsArtFamDeleted'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/FAM300.RPGLE
+- surface_id: mod:FAM301
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/FAM301.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/FAM301.RPGLE
+  status: candidate
+  slice_id: fam-maintain
+  notes: '*MODULE nomain - SltArtFam keyed-read selection window (by code / by description); screen FAM301D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/FAM301.RPGLE
+  - ATU_SRC/QDDSSRC/FAM301D.DSPF
+- surface_id: srvpgm:LOG
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+  status: candidate
+  slice_id: log-programs
+  notes: '*SRVPGM MODULE(LOG300) EXPORT(*ALL) - AddLogEntry to SAMLOG user space; not in SAMPLE.BNDDIR'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+- surface_id: mod:LOG300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/LOG300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/LOG300.RPGLE
+  status: candidate
+  slice_id: log-programs
+  notes: '*MODULE nomain - AddLogEntry appends User/Date/Msg at pos; no capacity check'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/LOG300.RPGLE
+- surface_id: pgm:LOG100
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+  status: candidate
+  slice_id: log-programs
+  notes: '*PGM RPGLE - create SAMLOG user space (5000 bytes) in PARAMETER''s library; no caller, no menu entry (install step)'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+- surface_id: menu:SAMMNU
+  kind: other
+  locator: ATU_SRC/QPNLSRC/SAMMNU.MENU
+  repo_path: ATU_SRC/QPNLSRC/SAMMNU.MENU
+  status: candidate
+  slice_id: menu-cmd-shell
+  notes: UIM MENU - application entry map (20 options); opts 12/13/84 reach QM queries / ADSPUSRSPC not in tree
+  discovery_evidence:
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU
+- surface_id: pnlgrp:SAMHELP
+  kind: other
+  locator: ATU_SRC/QPNLSRC/SAMHELP.PNLGRP
+  repo_path: ATU_SRC/QPNLSRC/SAMHELP.PNLGRP
+  status: candidate
+  slice_id: menu-cmd-shell
+  notes: PNLGRP - help stubs only; menu help= references mostly undefined
+  discovery_evidence:
+  - ATU_SRC/QPNLSRC/SAMHELP.PNLGRP
+- surface_id: msgf:SAMMSGF
+  kind: other
+  locator: ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
+  repo_path: ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
+  status: candidate
+  slice_id: menu-cmd-shell
+  notes: MSGF - 12 messages (8 referenced by screens, ERR0001/0003/0004/0005 unused)
+  discovery_evidence:
+  - ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
+- surface_id: cmd:CVTSPLPDF
+  kind: other
+  locator: ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+  repo_path: ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+  status: candidate
+  slice_id: menu-cmd-shell
+  notes: '*CMD Convert Spool to PDF - parameter definition only; processing program not in tree (used by ORD500C)'
+  discovery_evidence:
+  - ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+- surface_id: pgm:PAR200
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+  status: candidate
+  slice_id: par-maintain
+  notes: '*PGM RPGLE - Work with Parameters list/create/edit/delete (menu opt 20); screen PAR200D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/PAR200D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:135-138
+- surface_id: cl:PAR201
+  kind: other
+  locator: ATU_SRC/QCLSRC/PAR201.CLLE
+  repo_path: ATU_SRC/QCLSRC/PAR201.CLLE
+  status: candidate
+  slice_id: par-maintain
+  notes: '*PGM CLLE (CRTPGM BNDSRVPGM(FPARAMETER) ACTGRP(QILE)) - GetParm2 PATH -> WRKLNK (menu opt 83)'
+  discovery_evidence:
+  - ATU_SRC/QCLSRC/PAR201.CLLE
+  - ATU_SRC/QILESRC/PAR201.ILEPGM
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:155-158
+- surface_id: srvpgm:FPARAMETER
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+  status: candidate
+  slice_id: par-maintain
+  notes: '*SRVPGM MODULE(PAR300) EXPORT(*ALL) - no binder source; only PATH is a live parameter'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+- surface_id: mod:PAR300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PAR300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PAR300.RPGLE
+  status: candidate
+  slice_id: par-maintain
+  notes: '*MODULE nomain - GetPARM1..GetPARM5 by (PACODE, PASUBCODE)'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PAR300.RPGLE
+- surface_id: pgm:PRO201
+  kind: other
+  locator: ATU_SRC/QCBLSRC/PRO201.CBL
+  repo_path: ATU_SRC/QCBLSRC/PRO201.CBL
+  status: candidate
+  slice_id: pro-cobol-pro201
+  notes: '*PGM COBOL (only COBOL member) - Display Providers read-only list (menu opt 5); screen PRO201D; option 5 -> ART202'
+  discovery_evidence:
+  - ATU_SRC/QCBLSRC/PRO201.CBL
+  - ATU_SRC/QDDSSRC/PRO201D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:99-102
+- surface_id: pgm:PRO200
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO200.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO200.RPGLE
+  status: candidate
+  slice_id: pro-interactive
+  notes: '*PGM (CRTPGM MODULE(PRO200 PRO202) ACTGRP(QILE)) - Work with Providers (menu opt 4); screen PRO200D; edit never saves (mode never set)'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO200.RPGLE
+  - ATU_SRC/QILESRC/PRO200.ILEPGM
+  - ATU_SRC/QDDSSRC/PRO200D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:95-98
+- surface_id: mod:PRO202
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE
+  status: candidate
+  slice_id: pro-interactive
+  notes: '*MODULE bound into PRO200 (extproc) - purchase proposal -> XML file at PATH; screen PRO202D; XML srvpgm/copybook not in tree'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE
+  - ATU_SRC/QDDSSRC/PRO202D.DSPF
+- surface_id: pgm:PRO250
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE
+  status: candidate
+  slice_id: pro-interactive
+  notes: '*PGM RPGLE - Provider by id (menu opt 9); screen PRO250D; F4 SltProvider, F7 -> ART202'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE
+  - ATU_SRC/QDDSSRC/PRO250D.DSPF
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:115-118
+- surface_id: pgm:PRO203
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE
+  status: candidate
+  slice_id: pro-interactive
+  notes: '*PGM SQLRPGLE - Goods-to-purchase spreadsheet via XSS srvpgm (menu opt 10); binding and XSS not in source'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:121-124
+- surface_id: srvpgm:FPROVIDER
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+  status: candidate
+  slice_id: pro-modules
+  notes: '*SRVPGM MODULE(PRO300 PRO301); 14 exports; SIGNATURE(*GEN) with *PRV block (folds srvpgm-fprovider)'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FPROVIDER.BND
+- surface_id: mod:PRO300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO300.RPGLE
+  status: candidate
+  slice_id: pro-modules
+  notes: '*MODULE nomain - GetPro* getters x11, ExistProvider, IsProDeleted'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO300.RPGLE
+- surface_id: mod:PRO301
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE
+  repo_path: ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE
+  status: candidate
+  slice_id: pro-modules
+  notes: '*MODULE nomain - SltProvider selection window; screen PRO301D'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE
+  - ATU_SRC/QDDSSRC/PRO301D.DSPF
+- surface_id: view:ORDERCUS
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ORDERCUS.VIEW
+  repo_path: ATU_SRC/QSQLSRC/ORDERCUS.VIEW
+  status: candidate
+  slice_id: sql-objects
+  notes: SQL VIEW - ORDER inner-joined to CUSTOMER with TOTVAL (sum ODTOTVAT); read by ORD200/ORD201
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ORDERCUS.VIEW
+- surface_id: view:ARTLSTDAT
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
+  repo_path: ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
+  status: candidate
+  slice_id: sql-objects
+  notes: SQL VIEW - per-article MAX(ORDATE) / SUM(ODQTY); no consumer in ATU_SRC (QM query ARTQRY probable)
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
+- surface_id: table:ARTIINF
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ARTIINF.TABLE
+  repo_path: ATU_SRC/QSQLSRC/ARTIINF.TABLE
+  status: candidate
+  slice_id: sql-objects
+  notes: SQL TABLE article_full_description - ARID PK + VARCHAR(1520); written by ART200, read by ART302
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ARTIINF.TABLE
+- surface_id: seq:CUSSEQ
+  kind: other
+  locator: ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
+  repo_path: ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
+  status: candidate
+  slice_id: sql-objects
+  notes: SQL SEQUENCE START WITH 1551 - customer ids (CUS200 F6; documented cus-interactive-c02)
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
+- surface_id: sqlprc:ART801
+  kind: other
+  locator: ATU_SRC/QSQLSRC/ART801.SQLPRC
+  repo_path: ATU_SRC/QSQLSRC/ART801.SQLPRC
+  status: candidate
+  slice_id: sql-objects
+  notes: SQL PROCEDURE UPDATE_ON_CUS_ORD_QTY (menu opt 82) - behaviour documented as ord-trigger-ord700-c10
+  discovery_evidence:
+  - ATU_SRC/QSQLSRC/ART801.SQLPRC
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU:151-154
+- surface_id: bnddir:SAMPLE
+  kind: other
+  locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  status: candidate
+  slice_id: srvpgm-supporting
+  notes: '*BNDDIR - 11 srvpgms (XML ORDER TXT XSS without source; LOG absent); bound by 12 programs via bnddir(''SAMPLE'')'
+  discovery_evidence:
+  - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  - ATU_SRC/QILESRC/PRO200.ILEPGM
+  - ATU_SRC/QILESRC/PAR201.ILEPGM
+- surface_id: srvpgm:XML
+  kind: other
+  locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+  repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  status: unknown
+  slice_id: srvpgm-supporting
+  notes: '*SRVPGM XML listed in SAMPLE.BNDDIR and bound by PRO200.ILEPGM; procedures called by PRO202; no source or copybook in tree.'
+  discovery_evidence:
+  - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+- surface_id: srvpgm:XSS
+  kind: other
+  locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:11
+  repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  status: unknown
+  slice_id: srvpgm-supporting
+  notes: '*SRVPGM XSS listed in SAMPLE.BNDDIR; procedures called by PRO203; no source or copybook in tree.'
+  discovery_evidence:
+  - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:11
+- surface_id: srvpgm:ORDER
+  kind: other
+  locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+  repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  status: unknown
+  slice_id: srvpgm-supporting
+  notes: '*SRVPGM ORDER listed in SAMPLE.BNDDIR; no reference anywhere in the tree.'
+  discovery_evidence:
+  - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+- surface_id: srvpgm:TXT
+  kind: other
+  locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+  repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+  status: unknown
+  slice_id: srvpgm-supporting
+  notes: '*SRVPGM TXT listed in SAMPLE.BNDDIR; no reference anywhere in the tree.'
+  discovery_evidence:
+  - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
+- surface_id: srvpgm:FVAT
+  kind: other
+  locator: ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+  repo_path: ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+  status: candidate
+  slice_id: vat-module
+  notes: '*SRVPGM MODULE(VAT300); 4 exports; no VAT maintenance program exists'
+  discovery_evidence:
+  - ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FVAT.BND
+- surface_id: mod:VAT300
+  kind: other
+  locator: ATU_SRC/QRPGLESRC/VAT300.RPGLE
+  repo_path: ATU_SRC/QRPGLESRC/VAT300.RPGLE
+  status: candidate
+  slice_id: vat-module
+  notes: '*MODULE nomain - GetVATRate, GetVATDesc, ClcVAT (half-adjust 2dp; unknown code -> 0), ExistVATRate'
+  discovery_evidence:
+  - ATU_SRC/QRPGLESRC/VAT300.RPGLE
 behaviours:
 - behaviour_id: art-interactive-c01
   surface_id: pgm:ART200
@@ -1109,7 +1504,7 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Commented-out procedure and prototype left as a training exercise; not compiled, not exported.'
+  notes: 'confidence: inferred; Commented-out procedure and prototype left as a training exercise; not compiled, not exported. No card written (bind: needs-SME, inferred stays inferred).'
 - behaviour_id: cus-modules-c11
   surface_id: mod:CUS301
   name: Blank criteria list-all semantics
@@ -2250,7 +2645,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES). Definitions observed; attachment on the box inferred.'
+  notes: 'confidence: inferred; Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES), named ORD700_DETORD_ARTICLE_{INSERT,DELETE,UPDATE}; plus ORD701 CREATE TRIGGER on
+    ORDER. Definitions observed; attachment on the box inferred. No card (bind: keep inferred labelled inferred).'
 - behaviour_id: ord-trigger-ord700-c02
   surface_id: trgpgm:ORD700
   name: Insert adds ordered quantity to article customer-order quantity
@@ -2365,7 +2761,8 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; No delete/update trigger on ORDER; ART801/ORD901 recompute later.'
+  notes: 'confidence: inferred; No delete/update trigger on ORDER; ART801/ORD901 recompute later with MAX(ORDATE). No in-tree program deletes ORDER rows; ORD901 shifts ORDATE and then recomputes itself.
+    No card (bind: keep inferred labelled inferred).'
 - behaviour_id: ord-trigger-ord700-c09
   surface_id: trgpgm:ORD700
   name: Staging copy excludes triggers
@@ -2413,6 +2810,2021 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.'
-last_updated: '2026-09-08T18:01:30Z'
-updated_by: document-slices-conveyor
+  notes: 'confidence: inferred; Observed facts (cards c02/c04/c10): ORD700 never sees an order close (opt 7 updates ORDER only) while ART801 excludes closed orders; ORD700 insert adds ODQTY, every other
+    path uses ODQTY - ODQTYLIV; ORD701 assigns, ART801 takes MAX. Whether values actually diverge in practice is a data question. No card (bind: keep inferred labelled inferred).'
+- behaviour_id: cou-maintain-c01
+  surface_id: pgm:COU200
+  name: COU200 lists all countries in one load; option 2 only
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; *LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35.'
+- behaviour_id: cou-maintain-c02
+  surface_id: pgm:COU200
+  name: Edit country name / ISO-3 with no validation
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns.'
+- behaviour_id: cou-maintain-c03
+  surface_id: pgm:COU200
+  name: Chain indicator 98 never tested before UPDAT
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; A concurrent delete between list and edit would UPDAT without a locked record.'
+- behaviour_id: cou-maintain-c04
+  surface_id: pgm:COU200
+  name: No create / delete path; code not editable; no delete flag (absence)
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column.'
+- behaviour_id: cou-maintain-c05
+  surface_id: pgm:COU200
+  name: Key semantics (F3 on detail ends program; F12 returns without reload)
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload.'
+- behaviour_id: cou-maintain-c06
+  surface_id: pgm:COU200
+  name: Consecutive option-2 rows processed; subfile row not refreshed
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; STEP01 stays ''ACT'' after an update so the next changed row is picked up; the list shows stale values.'
+- behaviour_id: cou-maintain-c07
+  surface_id: srvpgm:FCOUNTRY
+  name: GetCountryName / GetCountryIso3 / ExistCountry
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Cached COUNTRY chain by 2A code; unknown -> blanks; ExistCountry = %found (no delete flag exists).'
+- behaviour_id: cou-maintain-c08
+  surface_id: mod:COU300
+  name: GetCountryIso3 unused; closeCOUNTRY not exported
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No caller of GetCountryIso3 in ATU_SRC; close procedure not in FCOUNTRY.BND.'
+- behaviour_id: cou-maintain-c09
+  surface_id: srvpgm:FCOUNTRY
+  name: SltCountry selection window (keyed read, by code or name)
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Native keyed read over COUNTRY or COUNTR1 positioned at pcod; 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns COID; F3/F12 return pcod.'
+- behaviour_id: cou-maintain-c10
+  surface_id: mod:COU301
+  name: F8 toggle clears the key of the mode entered (opposite of FAM301)
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; bydesc -> clear KEYDES so the new order restarts from the top.'
+- behaviour_id: cou-maintain-c11
+  surface_id: mod:COU301
+  name: Position-to option 8, guards 41/42 and row rules 35/36
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Identical to SltArtFam.'
+- behaviour_id: cou-maintain-c12
+  surface_id: srvpgm:FCOUNTRY
+  name: Export surface, binding and callers
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1'') ACTGRP(*CALLER); in SAMPLE.BNDDIR and PRO200.ILEPGM; callers CUS200, CUS250, PRO200, PRO250.'
+- behaviour_id: cou-maintain-c13
+  surface_id: pgm:COU200
+  name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
+  status: candidate
+  slice_id: cou-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF.'
+- behaviour_id: dat-utils-c01
+  surface_id: udf:ISOTODATE40
+  name: ISOTODATE40 sentinel conversion (0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL)
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DAT002 special-cases 0 and *HIVAL, otherwise test(de) *iso + %date; invalid sets the null indicator; NULL in -> NULL out.'
+- behaviour_id: dat-utils-c02
+  surface_id: udf:ISO_Num_To_Date
+  name: ISO_Num_To_Date plain conversion (0 -> NULL)
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DAT001 has no special values; 0 is an invalid ISO date and returns NULL.'
+- behaviour_id: dat-utils-c03
+  surface_id: udf:ISOTODATE40
+  name: Callers - ISOTODATE40 from ORD200/ORD201; ISO_Num_To_Date unused
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORDERCUS cursors in ORD200 and ORD201 wrap ORDATE/ORDATDEL/ORDATCLO; no caller of ISO_Num_To_Date in ATU_SRC.'
+- behaviour_id: dat-utils-c04
+  surface_id: udf:ISOTODATE40
+  name: UDF interface contract (PARAMETER STYLE SQL, DETERMINISTIC, NO SQL)
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; LANGUAGE RPGLE, DETERMINISTIC, NO SQL, NO EXTERNAL ACTION, RETURNS NULL ON NULL INPUT; 9-parameter external interface.'
+- behaviour_id: dat-utils-c05
+  surface_id: udf:ISOTODATE40
+  name: Error path SQLSTATE 38I02 with exception text
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; *PSSR sets SQL_State ''38I02'' and Msg_Text = first 70 chars of the program status exception text.'
+- behaviour_id: dat-utils-c06
+  surface_id: udf:ISOTODATE40
+  name: Programs stay active between rows (return without *inlr)
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No state kept between calls.'
+- behaviour_id: dat-utils-c07
+  surface_id: udf:ISOTODATE40
+  name: 0 -> 1940-01-01 sentinel implemented three times across the estate
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; DAT002 (SQL), CUS200 (RPG, documented cus-interactive-c07), ORD202 (RPG, ord-maintain-ord202-c01); only the SQL variant also maps 99999999.'
+- behaviour_id: dat-utils-c08
+  surface_id: udf:ISOTODATE40
+  name: Result value unassigned on invalid input (port trap)
+  status: candidate
+  slice_id: dat-utils
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Only the null indicator is set; the date parameter keeps whatever it held.'
+- behaviour_id: fam-maintain-c01
+  surface_id: srvpgm:FFAMILLY
+  name: GetArtFamDesc getter
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Returns FADESC from a cached FAMILLY chain by FAID; unknown id -> blanks.'
+- behaviour_id: fam-maintain-c02
+  surface_id: srvpgm:FFAMILLY
+  name: ExistArtFam ignores the delete flag (asymmetry)
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Returns %found only; soft-deleted families still pass ART200 validation. ExistCus/ExistProvider/ExistVATRate exclude ''X'' rows.'
+- behaviour_id: fam-maintain-c03
+  surface_id: srvpgm:FFAMILLY
+  name: IsArtFamDeleted (no caller)
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FADEL = ''X''; no caller in ATU_SRC.'
+- behaviour_id: fam-maintain-c04
+  surface_id: mod:FAM300
+  name: Lazy open and last-key cache; closeFAMILLY not exported
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; USROPN input-only, chain skipped on same FAID, clear *all before new chain; close procedure present but not exported.'
+- behaviour_id: fam-maintain-c05
+  surface_id: srvpgm:FFAMILLY
+  name: SltArtFam selection window (keyed read, by code or description)
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Native keyed read over FAMILLY or FAMILL1 positioned at pcod, 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns FAID; F3/F12 return pcod.'
+- behaviour_id: fam-maintain-c06
+  surface_id: mod:FAM301
+  name: F8 toggles by-code / by-description; clears the key just left
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; bydesc indicator 40 switches POSCOD/POSDES and the F8 label; toggle clears KEYCOD when entering by-desc (opposite of COU301).'
+- behaviour_id: fam-maintain-c07
+  surface_id: mod:FAM301
+  name: Control-line option 8 position-to and its guards
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; OPTC1 = 8 repositions on POSCOD/POSDES; other values -> 41; position-to with selection pending -> 42; selection with F8 -> redisplay.'
+- behaviour_id: fam-maintain-c08
+  surface_id: mod:FAM301
+  name: Row option rules (option 1 only, single selection)
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Non-1 -> 35, second 1 -> 36, RI/PC, SFLNXTCHG re-mark.'
+- behaviour_id: fam-maintain-c09
+  surface_id: mod:FAM301
+  name: Selector lists soft-deleted families; description key non-unique
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No FADEL test in the read loop; FAMILL1 keyed on FADESC without UNIQUE.'
+- behaviour_id: fam-maintain-c10
+  surface_id: mod:FAM301
+  name: Window display file opened once, never closed
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; %open guard; DUMMY record KEEP/ASSUME preserves the caller''s screen.'
+- behaviour_id: fam-maintain-c11
+  surface_id: srvpgm:FFAMILLY
+  name: No maintenance path for families (absence)
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No FAM200, no menu option, no write/update/delete on FAMILLY in ATU_SRC; audit and delete columns have no writer.'
+- behaviour_id: fam-maintain-c12
+  surface_id: srvpgm:FFAMILLY
+  name: FAVATCD default VAT code never read
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Family default VAT code exists in DDS only; articles carry ARVATCD.'
+- behaviour_id: fam-maintain-c13
+  surface_id: srvpgm:FFAMILLY
+  name: Export surface, binding and callers
+  status: candidate
+  slice_id: fam-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1''); bound into FARTICLE and listed in SAMPLE.BNDDIR; callers ART200, ART250, ART301.'
+- behaviour_id: log-programs-c01
+  surface_id: pgm:LOG100
+  name: LOG100 creates SAMLOG user space (5000 bytes) in PARAMETER's library
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; QUSCRTUS attribute LOG, 5000 bytes, X''00'', *ALL, replace *YES; library from the INFDS of the opened PARAMETER file.'
+- behaviour_id: log-programs-c02
+  surface_id: pgm:LOG100
+  name: SAMLOG header layout (pos at offset 0 = 7, '***' at offset 4)
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; LOG100 writes the header; LOG300 reads pos from offset 0 and appends at p1 + pos.'
+- behaviour_id: log-programs-c03
+  surface_id: srvpgm:LOG
+  name: AddLogEntry line format and append
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Resolves SAMLOG *LIBL once per activation group; writes ''User: <*USER> * Date: <timestamp> * Msg: <entry> ***'' at pos and advances pos; User captured at module
+    load.'
+- behaviour_id: log-programs-c04
+  surface_id: mod:LOG300
+  name: No capacity check - logging stops silently after ~4400 bytes
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; 5000-byte space without auto-extend; 600-byte fixed write per entry; overflow raises an exception that ORD700''s callp(e) swallows.'
+- behaviour_id: log-programs-c05
+  surface_id: pgm:LOG100
+  name: LOG100 API errors swallowed
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; errcod DS passed with bytes-provided set, never inspected.'
+- behaviour_id: log-programs-c06
+  surface_id: pgm:LOG100
+  name: LOG100 has no caller and no menu entry (install step)
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Run manually once; if never run, AddLogEntry fails on QUSPTRUS (swallowed by callers).'
+- behaviour_id: log-programs-c07
+  surface_id: srvpgm:LOG
+  name: Only log event is ORD700 line delete (pointer)
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Documented as ord-trigger-ord700-c03; no other caller of AddLogEntry.'
+- behaviour_id: log-programs-c08
+  surface_id: srvpgm:LOG
+  name: LOG srvpgm binding not in source
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; EXPORT(*ALL), absent from SAMPLE.BNDDIR, ORD700 has no bnddir / ILEPGM.'
+- behaviour_id: log-programs-c09
+  surface_id: srvpgm:LOG
+  name: Log reader ADSPUSRSPC not in tree
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Menu opt 84 runs a command that is not in ATU_SRC; no in-tree reader of SAMLOG.'
+- behaviour_id: log-programs-c10
+  surface_id: mod:LOG300
+  name: Unsynchronised shared append (concurrent writers overwrite)
+  status: candidate
+  slice_id: log-programs
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Two jobs read the same pos and write to the same offset; no lock or atomic update.'
+- behaviour_id: menu-cmd-shell-c01
+  surface_id: menu:SAMMNU
+  name: SAMMNU entry map (20 options, all parameterless CALLs)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Master files 1-9, Reports 10/12/13, Utilities 20/21/80-84, 90 signoff; every action is cmd call <pgm> or STRQMQRY / ADSPUSRSPC.'
+- behaviour_id: menu-cmd-shell-c02
+  surface_id: menu:SAMMNU
+  name: Menu options reaching objects not in the tree (12, 13, 84)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; QM queries CUSQRY / ARTQRY with form CUSQRYFMT and command ADSPUSRSPC are referenced but absent; option 11 does not exist.'
+- behaviour_id: menu-cmd-shell-c03
+  surface_id: menu:SAMMNU
+  name: Command line and system function keys on the menu
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; cmdline size=long; F4 prompt, F9 retrieve, F6 DSPMSG, F10 DSPJOBLOG, F14 WRKSBMJOB *USER.'
+- behaviour_id: menu-cmd-shell-c04
+  surface_id: menu:SAMMNU
+  name: Help mapping broken / placeholder only
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; help=srt200 undefined (typo for ART200); options 6-9 -> undefined ord100; defined topics are ''Text'' / ''Help not available''.'
+- behaviour_id: menu-cmd-shell-c05
+  surface_id: msgf:SAMMSGF
+  name: SAMMSGF message catalogue (12 ids)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ERR0001-0005, ERR0103, ERR1001/1002, ERR2000-2002; file CCSID 65535, messages CCSID 297; user-visible error strings for the screens.'
+- behaviour_id: menu-cmd-shell-c06
+  surface_id: menu:SAMMNU
+  name: Four messages never referenced (ERR0001/0003/0004/0005)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No DSPF or program uses them; the other 8 are live.'
+- behaviour_id: menu-cmd-shell-c07
+  surface_id: cmd:CVTSPLPDF
+  name: CVTSPLPDF command parameter contract (no PGM in source)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FROMFILE/TOSTMF/TODIR required; JOB, SPLNBR, STMFOPT, STMFCODPAG, TITLE, PAGESIZE, CUSTOMPAGE, FONT, BOOKMARK (+BMARKPOS/BMARKKEY); processing program unknown.'
+- behaviour_id: menu-cmd-shell-c08
+  surface_id: menu:SAMMNU
+  name: Shell message plumbing (QCPFMSG default, SAMMSGF substitute, CPD9817 on Enter)
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; dftmsgf=qcpfmsg submsgf=sammsgf; Enter without option -> msg cpd9817; imports SAMHELP.'
+- behaviour_id: menu-cmd-shell-c09
+  surface_id: menu:SAMMNU
+  name: Menu titles vs program text mismatches
+  status: candidate
+  slice_id: menu-cmd-shell
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Option 9 ''Provider by id'' calls PRO250 whose %TEXT says ''Display Article''; cosmetic.'
+- behaviour_id: par-maintain-c01
+  surface_id: pgm:PAR200
+  name: List parameters with paging, F5 refresh, options 2/4
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 14 rows per load with two-part saved-key restore; PARM2 truncated to 32 chars; F5 reloads; options 2 and 4 only.'
+- behaviour_id: par-maintain-c02
+  surface_id: pgm:PAR200
+  name: F6 create with duplicate-key check only
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FMT03 all fields input; chain on the typed key -> 40 if found; else write fparam; no other validation.'
+- behaviour_id: par-maintain-c03
+  surface_id: pgm:PAR200
+  name: List not refreshed after create (appends next page instead)
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F6 sets step01 = lod; on return the next 14 rows from the saved position are appended; new row visible only after F5.'
+- behaviour_id: par-maintain-c04
+  surface_id: pgm:PAR200
+  name: Option 2 edit values without validation
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Key output, PARM1..5 input; Enter -> update fparam unconditionally.'
+- behaviour_id: par-maintain-c05
+  surface_id: pgm:PAR200
+  name: Option 4 immediate delete, no confirmation
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; delete by two-part key; row rewritten blank with ''*** Deleted ****''; consecutive 4s in one pass.'
+- behaviour_id: par-maintain-c06
+  surface_id: pgm:PAR200
+  name: F3 on detail panels returns to list; F12 on list exits
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; S02key/S03key exit -> panel 1; s01key cancel -> panel 0.'
+- behaviour_id: par-maintain-c07
+  surface_id: cl:PAR201
+  name: PAR201 Work with IFS output (GetParm2 PATH -> WRKLNK)
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; CL CALLPRC GETPARM2(''PATH'','' ''), *TCAT ''*'', WRKLNK OBJ(&PATH); bound to FPARAMETER via PAR201.ILEPGM ACTGRP(QILE).'
+- behaviour_id: par-maintain-c08
+  surface_id: cl:PAR201
+  name: Blank PATH degrades to WRKLNK '*' / relative file names
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; Missing PATH row returns blanks; PAR201 lists the current directory; consumers build names from a blank prefix.'
+- behaviour_id: par-maintain-c09
+  surface_id: srvpgm:FPARAMETER
+  name: GetPARM1..5 getter family with two-part cached chain
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Five typed getters keyed by (PACODE, PASUBCODE); two-part last-key cache; unknown key -> blanks/zero.'
+- behaviour_id: par-maintain-c10
+  surface_id: srvpgm:FPARAMETER
+  name: EXPORT(*ALL) exposes chainPARAMETER / closePARAMETER
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No binder source; every procedure exported; no signature control.'
+- behaviour_id: par-maintain-c11
+  surface_id: cl:PAR201
+  name: Only PATH is a live parameter; GetPARM1/3/4/5 unused
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; GetParm2(''PATH'','' '') from ORD500, PRO202, PRO203, PAR201; no caller for the other getters.'
+- behaviour_id: par-maintain-c12
+  surface_id: pgm:PAR200
+  name: PARAMETER is a plain two-key key/value table
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; UNIQUE (PACODE, PASUBCODE); no audit or delete columns.'
+- behaviour_id: par-maintain-c13
+  surface_id: pgm:PAR200
+  name: LOG100 uses PARAMETER's library as the application library
+  status: candidate
+  slice_id: par-maintain
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Opens PARAMETER only to read INFDS library (pos 93-102) and create SAMLOG there.'
+- behaviour_id: pro-cobol-pro201-c01
+  surface_id: pgm:PRO201
+  name: Read-only provider list with paging and options 2/5
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; PROVIDE1 read sequentially, 14 rows per load, PRDEL shown; options 2 and 5 only, others SFLMSG 35.'
+- behaviour_id: pro-cobol-pro201-c02
+  surface_id: pgm:PRO201
+  name: Option 2 displays provider from subfile-carried hidden fields
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FMT02 output-only, populated by MOVE CORRESPONDING from the subfile row (hidden PRCONT..PRCREA); no re-read of the database.'
+- behaviour_id: pro-cobol-pro201-c03
+  surface_id: pgm:PRO201
+  name: Option 5 -> CALL ART202
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Dynamic CALL "ART202" USING PRID-WRK.'
+- behaviour_id: pro-cobol-pro201-c04
+  surface_id: pgm:PRO201
+  name: One option processed per Enter
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ACT01 reads a single NEXT MODIFIED row; further option rows need another Enter after redisplay.'
+- behaviour_id: pro-cobol-pro201-c05
+  surface_id: pgm:PRO201
+  name: F3 on detail returns to a re-read list without repositioning (likely empty)
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; F3 -> PANEL 1 + STEP01 PRP; PRP01 re-reads PROVIDE1 from the current position with IN80 never reset, so after a full load the list is empty. Code path observed; visible effect
+    needs the box.'
+- behaviour_id: pro-cobol-pro201-c06
+  surface_id: pgm:PRO201
+  name: F3/F12 on list exit; Page Down via control-area '90'
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Both keys set PANEL 0; PAGEDOWN decoded from F-KEYS value ''90''.'
+- behaviour_id: pro-cobol-pro201-c07
+  surface_id: pgm:PRO201
+  name: Read-ahead in PRP01 and sticky IN80
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; First READ happens in PRP01; IN80 set at EOF and never reset.'
+- behaviour_id: pro-cobol-pro201-c08
+  surface_id: pgm:PRO201
+  name: Direct file access, no service programs; CONAME never populated
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No FPROVIDER/FCOUNTRY use; country shown as code; CONAME on FMT02 stays blank.'
+- behaviour_id: pro-cobol-pro201-c09
+  surface_id: pgm:PRO201
+  name: DSPF leftovers from PRO200D (unreachable ERRMSG / CF04)
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ERRMSG 41, ERRMSGID ERR0002 and CF04 defined on FMT02 but never reachable from the COBOL.'
+- behaviour_id: pro-cobol-pro201-c10
+  surface_id: pgm:PRO201
+  name: Language outlier - only COBOL member; STOP RUN closes files
+  status: candidate
+  slice_id: pro-cobol-pro201
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; PROCESS APOST; OPEN INPUT PROVIDE1 / I-O PRO201D at init; CLOSE + STOP RUN on every exit.'
+- behaviour_id: pro-interactive-c01
+  surface_id: pgm:PRO200
+  name: List providers by id with paging and options 2/5/7
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Subfile over PROVIDE1 (PRID), 14 rows per load with saved-key restore, PRDEL shown; options 2, 5, 7 allowed, others SFLMSG 35.'
+- behaviour_id: pro-interactive-c02
+  surface_id: pgm:PRO200
+  name: Edit provider (option 2) with country prompt and validation
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FMT02 all fields input; F4 SltCountry + GetCountryName; ExistCountry (ERR0002) and name mandatory (41) checked in one pass.'
+- behaviour_id: pro-interactive-c03
+  surface_id: pgm:PRO200
+  name: Edit never saves (mode never set to upd - planted bug)
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; S02act updates FPROV only when mode = upd; the only assignment is commented out ("to remove the bug uncomment"); Enter returns to list with nothing written.'
+- behaviour_id: pro-interactive-c04
+  surface_id: pgm:PRO200
+  name: No create / delete path for providers (absence)
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No F6, no option 4, no write fprov, no writer of PRDEL anywhere in ATU_SRC; PROVIDE1 opened uf a but only update appears.'
+- behaviour_id: pro-interactive-c05
+  surface_id: pgm:PRO200
+  name: Option 5 -> ART202, option 7 -> bound PRO202
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; articles(prid) is extpgm ART202; prpOrd(prid) is extproc PRO202, a module bound into *PGM PRO200.'
+- behaviour_id: pro-interactive-c06
+  surface_id: mod:PRO202
+  name: PRO202 purchase proposal selection and proposed quantity
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Cursor over ARTICLE x ARTIPROV for the provider where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY; NEWORD = ARMINQTY + ARCUSQTY - ARPURQTY - ARSTOCK; all rows loaded
+    at once.'
+- behaviour_id: pro-interactive-c07
+  surface_id: mod:PRO202
+  name: F8 confirm writes XML purchase order file to PATH
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Pur_Ord_<prid>_<yymmdd>.xml in getParm2(''PATH''); hard-coded Customer block; one Item per row (ID, YOUR_REF, DESC, QTY, UnitPrice); FMT03 window then end.'
+- behaviour_id: pro-interactive-c08
+  surface_id: mod:PRO202
+  name: Confirm does not update ARPURQTY (no writer in ATU_SRC)
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No database write after the XML export; grep finds no writer of ARTICLE.ARPURQTY anywhere in the tree.'
+- behaviour_id: pro-interactive-c09
+  surface_id: mod:PRO202
+  name: PRO202 has no option handling; leftover order messages
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; s01chk accepts anything; Enter without F8 redisplays; SFLMSG 36/37 texts are order-screen leftovers.'
+- behaviour_id: pro-interactive-c10
+  surface_id: mod:PRO202
+  name: XML copybook and service program not in tree
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; /copy qprotosrc,xml and XML *SRVPGM absent; element shape known only from call names.'
+- behaviour_id: pro-interactive-c11
+  surface_id: pgm:PRO250
+  name: PRO250 provider-by-id inquiry with prompt, not-found and F7 items
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; F4 SltProvider; chain PROVIDE1; not found -> ERR0103; no PRDEL test; FMT02 read-only with GetCountryName; F7 -> ART202(prid); F3 on detail returns to FMT01.'
+- behaviour_id: pro-interactive-c12
+  surface_id: pgm:PRO203
+  name: PRO203 goods-to-purchase spreadsheet report
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; XSS spreadsheet; ARTICLE x ARTIPROV x PROVIDER where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY and ARCUSQTY > 0; yellow rows when article has >1 provider; proposed
+    qty; autofilter; Goods to purchase_<yymmdd>.xml in PATH; reuses PRO202D.FMT03.'
+- behaviour_id: pro-interactive-c13
+  surface_id: pgm:PRO203
+  name: PRO203 binding and XSS format not in source
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; dftactgrp(*no) with no bnddir, no PRO203.ILEPGM, Xss copybook missing; spreadsheet format unknown (file named .xml).'
+- behaviour_id: pro-interactive-c14
+  surface_id: pgm:PRO200
+  name: Entry paths and activation groups
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Menu opt 4 PRO200, opt 9 PRO250, opt 10 PRO203; PRO200+PRO202 in ACTGRP(QILE) via CRTPGM; PRO250 bnddir(''SAMPLE'').'
+- behaviour_id: pro-interactive-c15
+  surface_id: pgm:PRO200
+  name: F3 on edit panel returns to list; F12 on list exits
+  status: candidate
+  slice_id: pro-interactive
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; S02key exit -> panel 1; s01key cancel -> panel 0. Same key semantics as CUS200.'
+- behaviour_id: pro-modules-c01
+  surface_id: srvpgm:FPROVIDER
+  name: Provider getter family (GetPro*)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Eleven exported getters each chain PROVIDE1 by PRID and return one column from the module buffer; unknown id -> blanks, no found signal.'
+- behaviour_id: pro-modules-c02
+  surface_id: srvpgm:FPROVIDER
+  name: ExistProvider / IsProDeleted
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ExistProvider = %found and PRDEL <> ''X''; IsProDeleted = PRDEL = ''X''; unknown id -> false for both.'
+- behaviour_id: pro-modules-c03
+  surface_id: mod:PRO300
+  name: Lazy open and last-key cache in chainPROVIDE1
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; USROPN input-only open on first use; chain skipped when id equals buffered PRID; misses clear the buffer and are not cached.'
+- behaviour_id: pro-modules-c04
+  surface_id: mod:PRO300
+  name: ClosePROVIDE1 prototyped but not exported
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No export keyword, not in FPROVIDER.BND, prototyped in PROVIDER.RPGLEINC, no caller.'
+- behaviour_id: pro-modules-c05
+  surface_id: srvpgm:FPROVIDER
+  name: SltProvider selection window
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Dynamic SQL over PROVIDER with contains-LIKE on UPPER(provnm) and/or UPPER(prcity), ORDER BY provnm; 14 rows per page; option 1 returns PRID; F3/F12 return pcod.'
+- behaviour_id: pro-modules-c06
+  surface_id: mod:PRO301
+  name: Selection rules (option 1 only, single selection)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Non-1 option -> 35; second 1 -> 36; error rows RI/PC; all changed rows re-marked SFLNXTCHG; act only when clean.'
+- behaviour_id: pro-modules-c07
+  surface_id: mod:PRO301
+  name: Criteria change re-prepares and discards pending selection
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Saved name/city compared first; any change closes c1 and restarts prp, dropping an option 1 typed on the old list.'
+- behaviour_id: pro-modules-c08
+  surface_id: mod:PRO301
+  name: Dynamic SQL string concatenation of user input
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Search text concatenated into LIKE literals; no escaping, no parameter markers, no SQLCODE check (empty list on error).'
+- behaviour_id: pro-modules-c09
+  surface_id: mod:PRO301
+  name: Blank criteria list-all semantics; soft-deleted rows listed
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Both blank -> UPPER(prcity) LIKE ''%%'' lists every provider; no PRDEL predicate.'
+- behaviour_id: pro-modules-c10
+  surface_id: mod:PRO301
+  name: F8 dead in SltProvider (acts as Enter)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; in08 never assigned; s01key has no cf08 branch; F8=By code label conditioned on indicator 40 that nothing sets.'
+- behaviour_id: pro-modules-c11
+  surface_id: srvpgm:FPROVIDER
+  name: Versioned binder source (SIGNATURE *GEN with *PRV block)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; FPROVIDER.BND is the only binder in the tree with LVLCHK(*YES) SIGNATURE(*GEN) and a PGMLVL(*PRV) block; SLTPROVIDER added as new export.'
+- behaviour_id: pro-modules-c12
+  surface_id: srvpgm:FPROVIDER
+  name: FPROVIDER export surface and binding (folded srvpgm-fprovider)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 14 exported symbols; MODULE(PRO300 PRO301) ACTGRP(*CALLER) EXPORT(*SRCFILE); listed in SAMPLE.BNDDIR.'
+- behaviour_id: pro-modules-c13
+  surface_id: srvpgm:FPROVIDER
+  name: Callers in ATU_SRC (GetProName x2, SltProvider x1; 12 exports unused)
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ART201 and ART202 call GetProName; PRO250 calls SltProvider; no other export has a caller in the tree.'
+- behaviour_id: pro-modules-c14
+  surface_id: mod:PRO301
+  name: Search input not uppercased by the module
+  status: candidate
+  slice_id: pro-modules
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; UPPER(column) compared to raw %trim(input); relies on the 5250 session uppercasing (no CHECK(LC) on the fields).'
+- behaviour_id: sql-objects-c01
+  surface_id: view:ORDERCUS
+  name: ORDERCUS view - inner join to CUSTOMER with TOTVAL
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ORDER joined to CUSTOMER on ORCUID = CUID; TOTVAL = COALESCE(SUM(ODTOTVAT), 0); orders with a missing customer row disappear from the lists.'
+- behaviour_id: sql-objects-c02
+  surface_id: view:ORDERCUS
+  name: TOTVAL is VAT-inclusive
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Sums ODTOTVAT, not ODTOT; order lists show gross totals.'
+- behaviour_id: sql-objects-c03
+  surface_id: view:ARTLSTDAT
+  name: ARTLSTDAT view - last order date and total quantity per article
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; MAX(ORDATE), SUM(ODQTY) over all orders (open and closed); never-ordered articles absent.'
+- behaviour_id: sql-objects-c04
+  surface_id: view:ORDERCUS
+  name: ARTLSTDAT has no consumer in ATU_SRC (QM query ARTQRY probable)
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; DDL only; menu opt 13 STRQMQRY ARTQRY "Article by Last Order Date" is the likely reader (not in tree).'
+- behaviour_id: sql-objects-c05
+  surface_id: table:ARTIINF
+  name: ARTIINF table contract (ARID PK + VARCHAR(1520) text)
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; article_full_description; CCSID 297; NOT NULL DEFAULT ''''; written by ART200 opt 3, read by ART302.GetArtInfo.'
+- behaviour_id: sql-objects-c06
+  surface_id: view:ORDERCUS
+  name: ARTIINF rows never deleted (orphans after article soft delete)
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No DELETE FROM artiinf anywhere; soft-deleted articles keep their free text.'
+- behaviour_id: sql-objects-c07
+  surface_id: seq:CUSSEQ
+  name: CUSSEQ sequence (pointer to cus-interactive-c02)
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; consumed by CUS200 F6; behaviour documented under cus-interactive.'
+- behaviour_id: sql-objects-c08
+  surface_id: sqlprc:ART801
+  name: ART801 stored procedure surface (pointer to ord-trigger-ord700-c10)
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; UPDATE_ON_CUS_ORD_QTY, menu opt 82; three WHERE EXISTS-guarded UPDATEs; COMMIT *NONE; behaviour documented under ord-trigger-ord700.'
+- behaviour_id: sql-objects-c09
+  surface_id: sqlprc:ART801
+  name: ART801 interface facts
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; LANGUAGE SQL, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES; no parameters, no result set.'
+- behaviour_id: sql-objects-c10
+  surface_id: table:ARTIINF
+  name: Naming / reserved-word port traps
+  status: candidate
+  slice_id: sql-objects
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; SQL long names and labels on ARTIINF / ARTLSTDAT; "ORDER" must be delimited everywhere.'
+- behaviour_id: srvpgm-supporting-c01
+  surface_id: bnddir:SAMPLE
+  name: SAMPLE.BNDDIR contents (11 srvpgms; LOG absent)
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; XML, ORDER, TXT, XSS, FARTICLE, FCUSTOMER, FFAMILLY, FPARAMETER, FPROVIDER, FVAT, FCOUNTRY via *LIBL; LOG not listed.'
+- behaviour_id: srvpgm-supporting-c02
+  surface_id: bnddir:SAMPLE
+  name: Four listed srvpgms have no source (XML, XSS used; ORDER, TXT unreferenced)
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; XML bound by PRO200.ILEPGM and called by PRO202; XSS called by PRO203; ORDER and TXT referenced by nothing.'
+- behaviour_id: srvpgm-supporting-c03
+  surface_id: bnddir:SAMPLE
+  name: Twelve programs bind via bnddir('SAMPLE')
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; ART200, ART201, ART202, ART250, CUS200, CUS250, ORD100, ORD101, ORD200, ORD201, ORD202, PRO250.'
+- behaviour_id: srvpgm-supporting-c04
+  surface_id: bnddir:SAMPLE
+  name: PRO200 and PAR201 built by explicit CRTPGM in ACTGRP(QILE)
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; The only two .ILEPGM sources; the only members running in a named activation group.'
+- behaviour_id: srvpgm-supporting-c05
+  surface_id: bnddir:SAMPLE
+  name: PRO203 / ORD500 / ORD700 / LOG100 bindings not in source
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: inferred; dftactgrp(*no) with neither bnddir nor .ILEPGM; import resolution is ARCAD/elias build metadata.'
+- behaviour_id: srvpgm-supporting-c06
+  surface_id: bnddir:SAMPLE
+  name: Inconsistent signature policy across binders
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Five hard-code SIGNATURE(''V1''); FPROVIDER uses *GEN + *PRV; FPARAMETER and LOG use EXPORT(*ALL) with no binder.'
+- behaviour_id: srvpgm-supporting-c07
+  surface_id: bnddir:SAMPLE
+  name: All srvpgms ACTGRP(*CALLER); getter caches scoped per calling program's AG
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Every .ILESRVPGM is *CALLER; bnddir programs have no actgrp keyword (default new AG per program) while PRO200/PAR201 share QILE.'
+- behaviour_id: srvpgm-supporting-c08
+  surface_id: bnddir:SAMPLE
+  name: FARTICLE is the only srvpgm binding another (FFAMILLY)
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No other inter-service-program dependency in source.'
+- behaviour_id: srvpgm-supporting-c09
+  surface_id: bnddir:SAMPLE
+  name: Build members are ARCAD-generated snapshots (2022-05-17); elias build
+  status: candidate
+  slice_id: srvpgm-supporting
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; .ILESRVPGM / .ILEPGM / .BNDDIR / .MSGF headers say generated by ARCAD; iproj.json declares elias compile with objlib &verlibatu.'
+- behaviour_id: vat-module-c01
+  surface_id: srvpgm:FVAT
+  name: ClcVAT arithmetic (net x rate / 100, half-adjust to 2 dp)
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; %dech((net * VATRATE) / 100 : 9 : 2) with an 11P 4 intermediate; net and result 9P 2 by value.'
+- behaviour_id: vat-module-c02
+  surface_id: srvpgm:FVAT
+  name: Unknown VAT code -> rate 0 -> zero VAT silently
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Buffer cleared on miss so VATRATE = 0; ClcVAT and GetVATRate return 0; no caller checks ExistVATRate first.'
+- behaviour_id: vat-module-c03
+  surface_id: srvpgm:FVAT
+  name: GetVATRate / GetVATDesc getters (GetVATDesc unused)
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Return VATRATE (4P 2) / VATDESC (20A); no caller of GetVATDesc.'
+- behaviour_id: vat-module-c04
+  surface_id: srvpgm:FVAT
+  name: ExistVATRate respects the delete flag but has no caller
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; %found and VATDEL <> ''X''; unused in ATU_SRC.'
+- behaviour_id: vat-module-c05
+  surface_id: mod:VAT300
+  name: Lazy open and last-key cache; closeVATDEF not exported
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; USROPN input-only; chain skipped on same code; close present but not in FVAT.BND.'
+- behaviour_id: vat-module-c06
+  surface_id: mod:VAT300
+  name: Rate cache stale for the activation group after a VATDEF change
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Same code requested twice never re-reads; a rate change is invisible until another code is requested in between.'
+- behaviour_id: vat-module-c07
+  surface_id: srvpgm:FVAT
+  name: No maintenance path for VAT rates (absence)
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; No VAT200, no menu option, no writer of VATDEF in ATU_SRC; audit and delete columns have no writer.'
+- behaviour_id: vat-module-c08
+  surface_id: srvpgm:FVAT
+  name: VAT code comes from the article via GetArtVatCode (two srvpgm hops)
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Every caller does CLCVat(GetArtVatCode(arid), net); FVAT never sees an article id.'
+- behaviour_id: vat-module-c09
+  surface_id: srvpgm:FVAT
+  name: Export surface and binding
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1'') ACTGRP(*CALLER); in SAMPLE.BNDDIR.'
+- behaviour_id: vat-module-c10
+  surface_id: mod:VAT300
+  name: Copybook / module parameter-type drift on CLCVat
+  status: candidate
+  slice_id: vat-module
+  discovery_card: null
+  traceability: null
+  pack_id: null
+  pack_version: null
+  conversion_prs: []
+  parity: null
+  legacy_green: false
+  parity_green: false
+  waiver: null
+  notes: 'confidence: observed-in-code; Prototype declares the code as ''1'' (no A), module as ''1A''; same storage.'
+last_updated: '2026-09-08T19:39:46Z'
+updated_by: estate-discovery-loop

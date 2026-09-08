@@ -1,0 +1,115 @@
+slice_id: menu-cmd-shell
+seed: "Application shell - SAMMNU UIM menu (entry map), SAMHELP panel group (stubs), SAMMSGF message file, CVTSPLPDF command definition"
+seed_entrypoints:
+  - ATU_SRC/QPNLSRC/SAMMNU.MENU
+  - ATU_SRC/QPNLSRC/SAMHELP.PNLGRP
+  - ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
+  - ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+out_of_scope_hints:
+  - behaviour of the called programs (own slices)
+  - CRTORD.CMD (ord-entry-ord100, accepted)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: menu-cmd-shell-c01
+    name: SAMMNU entry map (20 options, all parameterless CALLs)
+    status: candidate
+    confidence: observed-in-code
+    summary: Master files 1-9, Reports 10/12/13, Utilities 20/21/80-84, 90 signoff; every action is cmd call <pgm> or STRQMQRY / ADSPUSRSPC.
+    entrypoints:
+      - kind: screen
+        locator: SAMMNU panel SAMPLE
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-167"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c02
+    name: Menu options reaching objects not in the tree (12, 13, 84)
+    status: candidate
+    confidence: inferred
+    summary: QM queries CUSQRY / ARTQRY with form CUSQRYFMT and command ADSPUSRSPC are referenced but absent; option 11 does not exist.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opts 12/13/84
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:125-132", "ATU_SRC/QPNLSRC/SAMMNU.MENU:159-162"]
+    dependencies: []
+    open_questions: ["Obtain CUSQRY, ARTQRY, CUSQRYFMT, ADSPUSRSPC sources?"]
+  - id: menu-cmd-shell-c03
+    name: Command line and system function keys on the menu
+    status: candidate
+    confidence: observed-in-code
+    summary: cmdline size=long; F4 prompt, F9 retrieve, F6 DSPMSG, F10 DSPJOBLOG, F14 WRKSBMJOB *USER.
+    entrypoints:
+      - kind: screen
+        locator: SAMMNU key list key01
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:11-70", "ATU_SRC/QPNLSRC/SAMMNU.MENU:169-170"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c04
+    name: Help mapping broken / placeholder only
+    status: candidate
+    confidence: observed-in-code
+    summary: help=srt200 undefined (typo for ART200); options 6-9 -> undefined ord100; defined topics are 'Text' / 'Help not available'.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU help= / SAMHELP
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:85-118", "ATU_SRC/QPNLSRC/SAMHELP.PNLGRP:5-19"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c05
+    name: SAMMSGF message catalogue (12 ids)
+    status: candidate
+    confidence: observed-in-code
+    summary: ERR0001-0005, ERR0103, ERR1001/1002, ERR2000-2002; file CCSID 65535, messages CCSID 297; user-visible error strings for the screens.
+    entrypoints:
+      - kind: other
+        locator: SAMMSGF
+        evidence: ["ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:8-32"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c06
+    name: Four messages never referenced (ERR0001/0003/0004/0005)
+    status: candidate
+    confidence: observed-in-code
+    summary: No DSPF or program uses them; the other 8 are live.
+    entrypoints:
+      - kind: other
+        locator: grep ERR000x
+        evidence: ["ATU_SRC/QDDSSRC/PRO200D.DSPF:102", "ATU_SRC/QDDSSRC/PRO250D.DSPF:30"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c07
+    name: CVTSPLPDF command parameter contract (no PGM in source)
+    status: candidate
+    confidence: observed-in-code
+    summary: FROMFILE/TOSTMF/TODIR required; JOB, SPLNBR, STMFOPT, STMFCODPAG, TITLE, PAGESIZE, CUSTOMPAGE, FONT, BOOKMARK (+BMARKPOS/BMARKKEY); processing program unknown.
+    entrypoints:
+      - kind: other
+        locator: CVTSPLPDF.CMD
+        evidence: ["ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-96"]
+    dependencies: [ORD500C]
+    open_questions: ["Which product supplies CVTSPLPDF?"]
+  - id: menu-cmd-shell-c08
+    name: Shell message plumbing (QCPFMSG default, SAMMSGF substitute, CPD9817 on Enter)
+    status: candidate
+    confidence: observed-in-code
+    summary: dftmsgf=qcpfmsg submsgf=sammsgf; Enter without option -> msg cpd9817; imports SAMHELP.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU pnlgrp header
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:4-9", "ATU_SRC/QPNLSRC/SAMMNU.MENU:71-77"]
+    dependencies: []
+    open_questions: []
+  - id: menu-cmd-shell-c09
+    name: Menu titles vs program text mismatches
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 9 'Provider by id' calls PRO250 whose %TEXT says 'Display Article'; cosmetic.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opt 9 / PRO250 %TEXT
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:115-118", "ATU_SRC/QDDSSRC/PRO250D.DSPF:2", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:2"]
+    dependencies: []
+    open_questions: []

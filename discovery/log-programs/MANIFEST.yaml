@@ -1,0 +1,126 @@
+slice_id: log-programs
+seed: "Application log - LOG100 creates the SAMLOG user space; LOG service program (LOG300 AddLogEntry) appends User/Date/Msg lines; only writer ORD700 on line delete"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+  - ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+  - ATU_SRC/QRPGLESRC/LOG300.RPGLE
+  - ATU_SRC/QPROTOSRC/LOG.RPGLEINC
+  - ATU_SRC/QPROTOSRC/APICALL.RPGLEINC
+out_of_scope_hints:
+  - ORD700 trigger behaviour (documented ord-trigger-ord700)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: log-programs-c01
+    name: LOG100 creates SAMLOG user space (5000 bytes) in PARAMETER's library
+    status: candidate
+    confidence: observed-in-code
+    summary: QUSCRTUS attribute LOG, 5000 bytes, X'00', *ALL, replace *YES; library from the INFDS of the opened PARAMETER file.
+    entrypoints:
+      - kind: job
+        locator: LOG100 (no menu entry)
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:6-7", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:11-12", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:20-22", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:4-12"]
+    dependencies: [PARAMETER.PF, QUSCRTUS]
+    open_questions: []
+  - id: log-programs-c02
+    name: SAMLOG header layout (pos at offset 0 = 7, '***' at offset 4)
+    status: candidate
+    confidence: observed-in-code
+    summary: LOG100 writes the header; LOG300 reads pos from offset 0 and appends at p1 + pos.
+    entrypoints:
+      - kind: other
+        locator: LOG100 / LOG300 based fields
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:14-16", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:23-25", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:12-13", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32"]
+    dependencies: []
+    open_questions: []
+  - id: log-programs-c03
+    name: AddLogEntry line format and append
+    status: candidate
+    confidence: observed-in-code
+    summary: "Resolves SAMLOG *LIBL once per activation group; writes 'User: <*USER> * Date: <timestamp> * Msg: <entry> ***' at pos and advances pos; User captured at module load."
+    entrypoints:
+      - kind: api
+        locator: LOG AddLogEntry (LOG300)
+        evidence: ["ATU_SRC/QRPGLESRC/LOG300.RPGLE:16", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:18-35", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:38-45"]
+    dependencies: [SAMLOG *USRSPC, QUSPTRUS]
+    open_questions: []
+  - id: log-programs-c04
+    name: No capacity check - logging stops silently after ~4400 bytes
+    status: candidate
+    confidence: inferred
+    summary: 5000-byte space without auto-extend; 600-byte fixed write per entry; overflow raises an exception that ORD700's callp(e) swallows.
+    entrypoints:
+      - kind: other
+        locator: LOG300 data / pos
+        evidence: ["ATU_SRC/QRPGLESRC/LOG300.RPGLE:13", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:21", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:78"]
+    dependencies: []
+    open_questions: ["Confirm the failure mode on the box."]
+  - id: log-programs-c05
+    name: LOG100 API errors swallowed
+    status: candidate
+    confidence: observed-in-code
+    summary: errcod DS passed with bytes-provided set, never inspected.
+    entrypoints:
+      - kind: other
+        locator: LOG100 crtusrspc call
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:21-22", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:25-33"]
+    dependencies: []
+    open_questions: []
+  - id: log-programs-c06
+    name: LOG100 has no caller and no menu entry (install step)
+    status: candidate
+    confidence: inferred
+    summary: Run manually once; if never run, AddLogEntry fails on QUSPTRUS (swallowed by callers).
+    entrypoints:
+      - kind: other
+        locator: grep LOG100
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-167"]
+    dependencies: []
+    open_questions: ["Who runs LOG100 and when?"]
+  - id: log-programs-c07
+    name: Only log event is ORD700 line delete (pointer)
+    status: candidate
+    confidence: observed-in-code
+    summary: Documented as ord-trigger-ord700-c03; no other caller of AddLogEntry.
+    entrypoints:
+      - kind: other
+        locator: ORD700 callp(e) addlogEntry
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:78-81"]
+    dependencies: [ORD700]
+    open_questions: []
+  - id: log-programs-c08
+    name: LOG srvpgm binding not in source
+    status: candidate
+    confidence: observed-in-code
+    summary: EXPORT(*ALL), absent from SAMPLE.BNDDIR, ORD700 has no bnddir / ILEPGM.
+    entrypoints:
+      - kind: other
+        locator: LOG.ILESRVPGM / SAMPLE.BNDDIR
+        evidence: ["ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:8-14", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:4"]
+    dependencies: []
+    open_questions: ["Build owner: how is LOG bound into ORD700?"]
+  - id: log-programs-c09
+    name: Log reader ADSPUSRSPC not in tree
+    status: candidate
+    confidence: inferred
+    summary: Menu opt 84 runs a command that is not in ATU_SRC; no in-tree reader of SAMLOG.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opt 84
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:159-162"]
+    dependencies: []
+    open_questions: []
+  - id: log-programs-c10
+    name: Unsynchronised shared append (concurrent writers overwrite)
+    status: candidate
+    confidence: inferred
+    summary: Two jobs read the same pos and write to the same offset; no lock or atomic update.
+    entrypoints:
+      - kind: other
+        locator: LOG300 AddLogEntry
+        evidence: ["ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32"]
+    dependencies: []
+    open_questions: []

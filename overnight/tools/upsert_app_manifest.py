@@ -73,6 +73,74 @@ SURFACES = {
         ("pgm:ORD900", "ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE", "*PGM RPGLE - Reset LASTORDNO to max ORID (menu opt 80)", ["ATU_SRC/QPNLSRC/SAMMNU.MENU:143-146"]),
         ("pgm:ORD901", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE", "*PGM SQLRPGLE - Shift order dates to today; resync years and CULASTORD (menu opt 81)", ["ATU_SRC/QPNLSRC/SAMMNU.MENU:147-150"]),
     ],
+    # --- residual run (seeds 13+), 2026-09-08 ---
+    "pro-interactive": [
+        ("pgm:PRO200", "ATU_SRC/QRPGLESRC/PRO200.RPGLE", "*PGM (CRTPGM MODULE(PRO200 PRO202) ACTGRP(QILE)) - Work with Providers (menu opt 4); screen PRO200D; edit never saves (mode never set)", ["ATU_SRC/QILESRC/PRO200.ILEPGM", "ATU_SRC/QDDSSRC/PRO200D.DSPF", "ATU_SRC/QPNLSRC/SAMMNU.MENU:95-98"]),
+        ("mod:PRO202", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE", "*MODULE bound into PRO200 (extproc) - purchase proposal -> XML file at PATH; screen PRO202D; XML srvpgm/copybook not in tree", ["ATU_SRC/QDDSSRC/PRO202D.DSPF"]),
+        ("pgm:PRO250", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE", "*PGM RPGLE - Provider by id (menu opt 9); screen PRO250D; F4 SltProvider, F7 -> ART202", ["ATU_SRC/QDDSSRC/PRO250D.DSPF", "ATU_SRC/QPNLSRC/SAMMNU.MENU:115-118"]),
+        ("pgm:PRO203", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE", "*PGM SQLRPGLE - Goods-to-purchase spreadsheet via XSS srvpgm (menu opt 10); binding and XSS not in source", ["ATU_SRC/QPNLSRC/SAMMNU.MENU:121-124"]),
+    ],
+    "pro-modules": [
+        ("srvpgm:FPROVIDER", "ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM", "*SRVPGM MODULE(PRO300 PRO301); 14 exports; SIGNATURE(*GEN) with *PRV block (folds srvpgm-fprovider)", ["ATU_SRC/QSRVSRC/FPROVIDER.BND"]),
+        ("mod:PRO300", "ATU_SRC/QRPGLESRC/PRO300.RPGLE", "*MODULE nomain - GetPro* getters x11, ExistProvider, IsProDeleted", []),
+        ("mod:PRO301", "ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE", "*MODULE nomain - SltProvider selection window; screen PRO301D", ["ATU_SRC/QDDSSRC/PRO301D.DSPF"]),
+    ],
+    "pro-cobol-pro201": [
+        ("pgm:PRO201", "ATU_SRC/QCBLSRC/PRO201.CBL", "*PGM COBOL (only COBOL member) - Display Providers read-only list (menu opt 5); screen PRO201D; option 5 -> ART202", ["ATU_SRC/QDDSSRC/PRO201D.DSPF", "ATU_SRC/QPNLSRC/SAMMNU.MENU:99-102"]),
+    ],
+    "fam-maintain": [
+        ("srvpgm:FFAMILLY", "ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM", "*SRVPGM MODULE(FAM300 FAM301); 4 exports; no family maintenance program exists (slice id is a charter misnomer)", ["ATU_SRC/QSRVSRC/FFAMILLY.BND"]),
+        ("mod:FAM300", "ATU_SRC/QRPGLESRC/FAM300.RPGLE", "*MODULE nomain - GetArtFamDesc, ExistArtFam (ignores FADEL), IsArtFamDeleted", []),
+        ("mod:FAM301", "ATU_SRC/QRPGLESRC/FAM301.RPGLE", "*MODULE nomain - SltArtFam keyed-read selection window (by code / by description); screen FAM301D", ["ATU_SRC/QDDSSRC/FAM301D.DSPF"]),
+    ],
+    "cou-maintain": [
+        ("pgm:COU200", "ATU_SRC/QRPGSRC/COU200.RPG", "*PGM RPG III OPM (only OPM member) - Work with Countries, edit name/ISO only (menu opt 21); screen COU200D", ["ATU_SRC/QDDSSRC/COU200D.DSPF", "ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142"]),
+        ("srvpgm:FCOUNTRY", "ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM", "*SRVPGM MODULE(COU300 COU301); 4 exports; used by CUS200/CUS250/PRO200/PRO250", ["ATU_SRC/QSRVSRC/FCOUNTRY.BND"]),
+        ("mod:COU300", "ATU_SRC/QRPGLESRC/COU300.RPGLE", "*MODULE nomain - GetCountryName, GetCountryIso3 (unused), ExistCountry", []),
+        ("mod:COU301", "ATU_SRC/QRPGLESRC/COU301.RPGLE", "*MODULE nomain - SltCountry keyed-read selection window; screen COU301D", ["ATU_SRC/QDDSSRC/COU301D.DSPF"]),
+    ],
+    "par-maintain": [
+        ("pgm:PAR200", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE", "*PGM RPGLE - Work with Parameters list/create/edit/delete (menu opt 20); screen PAR200D", ["ATU_SRC/QDDSSRC/PAR200D.DSPF", "ATU_SRC/QPNLSRC/SAMMNU.MENU:135-138"]),
+        ("cl:PAR201", "ATU_SRC/QCLSRC/PAR201.CLLE", "*PGM CLLE (CRTPGM BNDSRVPGM(FPARAMETER) ACTGRP(QILE)) - GetParm2 PATH -> WRKLNK (menu opt 83)", ["ATU_SRC/QILESRC/PAR201.ILEPGM", "ATU_SRC/QPNLSRC/SAMMNU.MENU:155-158"]),
+        ("srvpgm:FPARAMETER", "ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM", "*SRVPGM MODULE(PAR300) EXPORT(*ALL) - no binder source; only PATH is a live parameter", []),
+        ("mod:PAR300", "ATU_SRC/QRPGLESRC/PAR300.RPGLE", "*MODULE nomain - GetPARM1..GetPARM5 by (PACODE, PASUBCODE)", []),
+    ],
+    "vat-module": [
+        ("srvpgm:FVAT", "ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM", "*SRVPGM MODULE(VAT300); 4 exports; no VAT maintenance program exists", ["ATU_SRC/QSRVSRC/FVAT.BND"]),
+        ("mod:VAT300", "ATU_SRC/QRPGLESRC/VAT300.RPGLE", "*MODULE nomain - GetVATRate, GetVATDesc, ClcVAT (half-adjust 2dp; unknown code -> 0), ExistVATRate", []),
+    ],
+    "log-programs": [
+        ("srvpgm:LOG", "ATU_SRC/QILESRVSRC/LOG.ILESRVPGM", "*SRVPGM MODULE(LOG300) EXPORT(*ALL) - AddLogEntry to SAMLOG user space; not in SAMPLE.BNDDIR", []),
+        ("mod:LOG300", "ATU_SRC/QRPGLESRC/LOG300.RPGLE", "*MODULE nomain - AddLogEntry appends User/Date/Msg at pos; no capacity check", []),
+        ("pgm:LOG100", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE", "*PGM RPGLE - create SAMLOG user space (5000 bytes) in PARAMETER's library; no caller, no menu entry (install step)", []),
+    ],
+    "dat-utils": [
+        ("udf:ISOTODATE40", "ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF", "SQL UDF ISOTODATE40 -> DAT002: 0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL; used by ORD200/ORD201", ["ATU_SRC/QRPGLESRC/DAT002.PGM.RPGLE"]),
+        ("udf:ISO_Num_To_Date", "ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF", "SQL UDF ISO_Num_To_Date (SPECIFIC ISOTODATE) -> DAT001: plain conversion, 0 -> NULL; no caller in ATU_SRC", ["ATU_SRC/QRPGLESRC/DAT001.PGM.RPGLE"]),
+    ],
+    "sql-objects": [
+        ("view:ORDERCUS", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW", "SQL VIEW - ORDER inner-joined to CUSTOMER with TOTVAL (sum ODTOTVAT); read by ORD200/ORD201", []),
+        ("view:ARTLSTDAT", "ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW", "SQL VIEW - per-article MAX(ORDATE) / SUM(ODQTY); no consumer in ATU_SRC (QM query ARTQRY probable)", []),
+        ("table:ARTIINF", "ATU_SRC/QSQLSRC/ARTIINF.TABLE", "SQL TABLE article_full_description - ARID PK + VARCHAR(1520); written by ART200, read by ART302", []),
+        ("seq:CUSSEQ", "ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ", "SQL SEQUENCE START WITH 1551 - customer ids (CUS200 F6; documented cus-interactive-c02)", []),
+        ("sqlprc:ART801", "ATU_SRC/QSQLSRC/ART801.SQLPRC", "SQL PROCEDURE UPDATE_ON_CUS_ORD_QTY (menu opt 82) - behaviour documented as ord-trigger-ord700-c10", ["ATU_SRC/QPNLSRC/SAMMNU.MENU:151-154"]),
+    ],
+    "menu-cmd-shell": [
+        ("menu:SAMMNU", "ATU_SRC/QPNLSRC/SAMMNU.MENU", "UIM MENU - application entry map (20 options); opts 12/13/84 reach QM queries / ADSPUSRSPC not in tree", []),
+        ("pnlgrp:SAMHELP", "ATU_SRC/QPNLSRC/SAMHELP.PNLGRP", "PNLGRP - help stubs only; menu help= references mostly undefined", []),
+        ("msgf:SAMMSGF", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF", "MSGF - 12 messages (8 referenced by screens, ERR0001/0003/0004/0005 unused)", []),
+        ("cmd:CVTSPLPDF", "ATU_SRC/QCMDSRC/CVTSPLPDF.CMD", "*CMD Convert Spool to PDF - parameter definition only; processing program not in tree (used by ORD500C)", []),
+    ],
+    "srvpgm-supporting": [
+        ("bnddir:SAMPLE", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR", "*BNDDIR - 11 srvpgms (XML ORDER TXT XSS without source; LOG absent); bound by 12 programs via bnddir('SAMPLE')", ["ATU_SRC/QILESRC/PRO200.ILEPGM", "ATU_SRC/QILESRC/PAR201.ILEPGM"]),
+    ],
+}
+
+# Seeds intentionally not scanned as separate slices: their content lives in another slice.
+FOLDED_SEEDS = {
+    "srvpgm-fcustomer": "folded: srvpgm-fcustomer -> cus-modules (room bind 2026-09-08; export facts in cus-modules-c01/c05)",
+    "srvpgm-farticle": "folded: srvpgm-farticle -> art-modules (recommendation; surface srvpgm:FARTICLE + art-modules-c06/c10 carry the export facts and the ART302 gap)",
+    "srvpgm-fprovider": "folded: srvpgm-fprovider -> pro-modules (residual run 2026-09-08; pro-modules-c11/c12)",
 }
 
 # Seeds from CHARTER.yaml INITIAL_SEEDS in queue order; those not scanned stay as unscanned_hints.
@@ -111,6 +179,15 @@ STRUCTURAL_HINTS = [
     "blind-spot: CMD->PGM bindings (CRTORD) and trigger attachment are compiled-object/ARCAD metadata, not source",
     "unknown-surface: CUSTADRE.PF / ADDRESS.PF (multi-address model) referenced by no program in ATU_SRC",
     "unknown-surface: ARTIPROV link creation - no program found that writes new ARTIPROV rows",
+    # residual run 2026-09-08
+    "unknown-surface: ARTICLE.ARPURQTY (purchase order qty) has no writer in ATU_SRC; PRO202 XML export does not update it",
+    "unknown-surface: PROVIDE2.LF keyed on PROVA1 (not a PROVIDER field) and referenced by no program - stale / uncompilable",
+    "unknown-surface: no create or delete path for PROVIDER, COUNTRY, FAMILLY, VATDEF rows; PRDEL / FADEL / VATDEL have no writer",
+    "blind-spot: PRO203, ORD500, ORD700, LOG100 compile dftactgrp(*no) with no bnddir and no .ILEPGM - import resolution is ARCAD/elias build metadata",
+    "blind-spot: qprotosrc XML / XSS copybooks missing - PRO202 and PRO203 cannot be compiled from the tree",
+    "blind-spot: ORDER and TXT *SRVPGM in SAMPLE.BNDDIR referenced by nothing - possibly dead entries",
+    "runtime-only: SAMLOG user space is 5000 bytes without auto-extend - overflow behaviour and ADSPUSRSPC reader unknown",
+    "unknown-surface: ARTLSTDAT view and ISO_Num_To_Date UDF have no consumer in ATU_SRC (QM query ARTQRY probable)",
 ]
 
 
@@ -135,13 +212,25 @@ def stub(app_id: str, now: str) -> dict:
     }
 
 
+def _obj_name(sid: str) -> str:
+    return sid.split(":", 1)[1].split(".")[0]
+
+
 def pick_surface(slice_id: str, feature: dict, surfaces: list[tuple]) -> str:
-    text = " ".join(e.get("locator", "") for e in feature.get("entrypoints", []))
-    text += " " + " ".join(ev for e in feature.get("entrypoints", []) for ev in e.get("evidence", []))
-    for sid, _loc, _notes, _ev in surfaces:
-        obj = sid.split(":", 1)[1].split(".")[0].split("_")[0]
-        if obj and obj in text:
-            return sid
+    """Owner surface = the one whose object name appears earliest in the entrypoint locator
+    (so "PRO202 (from PRO200 opt 7)" -> PRO202), else earliest in the evidence, else the first surface."""
+    locator = " ".join(e.get("locator", "") for e in feature.get("entrypoints", []))
+    evidence = " ".join(ev for e in feature.get("entrypoints", []) for ev in e.get("evidence", []))
+    for text in (locator, evidence):
+        best = None
+        for sid, *_ in surfaces:
+            obj = _obj_name(sid)
+            pos = text.find(obj) if obj else -1
+            # longer names win ties so ISOTODATE40 beats ISOTODATE at the same offset
+            if pos >= 0 and (best is None or pos < best[0] or (pos == best[0] and len(obj) > len(_obj_name(best[1])))):
+                best = (pos, sid)
+        if best:
+            return best[1]
     return surfaces[0][0]
 
 
@@ -223,13 +312,13 @@ def main() -> int:
             added_b += 1
 
         for us in sm.get("unknown_surfaces", []) or []:
-            sid = f"unknown:{Path(us['locator']).name}"
+            sid = us.get("surface_id") or f"unknown:{Path(us['locator']).name}"
             if sid not in surf_by_id:
                 row = {
                     "surface_id": sid,
                     "kind": "other",
                     "locator": us["locator"],
-                    "repo_path": us["locator"],
+                    "repo_path": us["locator"].split(":")[0],
                     "status": "unknown",
                     "slice_id": slice_id,
                     "notes": us.get("note"),
@@ -243,11 +332,16 @@ def main() -> int:
             manifest["scanned_seeds"].append(slice_id)
 
     scanned = set(manifest["scanned_seeds"])
-    hints = [h for h in manifest["unscanned_hints"] if not h.startswith("seed ") or h.split(":")[0][5:] not in scanned]
+    # drop "seed X:" hints for seeds now scanned or folded; folded seeds get an explicit "folded:" line instead
+    hints = [h for h in manifest["unscanned_hints"]
+             if not h.startswith("seed ") or h.split(":")[0][5:] not in scanned | set(FOLDED_SEEDS)]
     for seed in ALL_SEEDS:
-        if seed in scanned:
+        if seed in scanned or seed in FOLDED_SEEDS:
             continue
         text = SEED_HINT_TEXT.get(seed, f"seed {seed}")
+        if text not in hints:
+            hints.append(text)
+    for text in FOLDED_SEEDS.values():
         if text not in hints:
             hints.append(text)
     for h in STRUCTURAL_HINTS:

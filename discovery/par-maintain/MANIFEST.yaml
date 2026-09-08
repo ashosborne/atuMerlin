@@ -1,0 +1,161 @@
+slice_id: par-maintain
+seed: "Parameters - PAR200 Work with Parameters (menu opt 20), PAR201 Work with IFS output (menu opt 83, CL), FPARAMETER service program (PAR300 GetPARM1..5)"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+  - ATU_SRC/QCLSRC/PAR201.CLLE
+  - ATU_SRC/QILESRC/PAR201.ILEPGM
+  - ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+  - ATU_SRC/QRPGLESRC/PAR300.RPGLE
+  - ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC
+  - ATU_SRC/QDDSSRC/PAR200D.DSPF
+out_of_scope_hints:
+  - programs that consume PATH (ORD500, PRO202, PRO203) - own slices
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: par-maintain-c01
+    name: List parameters with paging, F5 refresh, options 2/4
+    status: candidate
+    confidence: observed-in-code
+    summary: 14 rows per load with two-part saved-key restore; PARM2 truncated to 32 chars; F5 reloads; options 2 and 4 only.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 CTL01/SFL01 (menu opt 20)
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:92-119", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:133-173", "ATU_SRC/QDDSSRC/PAR200D.DSPF:15-41", "ATU_SRC/QPNLSRC/SAMMNU.MENU:135-138"]
+    dependencies: [PARAMETER.PF]
+    open_questions: []
+  - id: par-maintain-c02
+    name: F6 create with duplicate-key check only
+    status: candidate
+    confidence: observed-in-code
+    summary: FMT03 all fields input; chain on the typed key -> 40 if found; else write fparam; no other validation.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 FMT03
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:145-147", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:251-305", "ATU_SRC/QDDSSRC/PAR200D.DSPF:140-151"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c03
+    name: List not refreshed after create (appends next page instead)
+    status: candidate
+    confidence: observed-in-code
+    summary: F6 sets step01 = lod; on return the next 14 rows from the saved position are appended; new row visible only after F5.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 s01key create / s01lod
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:145-147", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:93-107", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:301-304"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c04
+    name: Option 2 edit values without validation
+    status: candidate
+    confidence: observed-in-code
+    summary: Key output, PARM1..5 input; Enter -> update fparam unconditionally.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:180-184", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:216-247", "ATU_SRC/QDDSSRC/PAR200D.DSPF:106-115"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c05
+    name: Option 4 immediate delete, no confirmation
+    status: candidate
+    confidence: observed-in-code
+    summary: delete by two-part key; row rewritten blank with '*** Deleted ****'; consecutive 4s in one pass.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 s01act opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:185-192"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c06
+    name: F3 on detail panels returns to list; F12 on list exits
+    status: candidate
+    confidence: observed-in-code
+    summary: S02key/S03key exit -> panel 1; s01key cancel -> panel 0.
+    entrypoints:
+      - kind: screen
+        locator: PAR200 key subroutines
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:135-140", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:226-236", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:278-288"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c07
+    name: PAR201 Work with IFS output (GetParm2 PATH -> WRKLNK)
+    status: candidate
+    confidence: observed-in-code
+    summary: CL CALLPRC GETPARM2('PATH',' '), *TCAT '*', WRKLNK OBJ(&PATH); bound to FPARAMETER via PAR201.ILEPGM ACTGRP(QILE).
+    entrypoints:
+      - kind: job
+        locator: PAR201 (menu opt 83)
+        evidence: ["ATU_SRC/QCLSRC/PAR201.CLLE:4-10", "ATU_SRC/QILESRC/PAR201.ILEPGM:8-9", "ATU_SRC/QPNLSRC/SAMMNU.MENU:155-158"]
+    dependencies: [FPARAMETER.ILESRVPGM]
+    open_questions: []
+  - id: par-maintain-c08
+    name: Blank PATH degrades to WRKLNK '*' / relative file names
+    status: candidate
+    confidence: inferred
+    summary: Missing PATH row returns blanks; PAR201 lists the current directory; consumers build names from a blank prefix.
+    entrypoints:
+      - kind: other
+        locator: PAR201 / PAR300 miss path
+        evidence: ["ATU_SRC/QCLSRC/PAR201.CLLE:9-10", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:34-44"]
+    dependencies: []
+    open_questions: ["Is PATH guaranteed present on the box?"]
+  - id: par-maintain-c09
+    name: GetPARM1..5 getter family with two-part cached chain
+    status: candidate
+    confidence: observed-in-code
+    summary: Five typed getters keyed by (PACODE, PASUBCODE); two-part last-key cache; unknown key -> blanks/zero.
+    entrypoints:
+      - kind: api
+        locator: FPARAMETER GetPARM1..GetPARM5 (PAR300)
+        evidence: ["ATU_SRC/QRPGLESRC/PAR300.RPGLE:22-80", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:82-98", "ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC:7-33"]
+    dependencies: [PARAMETER.PF]
+    open_questions: []
+  - id: par-maintain-c10
+    name: EXPORT(*ALL) exposes chainPARAMETER / closePARAMETER
+    status: candidate
+    confidence: observed-in-code
+    summary: No binder source; every procedure exported; no signature control.
+    entrypoints:
+      - kind: other
+        locator: FPARAMETER.ILESRVPGM
+        evidence: ["ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM:8"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c11
+    name: Only PATH is a live parameter; GetPARM1/3/4/5 unused
+    status: candidate
+    confidence: observed-in-code
+    summary: GetParm2('PATH',' ') from ORD500, PRO202, PRO203, PAR201; no caller for the other getters.
+    entrypoints:
+      - kind: other
+        locator: grep GetParm
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:58", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:151", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:32", "ATU_SRC/QCLSRC/PAR201.CLLE:7"]
+    dependencies: []
+    open_questions: ["Treat PATH as target configuration instead of converting the key/value screen?"]
+  - id: par-maintain-c12
+    name: PARAMETER is a plain two-key key/value table
+    status: candidate
+    confidence: observed-in-code
+    summary: UNIQUE (PACODE, PASUBCODE); no audit or delete columns.
+    entrypoints:
+      - kind: other
+        locator: PARAMETER.PF
+        evidence: ["ATU_SRC/QDDSSRC/PARAMETER.PF:4-14"]
+    dependencies: []
+    open_questions: []
+  - id: par-maintain-c13
+    name: LOG100 uses PARAMETER's library as the application library
+    status: candidate
+    confidence: observed-in-code
+    summary: Opens PARAMETER only to read INFDS library (pos 93-102) and create SAMLOG there.
+    entrypoints:
+      - kind: other
+        locator: LOG100 INFDS
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:6-7", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:11-12", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:20"]
+    dependencies: [LOG100]
+    open_questions: []

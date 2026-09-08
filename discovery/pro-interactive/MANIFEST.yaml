@@ -1,0 +1,186 @@
+slice_id: pro-interactive
+seed: "Provider screens - PRO200 Work with Providers (+ bound PRO202 purchase proposal), PRO250 Provider by id, PRO203 goods-to-purchase spreadsheet"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/PRO200.RPGLE
+  - ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE
+  - ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE
+  - ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE
+  - ATU_SRC/QILESRC/PRO200.ILEPGM
+  - ATU_SRC/QDDSSRC/PRO200D.DSPF
+  - ATU_SRC/QDDSSRC/PRO202D.DSPF
+  - ATU_SRC/QDDSSRC/PRO250D.DSPF
+out_of_scope_hints:
+  - PRO201 COBOL display list (pro-cobol-pro201)
+  - FPROVIDER getters / SltProvider internals (pro-modules)
+  - article maintenance, order screens
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: pro-interactive-c01
+    name: List providers by id with paging and options 2/5/7
+    status: candidate
+    confidence: observed-in-code
+    summary: Subfile over PROVIDE1 (PRID), 14 rows per load with saved-key restore, PRDEL shown; options 2, 5, 7 allowed, others SFLMSG 35.
+    entrypoints:
+      - kind: screen
+        locator: PRO200 CTL01/SFL01 (menu opt 4)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:98-123", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:152-172", "ATU_SRC/QDDSSRC/PRO200D.DSPF:15-26", "ATU_SRC/QPNLSRC/SAMMNU.MENU:95-98"]
+    dependencies: [PROVIDE1.LF, PROVIDER.PF]
+    open_questions: []
+  - id: pro-interactive-c02
+    name: Edit provider (option 2) with country prompt and validation
+    status: candidate
+    confidence: observed-in-code
+    summary: FMT02 all fields input; F4 SltCountry + GetCountryName; ExistCountry (ERR0002) and name mandatory (41) checked in one pass.
+    entrypoints:
+      - kind: screen
+        locator: PRO200 FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:179-185", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:217-255", "ATU_SRC/QDDSSRC/PRO200D.DSPF:85-103"]
+    dependencies: [FCOUNTRY.ILESRVPGM, SAMMSGF.MSGF]
+    open_questions: []
+  - id: pro-interactive-c03
+    name: Edit never saves (mode never set to upd - planted bug)
+    status: candidate
+    confidence: observed-in-code
+    summary: S02act updates FPROV only when mode = upd; the only assignment is commented out ("to remove the bug uncomment"); Enter returns to list with nothing written.
+    entrypoints:
+      - kind: screen
+        locator: PRO200 S02act
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:51", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:184-185", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:258-266"]
+    dependencies: []
+    open_questions: ["Preserve the defect as-is or fix it before characterization?"]
+  - id: pro-interactive-c04
+    name: No create / delete path for providers (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: No F6, no option 4, no write fprov, no writer of PRDEL anywhere in ATU_SRC; PROVIDE1 opened uf a but only update appears.
+    entrypoints:
+      - kind: other
+        locator: PRO200 F-spec / options
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:5", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:152-172", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:263"]
+    dependencies: []
+    open_questions: ["How are providers created / soft-deleted on the box?"]
+  - id: pro-interactive-c05
+    name: Option 5 -> ART202, option 7 -> bound PRO202
+    status: candidate
+    confidence: observed-in-code
+    summary: articles(prid) is extpgm ART202; prpOrd(prid) is extproc PRO202, a module bound into *PGM PRO200.
+    entrypoints:
+      - kind: other
+        locator: PRO200 s01act
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:13-17", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:186-193", "ATU_SRC/QILESRC/PRO200.ILEPGM:8-9"]
+    dependencies: [ART202]
+    open_questions: []
+  - id: pro-interactive-c06
+    name: PRO202 purchase proposal selection and proposed quantity
+    status: candidate
+    confidence: observed-in-code
+    summary: Cursor over ARTICLE x ARTIPROV for the provider where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY; NEWORD = ARMINQTY + ARCUSQTY - ARPURQTY - ARSTOCK; all rows loaded at once.
+    entrypoints:
+      - kind: screen
+        locator: PRO202 CTL01 (from PRO200 opt 7)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:85-114", "ATU_SRC/QDDSSRC/PRO202D.DSPF:16-30"]
+    dependencies: [ARTICLE.PF, ARTIPROV.PF]
+    open_questions: []
+  - id: pro-interactive-c07
+    name: F8 confirm writes XML purchase order file to PATH
+    status: candidate
+    confidence: observed-in-code
+    summary: Pur_Ord_<prid>_<yymmdd>.xml in getParm2('PATH'); hard-coded Customer block; one Item per row (ID, YOUR_REF, DESC, QTY, UnitPrice); FMT03 window then end.
+    entrypoints:
+      - kind: job
+        locator: PRO202 s01act confirm -> XML srvpgm
+        evidence: ["ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:148-176", "ATU_SRC/QDDSSRC/PRO202D.DSPF:91-103"]
+    dependencies: [FPARAMETER.ILESRVPGM, XML *SRVPGM (not in tree)]
+    open_questions: ["Who consumes the XML file?"]
+  - id: pro-interactive-c08
+    name: Confirm does not update ARPURQTY (no writer in ATU_SRC)
+    status: candidate
+    confidence: observed-in-code
+    summary: No database write after the XML export; grep finds no writer of ARTICLE.ARPURQTY anywhere in the tree.
+    entrypoints:
+      - kind: other
+        locator: PRO202 s01act
+        evidence: ["ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:148-176"]
+    dependencies: []
+    open_questions: ["Is ARPURQTY fed by an external purchasing process?"]
+  - id: pro-interactive-c09
+    name: PRO202 has no option handling; leftover order messages
+    status: candidate
+    confidence: observed-in-code
+    summary: s01chk accepts anything; Enter without F8 redisplays; SFLMSG 36/37 texts are order-screen leftovers.
+    entrypoints:
+      - kind: screen
+        locator: PRO202 s01chk
+        evidence: ["ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:143-145", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:177-178", "ATU_SRC/QDDSSRC/PRO202D.DSPF:44-47"]
+    dependencies: []
+    open_questions: []
+  - id: pro-interactive-c10
+    name: XML copybook and service program not in tree
+    status: candidate
+    confidence: inferred
+    summary: /copy qprotosrc,xml and XML *SRVPGM absent; element shape known only from call names.
+    entrypoints:
+      - kind: other
+        locator: PRO202 /copy qprotosrc,xml
+        evidence: ["ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:11", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10"]
+    dependencies: []
+    open_questions: ["Which product provides XML/XSS? Is the file format in parity scope?"]
+  - id: pro-interactive-c11
+    name: PRO250 provider-by-id inquiry with prompt, not-found and F7 items
+    status: candidate
+    confidence: observed-in-code
+    summary: F4 SltProvider; chain PROVIDE1; not found -> ERR0103; no PRDEL test; FMT02 read-only with GetCountryName; F7 -> ART202(prid); F3 on detail returns to FMT01.
+    entrypoints:
+      - kind: screen
+        locator: PRO250 FMT01/FMT02 (menu opt 9)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:86-116", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:135-159", "ATU_SRC/QDDSSRC/PRO250D.DSPF:30-35", "ATU_SRC/QPNLSRC/SAMMNU.MENU:115-118"]
+    dependencies: [FPROVIDER.ILESRVPGM, FCOUNTRY.ILESRVPGM, ART202]
+    open_questions: []
+  - id: pro-interactive-c12
+    name: PRO203 goods-to-purchase spreadsheet report
+    status: candidate
+    confidence: observed-in-code
+    summary: XSS spreadsheet; ARTICLE x ARTIPROV x PROVIDER where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY and ARCUSQTY > 0; yellow rows when article has >1 provider; proposed qty; autofilter; Goods to purchase_<yymmdd>.xml in PATH; reuses PRO202D.FMT03.
+    entrypoints:
+      - kind: job
+        locator: PRO203 (menu opt 10)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:29-95", "ATU_SRC/QPNLSRC/SAMMNU.MENU:121-124"]
+    dependencies: [FPARAMETER.ILESRVPGM, XSS *SRVPGM (not in tree), PRO202D.DSPF]
+    open_questions: ["Split into its own slice at bind?"]
+  - id: pro-interactive-c13
+    name: PRO203 binding and XSS format not in source
+    status: candidate
+    confidence: inferred
+    summary: dftactgrp(*no) with no bnddir, no PRO203.ILEPGM, Xss copybook missing; spreadsheet format unknown (file named .xml).
+    entrypoints:
+      - kind: other
+        locator: PRO203 H-spec
+        evidence: ["ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:4", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:7", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:30-31"]
+    dependencies: []
+    open_questions: []
+  - id: pro-interactive-c14
+    name: Entry paths and activation groups
+    status: candidate
+    confidence: observed-in-code
+    summary: Menu opt 4 PRO200, opt 9 PRO250, opt 10 PRO203; PRO200+PRO202 in ACTGRP(QILE) via CRTPGM; PRO250 bnddir('SAMPLE').
+    entrypoints:
+      - kind: other
+        locator: SAMMNU / PRO200.ILEPGM
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:95-98", "ATU_SRC/QPNLSRC/SAMMNU.MENU:115-124", "ATU_SRC/QILESRC/PRO200.ILEPGM:8-9", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:4"]
+    dependencies: []
+    open_questions: []
+  - id: pro-interactive-c15
+    name: F3 on edit panel returns to list; F12 on list exits
+    status: candidate
+    confidence: observed-in-code
+    summary: S02key exit -> panel 1; s01key cancel -> panel 0. Same key semantics as CUS200.
+    entrypoints:
+      - kind: screen
+        locator: PRO200 s01key / S02key
+        evidence: ["ATU_SRC/QRPGLESRC/PRO200.RPGLE:137-149", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:228-243"]
+    dependencies: []
+    open_questions: []

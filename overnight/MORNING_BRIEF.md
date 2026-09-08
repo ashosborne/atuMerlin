@@ -1,74 +1,102 @@
 # MORNING_BRIEF — atu-merlin
 
-# PHASE B DOCUMENT ONLY — NO TESTS — NO CONVERSION
+# PHASE A ONLY - UNBOUND CANDIDATES
 
-Run: Pack B document-slices conveyor, run 4 · 2026-09-08 17:45–18:30 UTC (18:45–19:30 Europe/London)
-Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `fa5b77f`
-Previous briefs preserved in git: run 3 at `efb5e2a:overnight/MORNING_BRIEF.md`; run 2 at `5ac7f0d:overnight/MORNING_BRIEF.md`; run 1 at `0e32c19:overnight/MORNING_BRIEF.md`; Pack A at `ab342e9:overnight/MORNING_BRIEF.md`.
+# ESTATE_SCAN_INCOMPLETE
 
-## 1. Slice processed
+Run: Pack A estate radar, **residual run** (seeds 13+) · 2026-09-08 19:05–19:45 UTC (20:05–20:45 Europe/London)
+Branch: `cursor/atu-merlin-estate-discovery` (PR #1 → `master`) · HEAD at start `7f1172b`
+Previous briefs preserved in git: Pack B run 4 at `200a3e3:overnight/MORNING_BRIEF.md`; Pack A run 1 at `ab342e9:overnight/MORNING_BRIEF.md`.
 
-**`ord-trigger-ord700`** (job preference; the only accepted-but-undocumented slice left in the 2026-09-08 bind). `ORD700` external trigger program on `DETORD` (three `ADDPFTRG` definitions) + `ORD701` SQL trigger on `ORDER`, plus the two boundary facts the bind accepted: `ORD100`'s staging copy is untriggered (`c09`) and `ART801` is the batch reconciliation of the same fields (`c10`). The CUS PACK / `modern/` convert were **not** touched — ORD is document-only per the bind record.
+> Of the allowlisted seeds scanned, these candidate slices were proposed; APP_MANIFEST updated; nothing bound.
 
-## 2. Cards written / needs-SME left
+## 1. Counts
 
-- **8 / 8** accepted behaviours now have as-is behaviour cards: `discovery/ord-trigger-ord700/features/ord-trigger-ord700-c02.md` … `c07.md`, `c09.md`, `c10.md`. Every card cites `ATU_SRC` file:line. `MANIFEST.yaml` → `phase: B`, 8 `documented`.
-- **`c01`** (trigger attachment on the box), **`c08`** (`CULASTORD` stale on delete) and **`c11`** (trigger vs reconciliation arithmetic) were `needs-SME` / `inferred` at bind → **no card**, stay `needs-SME` in `MANIFEST.yaml`; not promoted. Their summaries now carry the observed facts from the cards (status and confidence unchanged).
-- **0** accepted items left undocumented in this slice. **0** `blocked`.
-- **8 needs-SME lines** carried explicitly in `MANIFEST.yaml` `needs_sme` / `open_questions`. The ones worth Ash's attention first:
-  - `c02` vs `c03`/`c04`/`c10` — **the insert path adds the full `ODQTY`; every other path (delete, update, `ART801`) works in `ODQTY − ODQTYLIV`.** Coincides today because `ORD100` stages `ODQTYLIV = 0`; latent asymmetry.
-  - `c04` / `c11` — **order close (`ORD200`/`ORD201` option 7) updates `ORDER` only and never reaches `ORD700`**, while `ART801` excludes closed orders. Delivery (option 8) does reach it (`−ODQTY` per undelivered line; partially delivered lines are skipped by the writer). **No in-tree writer ever changes `ODARID`**, so the article-changed branch has no in-tree caller.
-  - `c03` — only the **delete** event logs; the `SAMLOG` line carries `ODQTY`, not the outstanding quantity subtracted; the log call is `callp(e)` with `%error` never read. **How `AddLogEntry` is bound into `ORD700` is not in source** (no `bnddir` on the H-spec, `LOG` absent from `SAMPLE.BNDDIR`, no `ORD700.ILEPGM`) — build owner.
-  - `c05` — `UpdArt` has **no error handling** (`chain`/`update` without `(e)`): a record lock or 5-digit overflow inside the trigger is an unhandled exception that lands on the writer's I/O, which none of the writers monitor. Unknown article → silent skip; `ARCUSQTY` can go negative; `ARMOD`/`ARMODID` not stamped; `ARDEL` ignored.
-  - `c07` — `ORD701` **assigns** `n.ordate` (no `MAX`) — a back-dated insert moves `CULASTORD` backwards (only reachable outside `ORD100` today); unknown customer → 0 rows, silent; fires **before** the lines are written, no commitment control.
-  - `c10` — `ART801` "Reset Summary Fields" is `WHERE EXISTS`-guarded: **articles with no open lines and customers with no open orders keep their old values.** `CUCREDIT` has **no incremental maintainer** anywhere in `ATU_SRC`; `ART801` is its only writer.
-  - `c06` — `*inlr` is set only on the no-parameter path; `TTIME`, `CMTLCK`, null maps, lengths and `PARM2` are never read; `dftactgrp(*no)` with no `actgrp` (compile-time).
-- Evidence corrections to Phase A recorded in the cards: `ORD701` body `ORD701.SQLTRG:5-16` (was `:4-14`); menu option 82 `SAMMNU.MENU:151-154` (was `:152-155`); `ART801` `CULASTORD` statement `:34-37` (was `:33-36`).
+| | |
+| --- | ---: |
+| seeds scanned this run | **12** (`pro-interactive`, `pro-modules`, `pro-cobol-pro201`, `fam-maintain`, `cou-maintain`, `par-maintain`, `vat-module`, `log-programs`, `dat-utils`, `sql-objects`, `menu-cmd-shell`, `srvpgm-supporting`) |
+| seeds folded (no separate Phase A) | 3 (`srvpgm-fcustomer` → cus-modules [bind], `srvpgm-farticle` → art-modules, `srvpgm-fprovider` → pro-modules) |
+| new candidate surfaces | **36** candidate + **4** `unknown` (`srvpgm:XML`, `srvpgm:XSS`, `srvpgm:ORDER`, `srvpgm:TXT` — listed in `SAMPLE.BNDDIR`, no source) |
+| new candidate behaviours | **134** (123 `observed-in-code`, 11 `inferred`) |
+| deferred / reject recommendations (prose only) | 9 slice-level (see §6); 0 MANIFEST statuses changed |
+| errors / BLOCKED | 0 |
+| `ATU_SRC` members read at least once across both Pack A runs | 136 of 136 — **inventory coverage, not completeness** |
 
-## 3. Characterization
+## 2. Top candidates (things a human should know before binding)
 
-`CHARACTERIZATION: deferred-waived` — note present at `discovery/ord-trigger-ord700/CHARACTERIZATION.md` and on every card. Reason: no IBM i runtime; documented from source only. **No RECORD/REPLAY, no goldens, no `WAIVED_*` artefact, no Conversion unlock claimed.** `legacy_green` / `parity_green` remain `false` everywhere. Two runtime facts the future RECORD must settle first are listed there (are the four triggers attached at all — `c01`; what an unhandled exception inside `ORD700` does to the writer — `c05`).
+| id | slice | entry hint | confidence | evidence |
+| --- | --- | --- | --- | --- |
+| pro-interactive-c03 | pro-interactive | PRO200 opt 2 — **edit never saves** (`mode = upd` commented out: "to remove the bug uncomment") | observed-in-code | `QRPGLESRC/PRO200.RPGLE:184-185`, `:258-266` |
+| pro-interactive-c08 | pro-interactive | PRO202 F8 confirm writes `Pur_Ord_*.xml` and **does not update `ARPURQTY`** — no writer of the field anywhere in the tree | observed-in-code | `PRO202.SQLRPGLE:148-176`; grep |
+| fam-maintain-c02 | fam-maintain | **`ExistArtFam` ignores `FADEL`** — a deleted family passes ART200 validation; every other `Exist*` excludes `'X'` | observed-in-code | `FAM300.RPGLE:29-37`; `ART200.PGM.SQLRPGLE:286` |
+| vat-module-c02 | vat-module | **unknown VAT code → rate 0 → zero VAT silently**; no caller checks `ExistVATRate` | observed-in-code | `VAT300.RPGLE:61-74`; `ORD100.PGM.RPGLE:267-269` |
+| sql-objects-c01 | sql-objects | **`ORDERCUS` inner-joins `CUSTOMER`** — orders for a missing customer vanish from ORD200/ORD201; `TOTVAL` is VAT-inclusive | observed-in-code | `ORDERCUS.VIEW:5-21` |
+| log-programs-c04 | log-programs | `SAMLOG` 5000 bytes, no auto-extend, 600-byte writes — **logging stops silently after ~4400 bytes** (`ORD700` swallows the error) | inferred | `LOG300.RPGLE:13,27-32`; `LOG100.PGM.RPGLE:21` |
+| pro-cobol-pro201-c05 | pro-cobol-pro201 | F3 on the detail panel re-reads `PROVIDE1` from the current position with `IN80` sticky → likely empty list | inferred (code path observed) | `PRO201.CBL:147-158`, `:292-305` |
+| dat-utils-c07 | dat-utils | `0 → 1940-01-01` sentinel implemented **three times** (DAT002 SQL, CUS200 RPG, ORD202 RPG); only the SQL one also maps `99999999` | observed-in-code | `DAT002.PGM.RPGLE:45-48` |
+| srvpgm-supporting-c02 / c05 | srvpgm-supporting | `XML` / `XSS` have no source; `PRO203`, `ORD500`, `ORD700`, `LOG100` **bind by build metadata only** | observed (absence) / inferred | `SAMPLE.BNDDIR:10-11`; H-specs |
+| menu-cmd-shell-c02 | menu-cmd-shell | menu opts 12 / 13 / 84 reach **QM queries and `ADSPUSRSPC` that are not in the tree** — two reports and the log viewer are unscannable | inferred | `SAMMNU.MENU:125-132`, `:159-162` |
+| par-maintain-c11 | par-maintain | the whole parameter subsystem carries **one live key** (`PATH`); `GetPARM1/3/4/5` unused | observed-in-code | grep `GetParm` |
+| pro-interactive-c04 / fam-maintain-c11 / cou-maintain-c04 / vat-module-c07 | four slices | **no create or delete path** for PROVIDER, FAMILLY, COUNTRY, VATDEF rows in `ATU_SRC`; `PRDEL`/`FADEL`/`VATDEL` have no writer | observed-in-code (absence) | greps |
 
-## 4. COVERAGE / APP_MANIFEST / INDEX delta
+## 3. APP_MANIFEST / COVERAGE delta
 
-`inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + `discovery_card` pointers only, via `overnight/tools/mark_documented.py --slice ord-trigger-ord700`; no new surfaces/behaviours):
-
-| Metric | before | after |
+| Metric | before (`200a3e3`) | after |
 | --- | ---: | ---: |
-| behaviours `documented` | 34 | 42 (`cus-interactive` 12 + `cus-modules` 10 + `ord-entry-ord100` 12 + `ord-trigger-ord700` 8) |
-| behaviours `accepted` | 8 | **0** (bind queue drained) |
-| behaviours `candidate` | 92 | 92 (incl. bind `needs-SME` rows kept as candidate — schema has no needs-SME status) |
-| surfaces `accepted` / `deferred` | 12 / 2 | 12 / 2 (unchanged; `ord-trigger-ord700` surfaces were already `accepted` from run 1) |
+| surfaces_total | 31 | **71** (accepted 12 · candidate 50 · deferred 2 · unknown 7) |
+| behaviours_known | 134 | **268** (candidate 226 · documented 42) |
+| behaviours confidence `inferred` | 10 | 21 |
+| scanned_seeds | 12 | **24** |
+| unscanned_hints | 21 | 17 (15 `seed …` lines removed; 3 `folded:` + 8 structural lines added) |
 | legacy_green / parity_green / parity_waived | 0 / 0 / 0 | 0 / 0 / 0 |
 
-- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems). Per-slice row `ord-trigger-ord700`: 11 behaviours, **8 documented**, weakest status `candidate` (that is `c01`/`c08`/`c11`, the needs-SME rows — weakest-wins column working as intended). The `behaviours accepted` histogram row disappears because the count is now zero.
-- `docs/estate/INDEX.md`: row 11 `ord-trigger-ord700` → **done** (cards written; SME sign-off pending) with the headline findings; header line notes run 4 and that the conveyor is idle.
+- Human-set rows untouched: 12 `accepted` surfaces, 2 `deferred`, 42 `documented` behaviours — no status changed, no downgrade. Four pre-existing `needs-SME` candidate rows (`cus-modules-c10`, `ord-trigger-ord700-c01/c08/c11`) had their **notes** refreshed from the slice MANIFESTs Pack B had already updated (text only).
+- `COVERAGE.md` regenerated by `overnight/tools/gen_coverage.py` (0 lint problems). `docs/estate/INDEX.md` rows 13–27 refreshed (`unscanned` → `candidate` / `folded`). `overnight/METHOD_COVERAGE.md` rewritten.
+- `overnight/tools/upsert_app_manifest.py` extended: 12 new `SURFACES` groups, `FOLDED_SEEDS`, `unknown_surfaces[].surface_id`, owner-surface picker prefers the earliest object name in the locator. Re-run is a no-op.
 
-## 5. Remaining accepted undocumenteds (queue for next run)
+## 4. Remaining `unscanned_hints` (17) — honesty metric, not completeness
 
-**None.** Every slice accepted in the 2026-09-08 room bind is documented: `cus-interactive` (run 1), `cus-modules` (run 2), `ord-entry-ord100` (run 3), `ord-trigger-ord700` (run 4). **Document conveyor idle** — re-running this paste will report idle until more slices are bound.
+**Seed queue: empty.** 24 of 27 charter seeds scanned, 3 folded → 27 of 27 seeds addressed. What remains is not seeds but **things the tree cannot show**:
 
-Awaiting human SME sign-off (`SME_BRIEF.md` checklists): all four documented slices. Deferred by bind: `ord-batch-ord900`. Skipped by bind: `art-interactive`, `art-modules` (ART302 question). Unbound Phase A candidates: 7 slices (`art-*`, `ord-entry-ord101`, `ord-maintain-ord200/201/202`, `ord-print-ord500`). Unscanned seeds: 15 (see COVERAGE / INDEX rows 13–27).
+- 4 sourceless service programs (`XML`, `XSS` used by PRO202/PRO203; `ORDER`, `TXT` referenced by nothing) and their copybooks
+- QM queries `CUSQRY`, `ARTQRY`, form `CUSQRYFMT`; commands `CVTSPLPDF` (impl), `ADSPUSRSPC`
+- binding of `PRO203`, `ORD500`, `ORD700`, `LOG100` (no `bnddir`, no `.ILEPGM`); CMD→PGM bindings; trigger attachment
+- `SAMLOG` capacity (runtime); `ARPURQTY` writer; `PROVIDE2.LF` (stale, keys on a non-field); no create/delete for four reference tables; `CUSTADRE`/`ADDRESS` unused; `ARTIPROV` link creation; `ARTLSTDAT` / `ISO_Num_To_Date` consumers
 
-## 6. Explicit non-claims
+## 5. Recommended human priority for bind (not auto-bound)
 
-- Did **not** convert anything. Target stack stays in `operator/atu-merlin-factory-loop/TARGET.md` / the bound CUS PACK for later stations; ORD is not in that vertical (bind record). `modern/` was not touched. `ROOM_OK` was not needed for this station and is not claimed.
-- Did **not** generate tests, RECORD, REPLAY, goldens, or any waiver artefact.
-- Did **not** bind anything (no self-accepts; every card was human-accepted on 2026-09-08; `c01`, `c08`, `c11` stay needs-SME). `inferred`/`needs-SME` rows in other slices were not promoted. `ORD100` / `ORD101` / `ORD200` / `ORD201` / `ORD901` / `LOG300` / `PRO202` / `PRO203` / `CUS200` / `CUS300` were cited as call sites, log format or consumers only — their slices were not deepened. `ART801` was documented only as the related surface the bind accepted (`c10`); the `sql-objects` seed remains unscanned.
-- Did **not** edit `ATU_SRC/**` or touch `master`.
-- No claim of parity, verification, or "% documented". Counts only.
+Prefer CUS / ART, then ORD seams — and this run's residual slices are mostly **dependencies of those**, not independent products:
 
-## 7. Deviations recorded
+1. **`vat-module`** (c01, c02, c08) — load-bearing for the ORD line cards already documented (`ord-entry-ord100-c03/c04` cite `CLCVat`); 85 lines, pure rule. Bind alongside `ord-entry-ord101`.
+2. **`cou-maintain` — FCOUNTRY half only** (c07, c09–c12) — dependency of the documented CUS slices (`ExistCountry`, `SltCountry`, `GetCountryName`). Consider splitting the OPM `COU200` screen off.
+3. **`dat-utils`** (c01, c07) — the sentinel rule three slices share; smallest seam in the estate.
+4. **`sql-objects` c01/c02** as dependency notes on `ord-maintain-ord200/201` when those are bound.
+5. **`pro-interactive` + `pro-modules`** — new domain (PRO); bind after deciding the planted-bug question (c03) and the `XML`/`XSS` blind spot. `pro-cobol-pro201` is superseded by PRO200 — retire vs convert is a room call.
+6. **`fam-maintain`** — only when ART is bound (its only consumers); decide c02 first.
+7. **Defer / reject candidates:** `par-maintain` (make `PATH` configuration), `log-programs` (replace with target logging), `menu-cmd-shell` (navigation spec, not a slice), `srvpgm-supporting` (architecture notes; keep the 4 `unknown` surfaces).
 
-- FEATURE_IDs kept as `ord-trigger-ord700-cNN` (same decision as runs 1–3; bind record, `BIND.md` and APP_MANIFEST reference them). Open Field Guide decision, unchanged.
-- The Cloud Agent VM checked out a scratch branch at `fa5b77f`; switched to `cursor/atu-merlin-estate-discovery` (same SHA) before writing anything, as the job requires.
-- Phase A's SME_BRIEF recommended "one rule card with two implementation notes" for incremental vs batch maintenance; the bind accepted `c02`–`c04` and `c10` as separate candidates, so they are separate cards cross-referencing each other. Not merged.
-- Pushed once at the end with `AGENT_JOB.md` already `DONE` (every push re-fires the automation; expect one no-op run).
+## 6. Deferred / reject recommendations made in prose (no MANIFEST status changed)
 
-## 8. completeness: incomplete
+`pro-interactive` split PRO203 or defer XML/XSS edges · `pro-cobol-pro201` retire · `fam-maintain` defer until ART bound, rename optional · `cou-maintain` split srvpgm from OPM screen · `par-maintain` PATH → configuration, PAR201 reject · `log-programs` defer whole slice, LOG100 reject · `dat-utils` defer `ISO_Num_To_Date` · `sql-objects` views as dependency notes, `ARTLSTDAT` defer · `menu-cmd-shell` reject as slice · `srvpgm-supporting` reject as slice.
 
-Human residual gate untouched. Estate scan still partial (`overnight/METHOD_COVERAGE.md`). Bind queue drained does not mean discovery complete — 7 Phase A slices are unbound and 15 seeds unscanned.
+## 7. Suspected blind spots
 
-## 9. Next action
+- **Functional:** two reports (menu 12/13, QM) and the log viewer (84) are outside the tree; the two IFS outputs of PRO (`Pur_Ord_*.xml`, `Goods to purchase_*.xml`) depend on `XML`/`XSS` whose format is unknown.
+- **Build:** ARCAD/elias metadata (`iproj.json`, `.elias/`) decides how four programs bind; source alone cannot say.
+- **Data:** reference tables (`PROVIDER`, `COUNTRY`, `FAMILLY`, `VATDEF`, `PARAMETER` beyond `PATH`) have no in-tree maintenance — how rows get there is unknown; `ARPURQTY` is never written.
+- **Runtime:** every `inferred` row (21 / 268) is a box or build question; no IBM i available.
 
-**Bind more slices from the Pack A radar** (this paste has nothing left to document; re-running it will report idle). Candidates ready for a room bind: `ord-entry-ord101`, `ord-maintain-ord200/201/202`, `ord-print-ord500` (Phase A done, `CANDIDATES.md` + `SME_BRIEF.md` in place); `art-*` once the ART302 question is answered; or resume Pack A radar on the 15 unscanned seeds (`sql-objects` would give `ART801` its own home). In parallel, a human SME should work the sign-off checklists in `discovery/cus-interactive/SME_BRIEF.md`, `discovery/cus-modules/SME_BRIEF.md`, `discovery/ord-entry-ord100/SME_BRIEF.md` and now `discovery/ord-trigger-ord700/SME_BRIEF.md`; those signatures, not this brief, are what unlock Test generation.
+## 8. Explicit non-claims
+
+- Did **not** bind, deepen Phase B, PACK, RECORD, test-gen, test-exec, or Convert. `AUTO_BIND: false`, `AUTO_ACCEPT: false` honoured. `ROOM_OK` not needed for this station and not claimed.
+- Did **not** widen `atu-merlin-ts-cus-v1`; did **not** touch `modern/`, `architecture/`, `verification/`, `ATU_SRC/**`, or `master`.
+- Did **not** re-scan the documented CUS / ORD slices as new work: `CUSSEQ` and `ART801` got a surface in `sql-objects` that points at the existing cards (`cus-interactive-c02`, `ord-trigger-ord700-c10`); `FCOUNTRY`, `FVAT`, `LOG`, `FPARAMETER` callers in CUS/ORD are cited as call sites only.
+- No percentages, no "all slices found". Counts only.
+
+## 9. completeness: incomplete
+
+Human residual gate required. `estate_scan: partial` stays in APP_MANIFEST notes; **ESTATE_SCAN_INCOMPLETE** because the residual is now objects the tree does not contain, not unread members. Reading every member once is inventory coverage, not migration progress.
+
+## 10. Bind which slice IDs today?
+
+Candidates ready for a room bind (Phase A done, `CANDIDATES.md` + `SME_BRIEF.md` in place): the 12 slices from this run plus the 7 unbound from run 1 (`art-interactive`, `art-modules`, `ord-entry-ord101`, `ord-maintain-ord200/201/202`, `ord-print-ord500`). Suggested first batch: `vat-module`, `dat-utils`, `cou-maintain` (FCOUNTRY half). Then Ash runs the Pack B document conveyor on accepted slice IDs only.

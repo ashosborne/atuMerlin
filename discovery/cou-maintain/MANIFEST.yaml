@@ -1,0 +1,161 @@
+slice_id: cou-maintain
+seed: "Countries - COU200 Work with Countries (OPM RPG III, menu opt 21) + FCOUNTRY service program (COU300 getters/ExistCountry, COU301 SltCountry window)"
+seed_entrypoints:
+  - ATU_SRC/QRPGSRC/COU200.RPG
+  - ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FCOUNTRY.BND
+  - ATU_SRC/QRPGLESRC/COU300.RPGLE
+  - ATU_SRC/QRPGLESRC/COU301.RPGLE
+  - ATU_SRC/QPROTOSRC/COUNTRY.RPGLEINC
+  - ATU_SRC/QDDSSRC/COU200D.DSPF
+out_of_scope_hints:
+  - customer / provider screens (callers only)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: cou-maintain-c01
+    name: COU200 lists all countries in one load; option 2 only
+    status: candidate
+    confidence: observed-in-code
+    summary: "*LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35."
+    entrypoints:
+      - kind: screen
+        locator: COU200 CTL01/SFL01 (menu opt 21)
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:37-47", "ATU_SRC/QRPGSRC/COU200.RPG:69-88", "ATU_SRC/QDDSSRC/COU200D.DSPF:24-33", "ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142"]
+    dependencies: [COUNTRY.PF]
+    open_questions: []
+  - id: cou-maintain-c02
+    name: Edit country name / ISO-3 with no validation
+    status: candidate
+    confidence: observed-in-code
+    summary: FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns.
+    entrypoints:
+      - kind: screen
+        locator: COU200 FMT02
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:94-98", "ATU_SRC/QRPGSRC/COU200.RPG:109-112", "ATU_SRC/QRPGSRC/COU200.RPG:127-133", "ATU_SRC/QDDSSRC/COU200D.DSPF:70-73"]
+    dependencies: []
+    open_questions: ["Does the target need ISO-3 validation?"]
+  - id: cou-maintain-c03
+    name: Chain indicator 98 never tested before UPDAT
+    status: candidate
+    confidence: observed-in-code
+    summary: A concurrent delete between list and edit would UPDAT without a locked record.
+    entrypoints:
+      - kind: other
+        locator: COU200 S02PRP / S02ACT
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:111", "ATU_SRC/QRPGSRC/COU200.RPG:131"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c04
+    name: No create / delete path; code not editable; no delete flag (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column.
+    entrypoints:
+      - kind: other
+        locator: COU200 options / COUNTRY.PF
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:74-76", "ATU_SRC/QDDSSRC/COU200D.DSPF:70", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10"]
+    dependencies: []
+    open_questions: ["How are countries added on the box?"]
+  - id: cou-maintain-c05
+    name: Key semantics (F3 on detail ends program; F12 returns without reload)
+    status: candidate
+    confidence: observed-in-code
+    summary: List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload.
+    entrypoints:
+      - kind: screen
+        locator: COU200 S01KEY / S02KEY
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:58-67", "ATU_SRC/QRPGSRC/COU200.RPG:117-126"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c06
+    name: Consecutive option-2 rows processed; subfile row not refreshed
+    status: candidate
+    confidence: observed-in-code
+    summary: STEP01 stays 'ACT' after an update so the next changed row is picked up; the list shows stale values.
+    entrypoints:
+      - kind: screen
+        locator: COU200 S01ACT
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:89-100", "ATU_SRC/QRPGSRC/COU200.RPG:130-133"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c07
+    name: GetCountryName / GetCountryIso3 / ExistCountry
+    status: candidate
+    confidence: observed-in-code
+    summary: Cached COUNTRY chain by 2A code; unknown -> blanks; ExistCountry = %found (no delete flag exists).
+    entrypoints:
+      - kind: api
+        locator: FCOUNTRY (COU300)
+        evidence: ["ATU_SRC/QRPGLESRC/COU300.RPGLE:19-48", "ATU_SRC/QRPGLESRC/COU300.RPGLE:50-63", "ATU_SRC/QPROTOSRC/COUNTRY.RPGLEINC:7-18"]
+    dependencies: [COUNTRY.PF]
+    open_questions: []
+  - id: cou-maintain-c08
+    name: GetCountryIso3 unused; closeCOUNTRY not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: No caller of GetCountryIso3 in ATU_SRC; close procedure not in FCOUNTRY.BND.
+    entrypoints:
+      - kind: other
+        locator: COU300
+        evidence: ["ATU_SRC/QRPGLESRC/COU300.RPGLE:29-37", "ATU_SRC/QRPGLESRC/COU300.RPGLE:65-72", "ATU_SRC/QSRVSRC/FCOUNTRY.BND:4-9"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c09
+    name: SltCountry selection window (keyed read, by code or name)
+    status: candidate
+    confidence: observed-in-code
+    summary: Native keyed read over COUNTRY or COUNTR1 positioned at pcod; 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns COID; F3/F12 return pcod.
+    entrypoints:
+      - kind: screen
+        locator: FCOUNTRY SltCountry (COU301 / COU301D window)
+        evidence: ["ATU_SRC/QRPGLESRC/COU301.RPGLE:53-92", "ATU_SRC/QRPGLESRC/COU301.RPGLE:95-141", "ATU_SRC/QRPGLESRC/COU301.RPGLE:240-247", "ATU_SRC/QDDSSRC/COU301D.DSPF:29-32"]
+    dependencies: [COUNTRY.PF, COUNTR1.LF, COU301D.DSPF]
+    open_questions: []
+  - id: cou-maintain-c10
+    name: F8 toggle clears the key of the mode entered (opposite of FAM301)
+    status: candidate
+    confidence: observed-in-code
+    summary: bydesc -> clear KEYDES so the new order restarts from the top.
+    entrypoints:
+      - kind: screen
+        locator: COU301 S01act IN08
+        evidence: ["ATU_SRC/QRPGLESRC/COU301.RPGLE:225-232", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:225-232"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c11
+    name: Position-to option 8, guards 41/42 and row rules 35/36
+    status: candidate
+    confidence: observed-in-code
+    summary: Identical to SltArtFam.
+    entrypoints:
+      - kind: screen
+        locator: COU301 S01chk / S01act
+        evidence: ["ATU_SRC/QRPGLESRC/COU301.RPGLE:166-239"]
+    dependencies: []
+    open_questions: []
+  - id: cou-maintain-c12
+    name: Export surface, binding and callers
+    status: candidate
+    confidence: observed-in-code
+    summary: 4 exports SIGNATURE('V1') ACTGRP(*CALLER); in SAMPLE.BNDDIR and PRO200.ILEPGM; callers CUS200, CUS250, PRO200, PRO250.
+    entrypoints:
+      - kind: other
+        locator: FCOUNTRY.ILESRVPGM / .BND
+        evidence: ["ATU_SRC/QSRVSRC/FCOUNTRY.BND:4-9", "ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM:8-9", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:14", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:259", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:219"]
+    dependencies: [SAMPLE.BNDDIR]
+    open_questions: []
+  - id: cou-maintain-c13
+    name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
+    status: candidate
+    confidence: observed-in-code
+    summary: Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF.
+    entrypoints:
+      - kind: other
+        locator: COU200 F-specs
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:4-19"]
+    dependencies: []
+    open_questions: ["Retire-and-replace or convert?"]

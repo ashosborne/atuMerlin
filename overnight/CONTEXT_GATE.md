@@ -1,10 +1,10 @@
-# CONTEXT_GATE — Pack B document-slices conveyor (atu-merlin), run 4
+# CONTEXT_GATE — Pack A estate radar, residual run (atu-merlin)
 
-Run: `pack-b document-slices` via `overnight/AGENT_JOB.md` (line 1 `RUN`; re-fired by Ash after the CUS convert station finished; job header "run 4 prefer ord-trigger-ord700")
-Started: 2026-09-08T17:45Z (UTC; 18:45 Europe/London)
-Agent: document-slices-conveyor (Cloud Agent, automation job runner)
+Run: `pack-a estate residual` via `overnight/AGENT_JOB.md` (line 1 `RUN`; header "seeds 13+ candidates only", fired after CUS Verification DONE)
+Started: 2026-09-08T19:05Z (UTC; 20:05 Europe/London)
+Agent: estate-discovery-loop (Cloud Agent, automation job runner)
 
-Previous gates preserved in git: Pack A at `ab342e9:overnight/CONTEXT_GATE.md`; Pack B run 1 at `0e32c19:overnight/CONTEXT_GATE.md`; run 2 at `5ac7f0d:overnight/CONTEXT_GATE.md`; run 3 at `efb5e2a:overnight/CONTEXT_GATE.md`.
+Previous gates preserved in git: Pack A run 1 at `ab342e9:overnight/CONTEXT_GATE.md`; Pack B runs 1–4 at `0e32c19`, `5ac7f0d`, `efb5e2a`, `200a3e3` (`:overnight/CONTEXT_GATE.md`).
 
 ## Repo identity
 
@@ -12,51 +12,59 @@ Previous gates preserved in git: Pack A at `ab342e9:overnight/CONTEXT_GATE.md`; 
 | --- | --- |
 | Remote | `https://github.com/ashosborne/atuMerlin` |
 | Work branch | `cursor/atu-merlin-estate-discovery` |
-| HEAD at start | `fa5b77f11d70ab2ced6a90fd75a77bbb3bcd200f` ("AGENT_JOB pack-b document-slices: RUN (run 4 prefer ord-trigger-ord700)") |
+| HEAD at start | `7f1172b3b7b9aaddc5315191191e5fb73e257a47` ("AGENT_JOB pack-a estate residual: RUN (seeds 13+ candidates only)") |
 | Base / PR target | `master` |
 | Existing PR | #1 `cursor/atu-merlin-estate-discovery` → `master` (open; this run updates it) |
-| `overnight/stop.txt` | absent at start |
+| `overnight/stop.txt` | absent at start; re-checked before every iteration |
 | `overnight/AGENT_JOB.md` line 1 | `RUN` |
 
 ## Station and gate decision
 
-- Station: **Document (Discovery Phase B deepen)**. Not Architecture-bind, not Convert — `ROOM_OK` not required and not claimed.
-- The Architecture PACK `atu-merlin-ts-cus-v1` (CUS-only) and the CUS convert under `modern/` (`efb5e2a`) are **not** touched or consumed by this run: ORD slices are document-only per the bind record; job header says "Convert CUS is DONE under modern/ — do not re-convert here."
-- Human bind present: `overnight/BIND_RECORD.md` + `discovery/ord-trigger-ord700/BIND.md` (room bind 2026-09-08, recorded by Agent Smith). Pack B may proceed.
-- Cap: 1 slice this run.
+- Station: **Discovery Phase A (estate radar, residual seeds 13+)**. Not Architecture-bind, not Convert — `ROOM_OK` not required and not claimed.
+- `AUTO_BIND: false`, `AUTO_ACCEPT: false`, `PHASE_B: false`, `ALLOW_CONVERSION: false`, `ALLOW_TEST_GEN: false`, `ALLOW_TEST_EXEC: false`.
+- Job header constraints honoured: no re-scan of documented CUS/ORD bound slices as new work (`ART801`, `CUSSEQ`, `ORDERCUS`, `ISOTODATE40` are given a home as SQL/UDF surfaces only, pointing at the existing cards where they exist); no widening of `atu-merlin-ts-cus-v1`; no ORD/ART convert; `modern/`, `architecture/`, `verification/` untouched.
+- Human bind record (`overnight/BIND_RECORD.md`, 2026-09-08) left untouched: accepted / deferred / documented rows in `APP_MANIFEST.yaml` are never downgraded by the upsert tool (`HUMAN_SET` guard).
 
 ## Context read (hard gate)
 
-- `migration-factory/docs/FIELD-GUIDE.md` — App Discovery Phase B run shape, "Done enough", Do / don't
-- `migration-factory/prompts/discovery-agent-v0.2.md` (behaviour-card shape, Phase B exit criteria)
-- `migration-factory/skills/operator/deepen-phase-b/SKILL.md`
-- `migration-factory/skills/operator/waive-characterization/SKILL.md` — deferred note only; **not** executed
-- `migration-factory/schemas/discovery-manifest.schema.md`; `app-manifest` schema via `overnight/tools/gen_coverage.py` lint
-- `overnight/BIND_RECORD.md`, `overnight/AGENT_JOB.md` (job body = Pack B charter), `overnight/MORNING_BRIEF.md` (run 3), `overnight/document-conveyor/JOURNAL.md`, `overnight/CONTEXT_GATE.md` (run 3)
-- `discovery/ord-trigger-ord700/{MANIFEST.yaml,CANDIDATES.md,BIND.md,SME_BRIEF.md}`; `overnight/seeds/ord-trigger-ord700.md`; `discovery/ord-entry-ord100/features/ord-entry-ord100-c05.md`, `MANIFEST.yaml`, `CHARACTERIZATION.md`, `SME_BRIEF.md` (card / note style from run 3)
-- `overnight/tools/{mark_documented.py,gen_coverage.py}`
+- `migration-factory/docs/FIELD-GUIDE.md` (App Discovery, Portfolio inventory, Experimental estate discovery)
+- `migration-factory/prompts/estate-discovery-loop-v0.1.md` (loop algorithm, end-of-run brief, anti-patterns, completeness claims)
+- `migration-factory/prompts/discovery-agent-v0.2.md` (Phase A output shape)
+- `migration-factory/skills/operator/slice-scoping/SKILL.md`
+- `migration-factory/schemas/app-manifest.schema.md` + `.json`; `discovery-manifest.schema.md`
+- `overnight/AGENT_JOB.md` (job body = Pack A charter), `overnight/JOURNAL.md` (run 1), `overnight/METHOD_COVERAGE.md`, `overnight/MORNING_BRIEF.md` (Pack B run 4), `overnight/BIND_RECORD.md`
+- `inventory/atu-merlin/APP_MANIFEST.yaml` (31 surfaces / 134 behaviours / 12 scanned seeds / 21 hints at start), `COVERAGE.md`, `docs/estate/INDEX.md`
+- `overnight/tools/{upsert_app_manifest.py,gen_coverage.py}`; prior `discovery/ord-print-ord500/*` and `overnight/seeds/*.md` as the output template
 
-Factory pack present at `migration-factory/` — no BLOCKED. `inventory/atu-merlin/APP_MANIFEST.yaml` present.
+Factory pack present at `migration-factory/` — no BLOCKED. `APP_MANIFEST.yaml` present, `completeness: incomplete`.
 
-## Slice pick
+## Seed queue for this run (charter order, filtered by `unscanned_hints`)
 
-Priority rule 1 (accepted, not yet `documented`) yields exactly one slice: `ord-trigger-ord700` (job preference matches). Last slice in the 2026-09-08 bind.
+12 iterations (MAX_ITERATIONS), one seed each:
 
-**Chosen SLICE_ID: `ord-trigger-ord700`** — 8 accepted candidates (`c02`–`c07`, `c09`, `c10`), all `observed-in-code`; `c01` (trigger attachment on the box), `c08` (CULASTORD stale on delete) and `c11` (trigger vs reconciliation arithmetic) are `needs-SME` / `inferred` at bind and get **no card**.
+| iter | seed | INDEX row |
+| ---: | --- | ---: |
+| 13 | `pro-interactive` | 13 |
+| 14 | `pro-modules` (folds `srvpgm-fprovider` — same pattern as `srvpgm-fcustomer` → `cus-modules` at bind) | 14 (+24) |
+| 15 | `pro-cobol-pro201` | 15 |
+| 16 | `fam-maintain` | 16 |
+| 17 | `cou-maintain` | 17 |
+| 18 | `par-maintain` | 18 |
+| 19 | `vat-module` | 19 |
+| 20 | `log-programs` | 20 |
+| 21 | `dat-utils` | 21 |
+| 22 | `sql-objects` | 27 |
+| 23 | `menu-cmd-shell` | 26 |
+| 24 | `srvpgm-supporting` (SAMPLE.BNDDIR + sourceless XML/ORDER/TXT/XSS as `unknown` surfaces) | 25 |
 
-Not deepened this run: `ord-batch-ord900` (deferred by bind; `ORD901` cited only where it fires the update trigger or recomputes `CULASTORD`), `art-*` (skipped by bind), `sql-objects` (unscanned; `ART801` documented here only as the related surface the bind accepted as `c10`), all unbound Phase A slices.
+Not scanned as separate seeds (recorded as folded, not deleted): `srvpgm-fcustomer` (folded into `cus-modules` by the 2026-09-08 bind; export facts in cards c01/c05) and `srvpgm-farticle` (recommend fold into `art-modules`; surface `srvpgm:FARTICLE` + candidates `art-modules-c06`/`c10` already carry the export facts and the ART302 gap).
 
-## Source read for the deepen (read-only, `ATU_SRC/**` untouched)
+## Source read (read-only, `ATU_SRC/**` untouched)
 
-Seed members: `QRPGLESRC/ORD700.PGM.RPGLE` (110 lines), `QTRGSRC/ORD700A.SYSTRG`, `QTRGSRC/ORD700D.SYSTRG`, `QTRGSRC/ORD700U.SYSTRG`, `QSQLSRC/ORD701.SQLTRG`.
-Related surface (accepted `c10`): `QSQLSRC/ART801.SQLPRC`; `QPNLSRC/SAMMNU.MENU:147-162` (options 81, 82, 84).
-Deps read as citations only: `QDDSSRC/DETORD.PF`, `QDDSSRC/DETORD1.LF`, `QDDSSRC/ARTICLE.PF`, `QDDSSRC/ARTICLE1.LF`, `QDDSSRC/ORDER.PF`, `QDDSSRC/ORDER1.LF`, `QDDSSRC/CUSTOMER.PF`, `QDDSSRC/SAMREF.PF` (field sizes), `QPROTOSRC/LOG.RPGLEINC`, `QRPGLESRC/LOG300.RPGLE` (what `AddLogEntry` writes), `QILESRVSRC/LOG.ILESRVPGM`, `QBNDSRC/SAMPLE.BNDDIR` (LOG absent).
-Writer call sites only (which I/O fires which event): `QCLSRC/ORD100C.PGM.CLLE`, `QCLSRC/ORD100C2.PGM.CLLE`, `QRPGLESRC/ORD100.PGM.RPGLE:10-12,197-206`, `QRPGLESRC/ORD101.PGM.RPGLE:8-9,164,191,250-270`, `QRPGLESRC/ORD200.PGM.SQLRPGLE:249-270`, `QRPGLESRC/ORD201.PGM.SQLRPGLE:250-275`, `QRPGLESRC/ORD901.PGM.SQLRPGLE:39-50`.
-Consumers cited as pointers: `QRPGLESRC/PRO202.SQLRPGLE:87-104`, `QRPGLESRC/PRO203.PGM.SQLRPGLE:60-84` (`ARCUSQTY` in reorder proposals), `QRPGLESRC/CUS200.PGM.SQLRPGLE:260-263`, `QDDSSRC/CUS250D.DSPF:69` (`CULASTORD` display), `QRPGLESRC/CUS300.RPGLE:130-135` (`GetCusCredit`).
-Structural grep of `ATU_SRC/**` for every `write`/`update`/`delete`/SQL `INSERT`/`UPDATE`/`DELETE` on `DETORD`/`ORDER`, and every reference to `ARCUSQTY`, `CULASTORD`, `CUCREDIT`, `AddLogEntry`.
+Every remaining member under `ATU_SRC/**` not deep-read in run 1: `QRPGLESRC/PRO200 PRO202 PRO203 PRO250 PRO300 PRO301 FAM300 FAM301 COU300 COU301 PAR200 PAR300 VAT300 LOG100 LOG300 DAT001 DAT002`, `QRPGSRC/COU200.RPG`, `QCBLSRC/PRO201.CBL`, `QCLSRC/PAR201.CLLE`, `QILESRC/PRO200.ILEPGM PAR201.ILEPGM`, all 8 `QILESRVSRC/*.ILESRVPGM`, all 6 `QSRVSRC/*.BND`, `QBNDSRC/SAMPLE.BNDDIR`, `QDDSSRC/PRO200D PRO201D PRO202D PRO250D PRO301D FAM301D COU200D COU301D PAR200D` + `PROVIDER.PF PROVIDE1/2.LF FAMILLY.PF FAMILL1.LF COUNTRY.PF COUNTR1.LF PARAMETER.PF VATDEF.PF`, all 9 `QPROTOSRC/*.RPGLEINC`, all 8 `QSQLSRC/*`, `QPNLSRC/SAMMNU.MENU SAMHELP.PNLGRP`, `QMSGFSRC/SAMMSGF.MSGF`, `QCMDSRC/CVTSPLPDF.CMD`.
+Structural grep of `ATU_SRC/**` for every caller of each exported procedure, every writer of `PROVIDER`/`COUNTRY`/`FAMILLY`/`PARAMETER`/`VATDEF`, every reference to `ARPURQTY`, `PROVIDE2`, `ARTLSTDAT`, `ISO_Num_To_Date`, `ERR00xx` message ids, `bnddir(`, and the four sourceless service programs.
 
-## Charter in force (Pack B)
+## Charter in force (Pack A)
 
-`PHASE_A: false`, `PHASE_B: true`, `CAP_SLICES_PER_RUN: 1`, `ALLOW_CONVERSION: false`, `ALLOW_TEST_GEN: false`, `ALLOW_TEST_EXEC: false`,
-`CHARACTERIZATION: deferred-waived`, `AUTO_ACCEPT_POLICY: observed-in-code-within-seed-only` (not exercised — every card was human-accepted; `c01`, `c08`, `c11` stay needs-SME),
-`WRITE_SCOPE: discovery/**, inventory/**, overnight/**, docs/estate/**`.
+`MAX_ITERATIONS: 12`, `MAX_NEW_SEEDS_PER_ITER: 1`, `STOP_WHEN_NO_NEW_SURFACES: 2`, `MAX_NEW_CANDIDATES: 40` (read as candidate surfaces, as in run 1), `MAX_SLICES_PHASE_A: 12`,
+`WRITE_SCOPE: discovery/**, inventory/**, overnight/**` + optional `docs/estate/INDEX.md`, `NO_COMMITS_TO_DEFAULT_BRANCH: true`, `COMMIT_AS: estate-discovery-loop`.

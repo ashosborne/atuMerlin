@@ -1,11 +1,11 @@
 # atu-merlin estate INDEX (readability mirror)
 
 > Status mirror for Ash. **Factory SoT for radar = `inventory/atu-merlin/APP_MANIFEST.yaml`**; slice truth = `discovery/<SLICE_ID>/MANIFEST.yaml`.
-> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`) run 2 (2026-09-08, `document-slices: cus-modules`), run 3 (2026-09-08, `document-slices: ord-entry-ord100`) and run 4 (2026-09-08, `document-slices: ord-trigger-ord700` — last slice in the 2026-09-08 bind; conveyor idle until more slices are bound).
+> This file never grants accepts and is not permission to run Phase B. Refreshed by Pack A on 2026-09-08 (run `discovery-phase-a`); status column mirrored by Pack B run 1 (2026-09-08, `document-slices: cus-interactive`) run 2 (2026-09-08, `document-slices: cus-modules`), run 3 (2026-09-08, `document-slices: ord-entry-ord100`) and run 4 (2026-09-08, `document-slices: ord-trigger-ord700` — last slice in the 2026-09-08 bind; conveyor idle until more slices are bound). Rows 13–27 refreshed by the Pack A **residual run** (2026-09-08 19:xx UTC, `pack-a estate residual`): every remaining seed is now Phase A'd or folded; nothing bound.
 
-Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09-08, cards not yet written · `done` = Phase B cards written for every accepted behaviour (SME sign-off still pending) · `deferred` = bind deferred · `unscanned` = in queue, not yet Phase A'd · counts are behaviours (not progress).
+Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09-08, cards not yet written · `done` = Phase B cards written for every accepted behaviour (SME sign-off still pending) · `deferred` = bind deferred · `folded` = no separate Phase A; content lives in the named slice · counts are behaviours (not progress).
 
-## Scanned (Phase A candidates; bind + Pack B status mirrored)
+## Scanned in run 1 (Phase A candidates; bind + Pack B status mirrored)
 
 | # | slice_id | domain | status | members (entry) | cand. | deps (not members) | notes |
 | ---: | --- | --- | --- | --- | ---: | --- | --- |
@@ -22,26 +22,26 @@ Legend: `candidate` = Pack A proposed, unbound · `accepted` = room bind 2026-09
 | 11 | `ord-trigger-ord700` | ORD | **done** (8/8 cards; `c01`, `c08`, `c11` needs-SME, no card) | ORD700, ORD700A/D/U.SYSTRG, ORD701.SQLTRG | 11 | DETORD/DETORD1, ARTICLE1, ORDER, CUSTOMER, LOG srvpgm + SAMLOG (not in tree), ART801 (related, sql-objects) | Cards `discovery/ord-trigger-ord700/features/`; hidden side effects of every order write; insert adds full ODQTY, delete/update use ODQTY−ODQTYLIV; only delete logs (SAMLOG, failure swallowed); order close never reaches ORD700; no in-tree writer changes ODARID; UpdArt silent on unknown article, no error handling, can go negative; ORD701 assigns (not MAX) CULASTORD; ART801 "Reset" leaves rows without open orders untouched, only writer of CUCREDIT; AddLogEntry binding not in source; CHARACTERIZATION deferred-waived |
 | 12 | `ord-batch-ord900` | ORD | deferred (bind) | ORD900, ORD901 | 9 | ORDER/ORDER1, DETORD, CUSTOMER, LASTORDNO | Likely demo-refresh tools (inferred) |
 
-## Not yet scanned (queue order — residual, not a completeness claim)
+## Scanned in the residual run (Phase A candidates, unbound — residual, not a completeness claim)
 
-| # | slice_id | domain | status | hint |
-| ---: | --- | --- | --- | --- |
-| 13 | `pro-interactive` | PRO | unscanned | PRO200/202/203/250 + DSPFs; PRO200.ILEPGM binds `XML` srvpgm (no source) |
-| 14 | `pro-modules` | PRO | unscanned | PRO300/301 (FPROVIDER body) |
-| 15 | `pro-cobol-pro201` | PRO | unscanned | only COBOL member |
-| 16 | `fam-maintain` | FAM | unscanned | FAM300/301 (FFAMILLY) |
-| 17 | `cou-maintain` | COU | unscanned | COU200.RPG (OPM) + COU300/301 (FCOUNTRY) |
-| 18 | `par-maintain` | PAR | unscanned | PAR200/201/300 (FPARAMETER; `PATH` used by ORD500) |
-| 19 | `vat-module` | VAT | unscanned | VAT300 (FVAT) |
-| 20 | `log-programs` | LOG | unscanned | LOG100/300 (SAMLOG user space) |
-| 21 | `dat-utils` | DAT | unscanned | DAT001/002 (behind ISOTODATE UDFs) |
-| 22 | `srvpgm-fcustomer` | SRVPGM | folded into #2 (bind 2026-09-08); export facts documented in #2 cards c01/c05 | no separate Phase A |
-| 23 | `srvpgm-farticle` | SRVPGM | unscanned | recommend merge into #4 |
-| 24 | `srvpgm-fprovider` | SRVPGM | unscanned | versioned signatures |
-| 25 | `srvpgm-supporting` | SRVPGM | unscanned | includes SAMPLE.BNDDIR with 4 missing srvpgms |
-| 26 | `menu-cmd-shell` | SHELL | unscanned | menu references QM queries / ADSPUSRSPC not in tree |
-| 27 | `sql-objects` | SQL | unscanned | ART801 reconciliation, views, UDFs, sequence |
+| # | slice_id | domain | status | members (entry) | cand. | deps (not members) | notes |
+| ---: | --- | --- | --- | --- | ---: | --- | --- |
+| 13 | `pro-interactive` | PRO | candidate | PRO200 (+bound PRO202), PRO250, PRO203 (+PRO200D/202D/250D) | 15 | PROVIDER/PROVIDE1, ARTICLE, ARTIPROV, FCOUNTRY, FPARAMETER (PATH), FPROVIDER, ART202, **XML / XSS srvpgms (no source)** | **PRO200 edit never saves** (planted bug, `mode` never set); purchase proposal writes `Pur_Ord_*.xml` and **does not update ARPURQTY** (no writer anywhere); PRO203 spreadsheet uses a different filter (`ARCUSQTY > 0`); no provider create/delete; recommend splitting PRO203 at bind |
+| 14 | `pro-modules` | PRO | candidate (folds #24) | FPROVIDER = PRO300, PRO301 (+PRO301D) | 14 | PROVIDER/PROVIDE1 | Twin of #2; only `GetProName` (ART201/202) and `SltProvider` (PRO250) have callers; F8 dead in selector; **only versioned binder** (`SIGNATURE(*GEN)` + `*PRV`) |
+| 15 | `pro-cobol-pro201` | PRO | candidate | PRO201.CBL (+PRO201D) | 10 | PROVIDE1, ART202 | Only COBOL member; read-only, superseded by PRO200; **F3 on detail re-reads without repositioning (likely empty list)** — confirm on box; retire vs convert is a room call |
+| 16 | `fam-maintain` | FAM | candidate | FFAMILLY = FAM300, FAM301 (+FAM301D) | 13 | FAMILLY/FAMILL1; callers ART200/250/301, FARTICLE | **No family maintenance program exists** (id is a charter misnomer); **`ExistArtFam` ignores FADEL** (unlike every other Exist*); `FAVATCD` never read; keyed-read window with by-code/by-desc toggle |
+| 17 | `cou-maintain` | COU | candidate | COU200.RPG (OPM), FCOUNTRY = COU300, COU301 (+COU200D/301D) | 13 | COUNTRY/COUNTR1; callers CUS200/250, PRO200/250 | Only OPM RPG III member; COU200 loads all rows, edits name/ISO with no validation, no create/delete; `GetCountryIso3` unused; FCOUNTRY feeds the **documented CUS slices** — consider splitting srvpgm from screen at bind |
+| 18 | `par-maintain` | PAR | candidate | PAR200, PAR201 (CL), FPARAMETER = PAR300 (+PAR200D) | 13 | PARAMETER; consumers ORD500/PRO202/PRO203 (PATH) | Generic key/value store with **one live key (`PATH`)**; create/edit/delete with dup-check only, delete unconfirmed, list stale after create; `EXPORT(*ALL)`; recommend PATH as target configuration |
+| 19 | `vat-module` | VAT | candidate | FVAT = VAT300 | 10 | VATDEF; callers ORD100/ORD101/ART250 via GetArtVatCode | `ClcVAT` = half-adjust 2 dp; **unknown VAT code → 0 silently**; no rate maintenance; load-bearing for ORD line cards |
+| 20 | `log-programs` | LOG | candidate | LOG100, LOG = LOG300 | 10 | SAMLOG *USRSPC (runtime), PARAMETER (library only), ORD700 (only writer) | 5000-byte user space, **no capacity check — logging stops silently ~4400 bytes** (inferred); LOG100 is an install step (no caller); LOG not in BNDDIR; ADSPUSRSPC reader not in tree; recommend replace with target logging |
+| 21 | `dat-utils` | DAT | candidate | ISOTODATE40 → DAT002, ISO_Num_To_Date → DAT001 | 8 | callers ORD200/ORD201 (ISOTODATE40 only) | Pure functions; `0 → 1940-01-01`, `99999999 → 2039-12-31`, invalid → NULL; sentinel **implemented 3× across the estate** (DAT002, CUS200, ORD202); ISO_Num_To_Date unused |
+| 22 | `srvpgm-fcustomer` | SRVPGM | folded into #2 (bind 2026-09-08) | — | — | — | export facts in #2 cards c01/c05 |
+| 23 | `srvpgm-farticle` | SRVPGM | folded into #4 (recommendation) | — | — | — | surface `srvpgm:FARTICLE` + #4 c06/c10 carry the export facts and the ART302 gap |
+| 24 | `srvpgm-fprovider` | SRVPGM | folded into #14 (residual run) | — | — | — | #14 c11/c12 |
+| 25 | `srvpgm-supporting` | SRVPGM | candidate (build metadata) + 4 `unknown` surfaces | SAMPLE.BNDDIR, PRO200/PAR201.ILEPGM | 9 | all 8 srvpgms (binding facts only) | 11 srvpgms in BNDDIR, **XML/ORDER/TXT/XSS have no source** (`unknown` surfaces; ORDER/TXT referenced by nothing), LOG absent; 12 programs bind via `bnddir('SAMPLE')`, 2 via CRTPGM in `QILE`, **4 (PRO203/ORD500/ORD700/LOG100) bind by build metadata only**; signature policy inconsistent; all srvpgms `*CALLER` → getter caches per calling program |
+| 26 | `menu-cmd-shell` | SHELL | candidate (adapter) | SAMMNU.MENU, SAMHELP.PNLGRP, SAMMSGF.MSGF, CVTSPLPDF.CMD | 9 | every called program | Entry map for 20 options; **opts 12/13/84 reach QM queries / ADSPUSRSPC not in tree**; help mapping broken/placeholder; 8 of 12 messages live; CVTSPLPDF parameter contract only; recommend reject as slice, use as navigation spec |
+| 27 | `sql-objects` | SQL | candidate | ORDERCUS, ARTLSTDAT (views), ARTIINF (table), CUSSEQ (sequence), ART801 (procedure) | 10 | ORDER, DETORD, CUSTOMER, ARTICLE | **ORDERCUS inner-joins CUSTOMER** (orders for missing customers vanish; TOTVAL is VAT-inclusive); ARTLSTDAT has no consumer; ARTIINF rows never deleted; CUSSEQ / ART801 are surfaces for behaviours already documented (#1 c02, #11 c10) |
 
 ## Blind spots (see `overnight/METHOD_COVERAGE.md`)
 
-XML/ORDER/TXT/XSS service programs; QM queries; CVTSPLPDF and ADSPUSRSPC implementations; CMD→PGM bindings; trigger attachment; runtime-only behaviour (no IBM i available).
+XML/ORDER/TXT/XSS service programs and their copybooks; QM queries CUSQRY/ARTQRY/CUSQRYFMT; CVTSPLPDF and ADSPUSRSPC implementations; CMD→PGM bindings and import resolution for PRO203/ORD500/ORD700/LOG100; trigger attachment; SAMLOG capacity; who maintains PROVIDER/COUNTRY/FAMILLY/VATDEF rows and ARPURQTY; runtime-only behaviour (no IBM i available). Every `ATU_SRC` member has now been read once — that is inventory coverage, not migration progress and not completeness.

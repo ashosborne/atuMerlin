@@ -1,0 +1,124 @@
+slice_id: pro-cobol-pro201
+seed: "PRO201 Display Providers - the only COBOL member (menu opt 5); read-only list, option 2 display, option 5 items"
+seed_entrypoints:
+  - ATU_SRC/QCBLSRC/PRO201.CBL
+  - ATU_SRC/QDDSSRC/PRO201D.DSPF
+out_of_scope_hints:
+  - PRO200 maintenance (pro-interactive)
+  - FPROVIDER (not used by PRO201)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: pro-cobol-pro201-c01
+    name: Read-only provider list with paging and options 2/5
+    status: candidate
+    confidence: observed-in-code
+    summary: PROVIDE1 read sequentially, 14 rows per load, PRDEL shown; options 2 and 5 only, others SFLMSG 35.
+    entrypoints:
+      - kind: screen
+        locator: PRO201 CTL01/SFL01 (menu opt 5)
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:30-33", "ATU_SRC/QCBLSRC/PRO201.CBL:147-180", "ATU_SRC/QCBLSRC/PRO201.CBL:214-239", "ATU_SRC/QDDSSRC/PRO201D.DSPF:15-21", "ATU_SRC/QPNLSRC/SAMMNU.MENU:99-102"]
+    dependencies: [PROVIDE1.LF, PROVIDER.PF]
+    open_questions: []
+  - id: pro-cobol-pro201-c02
+    name: Option 2 displays provider from subfile-carried hidden fields
+    status: candidate
+    confidence: observed-in-code
+    summary: FMT02 output-only, populated by MOVE CORRESPONDING from the subfile row (hidden PRCONT..PRCREA); no re-read of the database.
+    entrypoints:
+      - kind: screen
+        locator: PRO201 FMT02
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:247-254", "ATU_SRC/QCBLSRC/PRO201.CBL:280-282", "ATU_SRC/QDDSSRC/PRO201D.DSPF:22-30"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c03
+    name: Option 5 -> CALL ART202
+    status: candidate
+    confidence: observed-in-code
+    summary: Dynamic CALL "ART202" USING PRID-WRK.
+    entrypoints:
+      - kind: other
+        locator: PRO201 ACT01
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:73", "ATU_SRC/QCBLSRC/PRO201.CBL:256-263"]
+    dependencies: [ART202]
+    open_questions: []
+  - id: pro-cobol-pro201-c04
+    name: One option processed per Enter
+    status: candidate
+    confidence: observed-in-code
+    summary: ACT01 reads a single NEXT MODIFIED row; further option rows need another Enter after redisplay.
+    entrypoints:
+      - kind: screen
+        locator: PRO201 ACT01
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:241-266"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c05
+    name: F3 on detail returns to a re-read list without repositioning (likely empty)
+    status: candidate
+    confidence: inferred
+    summary: F3 -> PANEL 1 + STEP01 PRP; PRP01 re-reads PROVIDE1 from the current position with IN80 never reset, so after a full load the list is empty. Code path observed; visible effect needs the box.
+    entrypoints:
+      - kind: screen
+        locator: PRO201 FKEY02 / PRP01
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:147-158", "ATU_SRC/QCBLSRC/PRO201.CBL:292-305"]
+    dependencies: []
+    open_questions: ["Confirm the empty-list effect on the box; preserve or fix?"]
+  - id: pro-cobol-pro201-c06
+    name: F3/F12 on list exit; Page Down via control-area '90'
+    status: candidate
+    confidence: observed-in-code
+    summary: Both keys set PANEL 0; PAGEDOWN decoded from F-KEYS value '90'.
+    entrypoints:
+      - kind: screen
+        locator: PRO201 FKEY01
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:75-80", "ATU_SRC/QCBLSRC/PRO201.CBL:199-211"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c07
+    name: Read-ahead in PRP01 and sticky IN80
+    status: candidate
+    confidence: observed-in-code
+    summary: First READ happens in PRP01; IN80 set at EOF and never reset.
+    entrypoints:
+      - kind: other
+        locator: PRO201 PRP01 / LOD01
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:147-158", "ATU_SRC/QCBLSRC/PRO201.CBL:163-180"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c08
+    name: Direct file access, no service programs; CONAME never populated
+    status: candidate
+    confidence: observed-in-code
+    summary: No FPROVIDER/FCOUNTRY use; country shown as code; CONAME on FMT02 stays blank.
+    entrypoints:
+      - kind: other
+        locator: PRO201 FILE-CONTROL / PRP02
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:28-40", "ATU_SRC/QCBLSRC/PRO201.CBL:280-282", "ATU_SRC/QDDSSRC/PRO201D.DSPF:105-107"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c09
+    name: DSPF leftovers from PRO200D (unreachable ERRMSG / CF04)
+    status: candidate
+    confidence: observed-in-code
+    summary: ERRMSG 41, ERRMSGID ERR0002 and CF04 defined on FMT02 but never reachable from the COBOL.
+    entrypoints:
+      - kind: other
+        locator: PRO201D FMT02
+        evidence: ["ATU_SRC/QDDSSRC/PRO201D.DSPF:74", "ATU_SRC/QDDSSRC/PRO201D.DSPF:90", "ATU_SRC/QDDSSRC/PRO201D.DSPF:106"]
+    dependencies: []
+    open_questions: []
+  - id: pro-cobol-pro201-c10
+    name: Language outlier - only COBOL member; STOP RUN closes files
+    status: candidate
+    confidence: observed-in-code
+    summary: PROCESS APOST; OPEN INPUT PROVIDE1 / I-O PRO201D at init; CLOSE + STOP RUN on every exit.
+    entrypoints:
+      - kind: other
+        locator: PRO201 PGM-INIT / PGM-END
+        evidence: ["ATU_SRC/QCBLSRC/PRO201.CBL:4", "ATU_SRC/QCBLSRC/PRO201.CBL:307-316"]
+    dependencies: []
+    open_questions: ["Convert, or retire in favour of PRO200?"]

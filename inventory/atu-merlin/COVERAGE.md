@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T18:01:30Z` by `document-slices-conveyor`
+- last_updated: `2026-09-08T19:39:45Z` by `estate-discovery-loop`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -17,18 +17,18 @@
 
 | Metric | Count |
 | --- | ---: |
-| surfaces_total | 31 |
+| surfaces_total | 71 |
 | surfaces `accepted` | 12 |
-| surfaces `candidate` | 14 |
+| surfaces `candidate` | 50 |
 | surfaces `deferred` | 2 |
-| surfaces `unknown` | 3 |
-| behaviours_known | 134 |
-| behaviours `candidate` | 92 |
+| surfaces `unknown` | 7 |
+| behaviours_known | 268 |
+| behaviours `candidate` | 226 |
 | behaviours `documented` | 42 |
-| behaviours confidence `inferred` | 10 |
-| behaviours confidence `observed-in-code` | 124 |
-| scanned_seeds | 12 |
-| unscanned_hints | 21 |
+| behaviours confidence `inferred` | 21 |
+| behaviours confidence `observed-in-code` | 247 |
+| scanned_seeds | 24 |
+| unscanned_hints | 17 |
 | legacy_green | 0 |
 | parity_green | 0 |
 | parity_waived | 0 |
@@ -39,8 +39,13 @@
 | --- | ---: | ---: | ---: | --- |
 | `art-interactive` | 5 | 16 | 0 | `candidate` |
 | `art-modules` | 4 | 11 | 0 | `candidate` |
+| `cou-maintain` | 4 | 13 | 0 | `candidate` |
 | `cus-interactive` | 4 | 12 | 12 | `documented` |
 | `cus-modules` | 3 | 11 | 10 | `candidate` |
+| `dat-utils` | 2 | 8 | 0 | `candidate` |
+| `fam-maintain` | 3 | 13 | 0 | `candidate` |
+| `log-programs` | 3 | 10 | 0 | `candidate` |
+| `menu-cmd-shell` | 4 | 9 | 0 | `candidate` |
 | `ord-batch-ord900` | 2 | 9 | 0 | `candidate` |
 | `ord-entry-ord100` | 4 | 14 | 12 | `candidate` |
 | `ord-entry-ord101` | 1 | 12 | 0 | `candidate` |
@@ -49,6 +54,13 @@
 | `ord-maintain-ord202` | 1 | 6 | 0 | `candidate` |
 | `ord-print-ord500` | 2 | 8 | 0 | `candidate` |
 | `ord-trigger-ord700` | 3 | 11 | 8 | `candidate` |
+| `par-maintain` | 4 | 13 | 0 | `candidate` |
+| `pro-cobol-pro201` | 1 | 10 | 0 | `candidate` |
+| `pro-interactive` | 4 | 15 | 0 | `candidate` |
+| `pro-modules` | 3 | 14 | 0 | `candidate` |
+| `sql-objects` | 5 | 10 | 0 | `candidate` |
+| `srvpgm-supporting` | 5 | 9 | 0 | `candidate` |
+| `vat-module` | 2 | 10 | 0 | `candidate` |
 
 ## Scanned seeds
 
@@ -64,30 +76,38 @@
 - `ord-maintain-ord202`
 - `ord-print-ord500`
 - `ord-trigger-ord700`
+- `cou-maintain`
+- `dat-utils`
+- `fam-maintain`
+- `log-programs`
+- `menu-cmd-shell`
+- `par-maintain`
+- `pro-cobol-pro201`
+- `pro-interactive`
+- `pro-modules`
+- `sql-objects`
+- `srvpgm-supporting`
+- `vat-module`
 
 ## Unscanned hints (residual — not a completeness claim)
 
-- seed pro-interactive: PRO200/PRO202/PRO203/PRO250 + PRO200D/201D/202D/250D (PRO200.ILEPGM binds XML srvpgm - source missing)
-- seed pro-modules: PRO300/PRO301 + PRO301D (FPROVIDER body)
-- seed pro-cobol-pro201: QCBLSRC/PRO201.CBL (only COBOL member; menu opt 5)
-- seed fam-maintain: FAM300/FAM301 + FAM301D (FFAMILLY body; SltArtFam used by ART200/ART301)
-- seed cou-maintain: COU200.RPG (OPM RPG, menu opt 21) + COU300/COU301 (FCOUNTRY body; used by CUS200/CUS250)
-- seed par-maintain: PAR200 (menu opt 20) + PAR201 CL/ILEPGM (menu opt 83, WRKLNK on PATH) + PAR300 (FPARAMETER getParm*; PATH used by ORD500)
-- seed vat-module: VAT300 (FVAT: CLCVat/GetVatRate used by ORD100/ORD101/ART250)
-- seed log-programs: LOG100 (create SAMLOG user space) + LOG300 (AddLogEntry; used by ORD700 delete)
-- seed dat-utils: DAT001/DAT002 (external programs behind SQL UDFs ISOTODATE/ISOTODATE40 used by ORD200/ORD201)
-- seed srvpgm-fcustomer: FCUSTOMER binding/export view - recommend merging into cus-modules at bind
-- seed srvpgm-farticle: FARTICLE binding/export view - recommend merging into art-modules at bind (ART302 gap)
-- seed srvpgm-fprovider: FPROVIDER.ILESRVPGM + FPROVIDER.BND (versioned signatures *GEN/*PRV)
-- seed srvpgm-supporting: FFAMILLY/FCOUNTRY/FPARAMETER/FVAT/LOG srvpgms + SAMPLE.BNDDIR (lists XML/ORDER/TXT/XSS srvpgms with no source)
-- seed menu-cmd-shell: SAMMNU.MENU (entry map), SAMHELP.PNLGRP, SAMMSGF.MSGF, CVTSPLPDF.CMD; menu references QM queries CUSQRY/ARTQRY and ADSPUSRSPC not in tree
-- seed sql-objects: ART801.SQLPRC (menu opt 82 reconciliation), ARTIINF.TABLE, ARTLSTDAT.VIEW, CUSSEQ.SQLSEQ, ISOTODATE/ISOTODATE4.SQLUDF, ORDERCUS.VIEW
 - blind-spot: XML, ORDER, TXT, XSS *SRVPGM in SAMPLE.BNDDIR have no source under ATU_SRC (PRO200.ILEPGM binds XML; PRO202 /copy qprotosrc,xml missing)
 - blind-spot: QM query objects CUSQRY, ARTQRY, form CUSQRYFMT (menu opts 12/13) not in tree
 - blind-spot: CVTSPLPDF processing program and ADSPUSRSPC command not in tree
 - blind-spot: CMD->PGM bindings (CRTORD) and trigger attachment are compiled-object/ARCAD metadata, not source
 - unknown-surface: CUSTADRE.PF / ADDRESS.PF (multi-address model) referenced by no program in ATU_SRC
 - unknown-surface: ARTIPROV link creation - no program found that writes new ARTIPROV rows
+- folded: srvpgm-fcustomer -> cus-modules (room bind 2026-09-08; export facts in cus-modules-c01/c05)
+- folded: srvpgm-farticle -> art-modules (recommendation; surface srvpgm:FARTICLE + art-modules-c06/c10 carry the export facts and the ART302 gap)
+- folded: srvpgm-fprovider -> pro-modules (residual run 2026-09-08; pro-modules-c11/c12)
+- unknown-surface: ARTICLE.ARPURQTY (purchase order qty) has no writer in ATU_SRC; PRO202 XML export does not update it
+- unknown-surface: PROVIDE2.LF keyed on PROVA1 (not a PROVIDER field) and referenced by no program - stale / uncompilable
+- unknown-surface: no create or delete path for PROVIDER, COUNTRY, FAMILLY, VATDEF rows; PRDEL / FADEL / VATDEL have no writer
+- blind-spot: PRO203, ORD500, ORD700, LOG100 compile dftactgrp(*no) with no bnddir and no .ILEPGM - import resolution is ARCAD/elias build metadata
+- blind-spot: qprotosrc XML / XSS copybooks missing - PRO202 and PRO203 cannot be compiled from the tree
+- blind-spot: ORDER and TXT *SRVPGM in SAMPLE.BNDDIR referenced by nothing - possibly dead entries
+- runtime-only: SAMLOG user space is 5000 bytes without auto-extend - overflow behaviour and ADSPUSRSPC reader unknown
+- unknown-surface: ARTLSTDAT view and ISO_Num_To_Date UDF have no consumer in ATU_SRC (QM query ARTQRY probable)
 
 ## Lint
 

@@ -1,0 +1,25 @@
+# CANDIDATES — cou-maintain (Phase A, unbound)
+
+Seed: `COU200` (OPM RPG III) + `FCOUNTRY` service program (`COU300`, `COU301`). All rows `candidate`.
+
+| id | provisional name | evidence | confidence | why it belongs |
+| --- | --- | --- | --- | --- |
+| cou-maintain-c01 | `COU200` lists **all** countries in one load: `*LOVAL SETLL` then read until EOF with no page limit into an `SFLSIZ 15 / SFLPAG 14` extendable subfile (Page Down handled by the display, never by the program); option 2 only, others RI + SFLMSG 35 | `QRPGSRC/COU200.RPG:37-47`, `:69-88`; `QDDSSRC/COU200D.DSPF:24-33`, `:38` | observed-in-code | Core list (different load strategy from every ILE list) |
+| cou-maintain-c02 | Option 2 → FMT02: `COID` output, `COUNTR` (with `CHECK(LC)`) and `COISO` input; Enter → `UPDAT FCOUN` **unconditionally** — no validation of name or ISO code, no audit stamping (the file has no audit columns) | `COU200.RPG:94-98`, `:109-112`, `:127-133`; `COU200D.DSPF:70-73` | observed-in-code | Edit path |
+| cou-maintain-c03 | Chain result indicator 98 in `S02PRP` is never tested; a concurrent delete between list and edit would attempt `UPDAT` without a locked record (runtime error) | `COU200.RPG:111`, `:131` | observed-in-code | Edge (unlikely, but unguarded) |
+| cou-maintain-c04 | No create / delete path for countries: no F6, no option 4, no `WRITE`/`DELET` on `COUNTRY`; the country **code** is never editable; `COUNTRY.PF` has no delete flag at all (so no soft-delete concept either) | `COU200.RPG:74-76`; `COU200D.DSPF:70` (COID output); `QDDSSRC/COUNTRY.PF:4-10` | observed-in-code | Recorded absence |
+| cou-maintain-c05 | Key semantics: F3 on the list → end; F12 on the list → end (panel 0); F3 on FMT02 → end program directly (`GOTO ENDPGM`); F12 on FMT02 → back to list **without reload** (edited row shown with stale values until re-entry) | `COU200.RPG:58-67`, `:117-126` | observed-in-code | Navigation quirks |
+| cou-maintain-c06 | After an update the program returns to panel 1 with `STEP01` still `'ACT'`, so remaining option-2 rows are processed one after another; the subfile row itself is not refreshed with the new name | `COU200.RPG:89-100`, `:130-133` | observed-in-code | Multi-row edit behaviour |
+| cou-maintain-c07 | `GetCountryName(coid)` / `GetCountryIso3(coid)` return `COUNTR` / `COISO` from a cached `COUNTRY` chain (2A key by value); unknown code → blanks; `ExistCountry` = `%found` (there is no delete flag to test) | `QRPGLESRC/COU300.RPGLE:19-48`, `:50-63`; `QPROTOSRC/COUNTRY.RPGLEINC:7-18` | observed-in-code | Getter / predicate family |
+| cou-maintain-c08 | `GetCountryIso3` has **no caller** in `ATU_SRC`; `closeCOUNTRY` present but not exported | `COU300.RPGLE:29-37`, `:65-72`; `FCOUNTRY.BND:4-9`; grep = none | observed-in-code | Unused export / dead code |
+| cou-maintain-c09 | `SltCountry(pcod)` selection **window**: keyed read over `COUNTRY` (by code) or `COUNTR1` (by name) positioned at `pcod`, 20 rows per load into `SFLSIZ 11 / SFLPAG 10`; option 1 returns `COID`; F3/F12 return `pcod` | `QRPGLESRC/COU301.RPGLE:53-92`, `:95-141`, `:240-247`; `QDDSSRC/COU301D.DSPF:29-32`, `:72-77` | observed-in-code | Core selector; same template as `SltArtFam` |
+| cou-maintain-c10 | F8 toggles by-code / by-name and clears the key of the mode **entered** (`bydesc` → `clear KEYDES`) so the new order restarts from the top — the opposite of `FAM301` (which clears the key just left) | `COU301.RPGLE:225-232`; compare `FAM301.RPGLE:225-232` | observed-in-code | Template divergence between the two windows |
+| cou-maintain-c11 | Control-line option 8 position-to (`POSCOD` / `POSDES`), guards 41 / 42, row rules 35 / 36, `SFLNXTCHG` re-mark — identical to `SltArtFam` | `COU301.RPGLE:166-239`; `COU301D.DSPF` (SFLMSG 35/36, ERRMSG 41/42) | observed-in-code | Selector rules |
+| cou-maintain-c12 | Export surface = 4 symbols (`EXISTCOUNTRY`, `GETCOUNTRYISO3`, `GETCOUNTRYNAME`, `SLTCOUNTRY`), `SIGNATURE('V1')`, `ACTGRP(*CALLER)`; listed in `SAMPLE.BNDDIR` and bound explicitly by `PRO200.ILEPGM`; callers `CUS200`, `CUS250`, `PRO200`, `PRO250` | `FCOUNTRY.BND:4-9`; `FCOUNTRY.ILESRVPGM:8-9`; `SAMPLE.BNDDIR:14`; `PRO200.ILEPGM:9`; `CUS200.PGM.SQLRPGLE:259,283-284,292`; `CUS250.PGM.RPGLE:130`; `PRO200.RPGLE:219,238-239,247`; `PRO250.PGM.RPGLE:136` | observed-in-code | Binding / call graph |
+| cou-maintain-c13 | `COU200` is the only OPM RPG III member (`QRPGSRC`), fixed-form with `CASEQ`/`GOTO`; it does not use `FCOUNTRY` (reads `COUNTRY` directly `UF`) | `COU200.RPG:4-19`; `QPNLSRC/SAMMNU.MENU:139-142` | observed-in-code | Language outlier for the target-stack decision |
+
+## Deferred recommendations (prose only)
+
+- c02: an edit with no validation and no audit trail on reference data is probably acceptable for a sample; recommend the SME confirm whether the target needs ISO-3 validation.
+- c10: the FAM/COU toggle divergence is tiny but real; if both windows are carded, card them separately rather than as one "selector window" rule.
+- c13: as with `PRO201`, recommend the room decide **retire-and-replace** (a thin CRUD screen) vs convert for a 138-line OPM program.

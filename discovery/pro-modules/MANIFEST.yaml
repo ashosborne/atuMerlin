@@ -1,0 +1,172 @@
+slice_id: pro-modules
+seed: "Provider service program FPROVIDER - PRO300 getters/predicates + PRO301 SltProvider; folds srvpgm-fprovider"
+seed_entrypoints:
+  - ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FPROVIDER.BND
+  - ATU_SRC/QRPGLESRC/PRO300.RPGLE
+  - ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE
+  - ATU_SRC/QPROTOSRC/PROVIDER.RPGLEINC
+out_of_scope_hints:
+  - PRO200 / PRO250 / PRO202 / PRO203 screens (pro-interactive)
+  - PRO201 COBOL (pro-cobol-pro201)
+  - SAMPLE.BNDDIR as a whole (srvpgm-supporting)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: pro-modules-c01
+    name: Provider getter family (GetPro*)
+    status: candidate
+    confidence: observed-in-code
+    summary: Eleven exported getters each chain PROVIDE1 by PRID and return one column from the module buffer; unknown id -> blanks, no found signal.
+    entrypoints:
+      - kind: api
+        locator: FPROVIDER GetProName..GetProCountry (PRO300)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO300.RPGLE:19-127", "ATU_SRC/QPROTOSRC/PROVIDER.RPGLEINC:7-58"]
+    dependencies: [PROVIDE1.LF, PROVIDER.PF]
+    open_questions: []
+  - id: pro-modules-c02
+    name: ExistProvider / IsProDeleted
+    status: candidate
+    confidence: observed-in-code
+    summary: ExistProvider = %found and PRDEL <> 'X'; IsProDeleted = PRDEL = 'X'; unknown id -> false for both.
+    entrypoints:
+      - kind: api
+        locator: FPROVIDER ExistProvider / IsProDeleted (PRO300)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO300.RPGLE:129-148"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c03
+    name: Lazy open and last-key cache in chainPROVIDE1
+    status: candidate
+    confidence: observed-in-code
+    summary: USROPN input-only open on first use; chain skipped when id equals buffered PRID; misses clear the buffer and are not cached.
+    entrypoints:
+      - kind: other
+        locator: PRO300 chainPROVIDE1
+        evidence: ["ATU_SRC/QRPGLESRC/PRO300.RPGLE:6", "ATU_SRC/QRPGLESRC/PRO300.RPGLE:150-163"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c04
+    name: ClosePROVIDE1 prototyped but not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: No export keyword, not in FPROVIDER.BND, prototyped in PROVIDER.RPGLEINC, no caller.
+    entrypoints:
+      - kind: other
+        locator: PRO300 closePROVIDE1
+        evidence: ["ATU_SRC/QRPGLESRC/PRO300.RPGLE:165-172", "ATU_SRC/QPROTOSRC/PROVIDER.RPGLEINC:72-75", "ATU_SRC/QSRVSRC/FPROVIDER.BND:8-22"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c05
+    name: SltProvider selection window
+    status: candidate
+    confidence: observed-in-code
+    summary: Dynamic SQL over PROVIDER with contains-LIKE on UPPER(provnm) and/or UPPER(prcity), ORDER BY provnm; 14 rows per page; option 1 returns PRID; F3/F12 return pcod.
+    entrypoints:
+      - kind: screen
+        locator: FPROVIDER SltProvider (PRO301 / PRO301D)
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:54-93", "ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:96-144", "ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:211-227", "ATU_SRC/QDDSSRC/PRO301D.DSPF:26-29"]
+    dependencies: [PROVIDER.PF, PRO301D.DSPF]
+    open_questions: []
+  - id: pro-modules-c06
+    name: Selection rules (option 1 only, single selection)
+    status: candidate
+    confidence: observed-in-code
+    summary: Non-1 option -> 35; second 1 -> 36; error rows RI/PC; all changed rows re-marked SFLNXTCHG; act only when clean.
+    entrypoints:
+      - kind: screen
+        locator: PRO301 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:168-209", "ATU_SRC/QDDSSRC/PRO301D.DSPF:35-36"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c07
+    name: Criteria change re-prepares and discards pending selection
+    status: candidate
+    confidence: observed-in-code
+    summary: Saved name/city compared first; any change closes c1 and restarts prp, dropping an option 1 typed on the old list.
+    entrypoints:
+      - kind: screen
+        locator: PRO301 S01act
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:116-117", "ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:211-217"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c08
+    name: Dynamic SQL string concatenation of user input
+    status: candidate
+    confidence: observed-in-code
+    summary: Search text concatenated into LIKE literals; no escaping, no parameter markers, no SQLCODE check (empty list on error).
+    entrypoints:
+      - kind: other
+        locator: PRO301 s01prp
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:103-123"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c09
+    name: Blank criteria list-all semantics; soft-deleted rows listed
+    status: candidate
+    confidence: observed-in-code
+    summary: Both blank -> UPPER(prcity) LIKE '%%' lists every provider; no PRDEL predicate.
+    entrypoints:
+      - kind: other
+        locator: PRO301 s01prp else-branch
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:111-114"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c10
+    name: F8 dead in SltProvider (acts as Enter)
+    status: candidate
+    confidence: observed-in-code
+    summary: in08 never assigned; s01key has no cf08 branch; F8=By code label conditioned on indicator 40 that nothing sets.
+    entrypoints:
+      - kind: screen
+        locator: PRO301 s01key / PRO301D KEY01
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:62", "ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:155-165", "ATU_SRC/QDDSSRC/PRO301D.DSPF:63-64"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c11
+    name: Versioned binder source (SIGNATURE *GEN with *PRV block)
+    status: candidate
+    confidence: observed-in-code
+    summary: FPROVIDER.BND is the only binder in the tree with LVLCHK(*YES) SIGNATURE(*GEN) and a PGMLVL(*PRV) block; SLTPROVIDER added as new export.
+    entrypoints:
+      - kind: other
+        locator: FPROVIDER.BND
+        evidence: ["ATU_SRC/QSRVSRC/FPROVIDER.BND:5-23", "ATU_SRC/QSRVSRC/FPROVIDER.BND:26-45"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c12
+    name: FPROVIDER export surface and binding (folded srvpgm-fprovider)
+    status: candidate
+    confidence: observed-in-code
+    summary: 14 exported symbols; MODULE(PRO300 PRO301) ACTGRP(*CALLER) EXPORT(*SRCFILE); listed in SAMPLE.BNDDIR.
+    entrypoints:
+      - kind: other
+        locator: FPROVIDER.ILESRVPGM
+        evidence: ["ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM:8-9", "ATU_SRC/QSRVSRC/FPROVIDER.BND:8-22", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:13"]
+    dependencies: [SAMPLE.BNDDIR]
+    open_questions: []
+  - id: pro-modules-c13
+    name: Callers in ATU_SRC (GetProName x2, SltProvider x1; 12 exports unused)
+    status: candidate
+    confidence: observed-in-code
+    summary: ART201 and ART202 call GetProName; PRO250 calls SltProvider; no other export has a caller in the tree.
+    entrypoints:
+      - kind: other
+        locator: grep FPROVIDER exports
+        evidence: ["ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE:107", "ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE:97", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:91"]
+    dependencies: []
+    open_questions: []
+  - id: pro-modules-c14
+    name: Search input not uppercased by the module
+    status: candidate
+    confidence: observed-in-code
+    summary: UPPER(column) compared to raw %trim(input); relies on the 5250 session uppercasing (no CHECK(LC) on the fields).
+    entrypoints:
+      - kind: other
+        locator: PRO301 s01prp
+        evidence: ["ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE:105-113", "ATU_SRC/QDDSSRC/PRO301D.DSPF:56-57"]
+    dependencies: []
+    open_questions: []

@@ -1,0 +1,126 @@
+slice_id: vat-module
+seed: "VAT service program FVAT - VAT300 GetVATRate / GetVATDesc / ClcVAT / ExistVATRate over VATDEF"
+seed_entrypoints:
+  - ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FVAT.BND
+  - ATU_SRC/QRPGLESRC/VAT300.RPGLE
+  - ATU_SRC/QPROTOSRC/VAT.RPGLEINC
+out_of_scope_hints:
+  - order / article screens (callers only)
+  - FAMILLY.FAVATCD (fam-maintain)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: vat-module-c01
+    name: ClcVAT arithmetic (net x rate / 100, half-adjust to 2 dp)
+    status: candidate
+    confidence: observed-in-code
+    summary: "%dech((net * VATRATE) / 100 : 9 : 2) with an 11P 4 intermediate; net and result 9P 2 by value."
+    entrypoints:
+      - kind: api
+        locator: FVAT ClcVAT (VAT300)
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:38-49", "ATU_SRC/QPROTOSRC/VAT.RPGLEINC:22-24"]
+    dependencies: [VATDEF.PF]
+    open_questions: []
+  - id: vat-module-c02
+    name: Unknown VAT code -> rate 0 -> zero VAT silently
+    status: candidate
+    confidence: observed-in-code
+    summary: Buffer cleared on miss so VATRATE = 0; ClcVAT and GetVATRate return 0; no caller checks ExistVATRate first.
+    entrypoints:
+      - kind: api
+        locator: FVAT chainVATDEF miss path
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:61-74", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:267-269", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:154"]
+    dependencies: []
+    open_questions: ["Should a bad VAT code be an error in the target?"]
+  - id: vat-module-c03
+    name: GetVATRate / GetVATDesc getters (GetVATDesc unused)
+    status: candidate
+    confidence: observed-in-code
+    summary: Return VATRATE (4P 2) / VATDESC (20A); no caller of GetVATDesc.
+    entrypoints:
+      - kind: api
+        locator: FVAT GetVATRate / GetVATDesc (VAT300)
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:19-35"]
+    dependencies: []
+    open_questions: []
+  - id: vat-module-c04
+    name: ExistVATRate respects the delete flag but has no caller
+    status: candidate
+    confidence: observed-in-code
+    summary: "%found and VATDEL <> 'X'; unused in ATU_SRC."
+    entrypoints:
+      - kind: api
+        locator: FVAT ExistVATRate (VAT300)
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:52-59"]
+    dependencies: []
+    open_questions: []
+  - id: vat-module-c05
+    name: Lazy open and last-key cache; closeVATDEF not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: USROPN input-only; chain skipped on same code; close present but not in FVAT.BND.
+    entrypoints:
+      - kind: other
+        locator: VAT300 chainVATDEF
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:6", "ATU_SRC/QRPGLESRC/VAT300.RPGLE:61-83", "ATU_SRC/QSRVSRC/FVAT.BND:4-9"]
+    dependencies: []
+    open_questions: []
+  - id: vat-module-c06
+    name: Rate cache stale for the activation group after a VATDEF change
+    status: candidate
+    confidence: observed-in-code
+    summary: Same code requested twice never re-reads; a rate change is invisible until another code is requested in between.
+    entrypoints:
+      - kind: other
+        locator: VAT300 chainVATDEF
+        evidence: ["ATU_SRC/QRPGLESRC/VAT300.RPGLE:66-73"]
+    dependencies: []
+    open_questions: ["Do rates change while jobs run in the real deployment?"]
+  - id: vat-module-c07
+    name: No maintenance path for VAT rates (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: No VAT200, no menu option, no writer of VATDEF in ATU_SRC; audit and delete columns have no writer.
+    entrypoints:
+      - kind: other
+        locator: grep VATDEF writers
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-163", "ATU_SRC/QDDSSRC/VATDEF.PF:5-16"]
+    dependencies: []
+    open_questions: ["How are rates maintained on the box?"]
+  - id: vat-module-c08
+    name: VAT code comes from the article via GetArtVatCode (two srvpgm hops)
+    status: candidate
+    confidence: observed-in-code
+    summary: Every caller does CLCVat(GetArtVatCode(arid), net); FVAT never sees an article id.
+    entrypoints:
+      - kind: other
+        locator: callers of ClcVAT
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:267-269", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:224-226", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:154", "ATU_SRC/QDDSSRC/ARTICLE.PF:32"]
+    dependencies: [FARTICLE.ILESRVPGM]
+    open_questions: []
+  - id: vat-module-c09
+    name: Export surface and binding
+    status: candidate
+    confidence: observed-in-code
+    summary: 4 exports SIGNATURE('V1') ACTGRP(*CALLER); in SAMPLE.BNDDIR.
+    entrypoints:
+      - kind: other
+        locator: FVAT.ILESRVPGM / .BND
+        evidence: ["ATU_SRC/QSRVSRC/FVAT.BND:4-9", "ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM:8-9", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:13-14"]
+    dependencies: [SAMPLE.BNDDIR]
+    open_questions: []
+  - id: vat-module-c10
+    name: Copybook / module parameter-type drift on CLCVat
+    status: candidate
+    confidence: observed-in-code
+    summary: Prototype declares the code as '1' (no A), module as '1A'; same storage.
+    entrypoints:
+      - kind: other
+        locator: VAT.RPGLEINC vs VAT300
+        evidence: ["ATU_SRC/QPROTOSRC/VAT.RPGLEINC:22-23", "ATU_SRC/QRPGLESRC/VAT300.RPGLE:39-40"]
+    dependencies: []
+    open_questions: []
