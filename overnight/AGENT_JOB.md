@@ -1,4 +1,14 @@
-RUN
+DONE
+
+# RESULT 2026-09-08 — convert CUS vertical under atu-merlin-ts-cus-v1@1 (WAIVED_PATHFINDER, PARITY=UNVERIFIED)
+# - modern/README.md                         coverage table, SME open questions c04/c08/c11, deltas CR-1..CR-9
+# - modern/openapi/customer.yaml             HTTP contract
+# - modern/db/schema.sql                     customer table, cusseq, custome2 index, country dependency table
+# - modern/src/features/customer/            CUS200 / CUS250 service, routes, web
+# - modern/src/shared/fcustomer/             FCUSTOMER shared module (getters, ExistCus, IsCusDeleted, SltCustomer)
+# - modern/test/                             55 tests green (npm test, needs DATABASE_URL; scripts/local-pg.sh)
+# - architecture/atu-merlin/CONVERT_RECORD.md batch summary {feature_id, status, code}
+# Not converted: c06 (ORD200 stay_legacy), cus-modules c10 (needs-SME). Next: re-fire Pack B run 4 (ord-trigger-ord700).
 
 # CONVERT — CUS vertical (atuMerlin) — FIRE after Field+CTO ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
