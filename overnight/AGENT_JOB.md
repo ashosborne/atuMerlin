@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — run 6 after residual bind
 # Prefer: dat-utils (8 accepted). Then cou-maintain FCOUNTRY half (c07–c12).
