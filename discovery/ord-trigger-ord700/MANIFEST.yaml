@@ -11,13 +11,13 @@ out_of_scope_hints:
   - writer programs' own behaviour
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T13:20:29Z
+bind_status: accepted
 
 features:
   - id: ord-trigger-ord700-c01
     name: Trigger registration on DETORD
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: Three ADDPFTRG (*AFTER insert/delete/update-on-change) calling ORD700 with RPLTRG(*YES). Definitions observed; attachment on the box inferred.
     entrypoints:
@@ -28,7 +28,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c02
     name: Insert adds ordered quantity to article customer-order quantity
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ARCUSQTY += new.ODQTY.
     entrypoints:
@@ -39,7 +39,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c03
     name: Delete subtracts outstanding quantity and logs
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ARCUSQTY -= (old.ODQTY - old.ODQTYLIV); AddLogEntry with order/line/article/qty; log errors swallowed.
     entrypoints:
@@ -50,7 +50,7 @@ features:
     open_questions: ["Is the SAMLOG user-space log an observable a target must preserve?"]
   - id: ord-trigger-ord700-c04
     name: Update applies outstanding-quantity delta, handles article change
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Same article -> (dQty - dDelivered); changed article -> subtract old outstanding, add new outstanding.
     entrypoints:
@@ -61,7 +61,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c05
     name: Silent no-op on zero delta or unknown article
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: UpdArt returns without error.
     entrypoints:
@@ -72,7 +72,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c06
     name: Trigger buffer mechanics
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Standard PARM1 layout with old/new offsets; %parms = 0 early return.
     entrypoints:
@@ -83,7 +83,7 @@ features:
     open_questions: ["Conversion must replace this mechanism, not port it."]
   - id: ord-trigger-ord700-c07
     name: ORD701 sets customer last-order date on order insert
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: SQL AFTER INSERT trigger updates CUSTOMER.CULASTORD = new.ORDATE.
     entrypoints:
@@ -94,7 +94,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c08
     name: Trigger asymmetry leaves CULASTORD stale on delete
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: No delete/update trigger on ORDER; ART801/ORD901 recompute later.
     entrypoints:
@@ -105,7 +105,7 @@ features:
     open_questions: ["Accepted drift or defect?"]
   - id: ord-trigger-ord700-c09
     name: Staging copy excludes triggers
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORD100C creates QTEMP/DETORD with TRG(*NO); only final writes fire ORD700.
     entrypoints:
@@ -116,7 +116,7 @@ features:
     open_questions: []
   - id: ord-trigger-ord700-c10
     name: ART801 batch reconciliation (related surface)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: SQL procedure recomputes ARCUSQTY, CUCREDIT, CULASTORD from open orders; menu opt 82.
     entrypoints:
@@ -127,7 +127,7 @@ features:
     open_questions: ["Owned by sql-objects seed; listed here for the relationship."]
   - id: ord-trigger-ord700-c11
     name: Possible arithmetic divergence between trigger and reconciliation
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: ORD700 never subtracts on order close; ART801 excludes closed orders. Values can diverge after close.
     entrypoints:

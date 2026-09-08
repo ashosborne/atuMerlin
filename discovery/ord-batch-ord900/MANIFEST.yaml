@@ -8,8 +8,8 @@ out_of_scope_hints:
   - interactive ORD screens
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T13:20:29Z
+bind_status: deferred
 
 features:
   - id: ord-batch-ord900-c01

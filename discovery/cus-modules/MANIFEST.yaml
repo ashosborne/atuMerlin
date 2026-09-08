@@ -9,13 +9,13 @@ out_of_scope_hints:
   - FCUSTOMER export/signature policy (srvpgm-fcustomer) — overlap flagged
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T13:20:29Z
+bind_status: accepted
 
 features:
   - id: cus-modules-c01
     name: Customer getter family (GetCus*)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Eleven exported procedures each chain CUSTOME1 by CUID and return one column.
     entrypoints:
@@ -26,7 +26,7 @@ features:
     open_questions: []
   - id: cus-modules-c02
     name: ExistCus (found and not deleted)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Returns %found(CUSTOME1) and CUDEL <> 'X'.
     entrypoints:
@@ -37,7 +37,7 @@ features:
     open_questions: []
   - id: cus-modules-c03
     name: IsCusDeleted
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Returns CUDEL = 'X' after chain.
     entrypoints:
@@ -48,7 +48,7 @@ features:
     open_questions: []
   - id: cus-modules-c04
     name: Lazy open and last-key cache in chainCUSTOME1
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Opens CUSTOME1 on first use; skips chain when the requested CUID equals the buffered CUID; clears buffer before chain so missing ids yield blanks/zeros.
     entrypoints:
@@ -59,7 +59,7 @@ features:
     open_questions: ["Getters on a missing id return blank/zero silently — preserve or surface as error in target?"]
   - id: cus-modules-c05
     name: CloseCUSTOME1 prototyped but not exported
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Procedure exists and is in the include, but FCUSTOMER.BND does not export it.
     entrypoints:
@@ -70,7 +70,7 @@ features:
     open_questions: ["Intentional (file lifetime = activation group) or oversight?"]
   - id: cus-modules-c06
     name: SltCustomer selection window
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Dynamic SQL over CUSTOMER filtered by name and/or city LIKE, ordered by name, paged 14; returns selected CUID or the passed default.
     entrypoints:
@@ -81,7 +81,7 @@ features:
     open_questions: []
   - id: cus-modules-c07
     name: Selection rules (option 1 only, single selection)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Non-1 options and second selections are flagged with SFLMSG and reverse image; cursor to first error.
     entrypoints:
@@ -92,7 +92,7 @@ features:
     open_questions: []
   - id: cus-modules-c08
     name: Criteria change re-prepares; F3/F12 return default
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: If search fields changed since last load the cursor is closed and rebuilt; exit/cancel return the input default unchanged.
     entrypoints:
@@ -103,7 +103,7 @@ features:
     open_questions: []
   - id: cus-modules-c09
     name: Dynamic SQL string concatenation of user input
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Search text is trimmed and concatenated into the SELECT; single quotes in input would break or alter the statement.
     entrypoints:
@@ -114,7 +114,7 @@ features:
     open_questions: ["Preserve as-is quirk or treat as defect to fix during conversion? (SME/architecture decision, not Discovery)"]
   - id: cus-modules-c10
     name: Dormant GetCusLastOrdDate scaffold
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: Commented-out procedure and prototype left as a training exercise; not compiled, not exported.
     entrypoints:
@@ -125,7 +125,7 @@ features:
     open_questions: ["Recommend reject at bind."]
   - id: cus-modules-c11
     name: Blank criteria list-all semantics
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: With both search fields blank the city branch is taken and LIKE '%%' matches every customer.
     entrypoints:

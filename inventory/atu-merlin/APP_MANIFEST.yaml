@@ -3,6 +3,8 @@ app_id: atu-merlin
 repo: https://github.com/ashosborne/atuMerlin
 status: in_progress
 completeness: incomplete
+notes:
+- 'Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.'
 scanned_seeds:
 - art-interactive
 - art-modules

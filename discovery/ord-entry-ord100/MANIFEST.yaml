@@ -11,13 +11,13 @@ out_of_scope_hints:
   - whole-ORD mega-slice
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T12:49:00Z
-bind_status: unbound
+updated_at: 2026-09-08T13:20:29Z
+bind_status: accepted
 
 features:
   - id: ord-entry-ord100-c01
     name: Customer selection at entry
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Optional CUID parameter; when absent or zero, SltCustomer(0) is shown and a zero result aborts; header shows GetCusName.
     entrypoints:
@@ -28,7 +28,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c02
     name: Lines staged in QTEMP copy of DETORD (triggers/constraints off)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: CL wrappers DLTF + CRTDUPOBJ DETORD to QTEMP with CST(*NO) TRG(*NO) and OVRDBF TMPDETORD before calling the program.
     entrypoints:
@@ -39,7 +39,7 @@ features:
     open_questions: ["Calling ORD100 directly (without CL) leaves TMPDETORD unresolved — is that ever done?"]
   - id: ord-entry-ord100-c03
     name: Add order line with article prompt and default pricing
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: F6 prompts SltArticle; qty 1; price GetArtRefSalPrice; VAT CLCVat(GetArtVatCode); rate GetVatRate.
     entrypoints:
@@ -50,7 +50,7 @@ features:
     open_questions: ["Price is copied at entry time — no later re-pricing observed."]
   - id: ord-entry-ord100-c04
     name: Edit staged line and recompute totals
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ODTOT = qty*price; VAT recomputed; F27 redisplays without saving.
     entrypoints:
@@ -61,7 +61,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c05
     name: Delete staged line
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 4 deletes from temp file, adjusts running totals, marks row '**** Delete ***'.
     entrypoints:
@@ -72,7 +72,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c06
     name: Confirm blocked while options pending
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: F8 with any row option 2/4 shows SFLMSG 36 and does not confirm.
     entrypoints:
@@ -83,7 +83,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c07
     name: Confirm writes ORDER header and DETORD lines
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: LASTORDNO incremented under *lock; ORYEAR=*year; ORDATE=today; delivery/close 0; staged lines copied with ODLINE renumbered 1..n.
     entrypoints:
@@ -94,7 +94,7 @@ features:
     open_questions: ["No commitment control — partial failure mid-loop leaves header without all lines."]
   - id: ord-entry-ord100-c08
     name: Print and acknowledge after confirm
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Calls ORD500(orid), shows FMT03, ends program.
     entrypoints:
@@ -105,7 +105,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c09
     name: CRTORD command facade
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: CRTORD takes CUID (default 0); ORD100C runs CRTORD CUID(&CUID). Command-to-program binding is not in source.
     entrypoints:
@@ -116,7 +116,7 @@ features:
     open_questions: ["Confirm CRTCMD PGM(ORD100) from compiled object or ARCAD repository."]
   - id: ord-entry-ord100-c10
     name: Entry paths into order creation
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Menu opt 6 -> ORD100C2; ORD200 F6 -> ORD100C(cuid); ORD201 F6 -> ORD100C2.
     entrypoints:
@@ -127,7 +127,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c11
     name: Trigger side effects on confirm (pointer)
-    status: candidate
+    status: needs-SME
     confidence: inferred
     summary: DETORD writes fire ORD700 (ARCUSQTY), ORDER write fires ORD701 (CULASTORD) if triggers are attached on the box.
     entrypoints:
@@ -138,7 +138,7 @@ features:
     open_questions: ["Own this under ord-trigger-ord700; keep pointer only here."]
   - id: ord-entry-ord100-c12
     name: Staged line numbering gaps until confirm
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: count increments on add, not decremented on delete; confirm renumbers.
     entrypoints:
@@ -149,7 +149,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c13
     name: Abandon before confirm writes nothing
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: F3/F12 exit without writing ORDER/DETORD; QTEMP copy discarded on next run.
     entrypoints:
@@ -160,7 +160,7 @@ features:
     open_questions: []
   - id: ord-entry-ord100-c14
     name: No stock / credit / date checks at entry (absence)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: CULIMCRE, CUCREDIT, ARSTOCK are never read by ORD100.
     entrypoints:
