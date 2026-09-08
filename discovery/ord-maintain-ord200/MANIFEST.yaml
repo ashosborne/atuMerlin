@@ -1,0 +1,157 @@
+slice_id: ord-maintain-ord200
+seed: "Orders of one customer - ORD200(cuid) list with lifecycle options"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ORD200D.DSPF
+out_of_scope_hints:
+  - ORD201 all-customers list (separate seam; divergences flagged)
+  - internals of ORD100/101/202/500
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T13:35:00Z
+bind_status: unbound
+
+features:
+  - id: ord-maintain-ord200-c01
+    name: List customer's orders from ORDERCUS view
+    status: candidate
+    confidence: observed-in-code
+    summary: SQL cursor over ORDERCUS where orcuid = cuid, ISOTODATE40 on three dates, TOTVAL; ordered by order date desc; loads all rows.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 CTL01/SFL01
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:105-131", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW:4-19"]
+    dependencies: [ORDERCUS.VIEW, ISOTODATE4.SQLUDF, DAT002.PGM.RPGLE]
+    open_questions: []
+  - id: ord-maintain-ord200-c02
+    name: F6 create order for customer -> ORD100C
+    status: candidate
+    confidence: observed-in-code
+    summary: Calls ORD100C(cuid) then reloads.
+    entrypoints:
+      - kind: other
+        locator: ORD200 F6 -> extpgm ORD100C
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:154-156"]
+    dependencies: [ORD100C.PGM.CLLE]
+    open_questions: []
+  - id: ord-maintain-ord200-c03
+    name: Option 2 update lines -> ORD101
+    status: candidate
+    confidence: observed-in-code
+    summary: Calls ORD101(orid). Note c09 - this branch is unreachable in ORD200 as coded.
+    entrypoints:
+      - kind: other
+        locator: ORD200 opt 2 -> extpgm ORD101
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:225-228"]
+    dependencies: [ORD101.PGM.RPGLE]
+    open_questions: []
+  - id: ord-maintain-ord200-c04
+    name: Option 4 delete order and lines
+    status: candidate
+    confidence: observed-in-code
+    summary: Deletes ORDER1 row then loop-deletes DETORD1 rows by ORID.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:229-235"]
+    dependencies: [ORDER1.LF, DETORD1.LF]
+    open_questions: ["No confirmation prompt before delete."]
+  - id: ord-maintain-ord200-c05
+    name: Option 5 display / option 6 print
+    status: candidate
+    confidence: observed-in-code
+    summary: ORD202(orid) and ORD500(orid).
+    entrypoints:
+      - kind: other
+        locator: ORD200 opt 5/6
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:236-243"]
+    dependencies: [ORD202.PGM.RPGLE, ORD500.PGM.RPGLE]
+    open_questions: []
+  - id: ord-maintain-ord200-c06
+    name: Option 7 close order
+    status: candidate
+    confidence: observed-in-code
+    summary: ORDATCLO = today; ORDATDEL = today if zero.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 opt 7
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:244-254"]
+    dependencies: [ORDER1.LF]
+    open_questions: ["Closing does not deliver lines (ODQTYLIV untouched) - intended?"]
+  - id: ord-maintain-ord200-c07
+    name: Option 8 deliver order
+    status: candidate
+    confidence: observed-in-code
+    summary: ORDATDEL = today; lines with ODQTYLIV = 0 get ODQTYLIV = ODQTY; others unlocked.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 opt 8
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:255-272"]
+    dependencies: [ORDER1.LF, DETORD1.LF]
+    open_questions: []
+  - id: ord-maintain-ord200-c08
+    name: Option guards
+    status: candidate
+    confidence: observed-in-code
+    summary: 7 blocked if closed; 8 blocked if delivered; 4 blocked if any line delivered; 1,3,>8 invalid.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:168-212", "ATU_SRC/QDDSSRC/ORD200D.DSPF:40-43"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord200-c09
+    name: Precedence quirk - option 2 always rejected
+    status: candidate
+    confidence: observed-in-code
+    summary: Missing parentheses make 'opt01 = 2' unconditionally trigger the closed-order message; ORD201 has the corrected form.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 S01chk line 187
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:187-195", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191"]
+    dependencies: []
+    open_questions: ["Preserve as-is or adopt ORD201 rule? SME/architecture decision."]
+  - id: ord-maintain-ord200-c10
+    name: Caller CUS200 option 5
+    status: candidate
+    confidence: observed-in-code
+    summary: Only caller found in ATU_SRC.
+    entrypoints:
+      - kind: other
+        locator: extpgm ORD200
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:230-233"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord200-c11
+    name: Header context and sentinel dates
+    status: candidate
+    confidence: observed-in-code
+    summary: Chains CUSTOME1; dates initialised to 1940-01-01 sentinel.
+    entrypoints:
+      - kind: screen
+        locator: ORD200 *inzsr
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:279-284"]
+    dependencies: [CUSTOME1.LF]
+    open_questions: []
+  - id: ord-maintain-ord200-c12
+    name: Delete leaves CULASTORD stale (consequence)
+    status: candidate
+    confidence: inferred
+    summary: ORD701 only fires on insert; deleting the latest order leaves CUSTOMER.CULASTORD pointing at it until ART801/ORD901 recompute.
+    entrypoints:
+      - kind: other
+        locator: ORDER delete path
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:229-235", "ATU_SRC/QSQLSRC/ORD701.SQLTRG:4-14", "ATU_SRC/QSQLSRC/ART801.SQLPRC:33-36"]
+    dependencies: []
+    open_questions: ["Confirm on the box; SME to decide if this is accepted drift."]
+  - id: ord-maintain-ord200-c13
+    name: Delete ordering differs from ORD201
+    status: candidate
+    confidence: observed-in-code
+    summary: ORD200 deletes header then lines; ORD201 deletes lines then header.
+    entrypoints:
+      - kind: other
+        locator: ORD200 vs ORD201 opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:230-233", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:233-237"]
+    dependencies: []
+    open_questions: []
