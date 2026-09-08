@@ -1,0 +1,134 @@
+slice_id: ord-maintain-ord201
+seed: "All customer orders - ORD201 list (menu opt 3) with lifecycle options"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ORD201D.DSPF
+out_of_scope_hints:
+  - ORD200 per-customer twin (shared rules noted, not merged)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T13:45:00Z
+bind_status: unbound
+
+features:
+  - id: ord-maintain-ord201-c01
+    name: List all orders paged from ORDERCUS
+    status: candidate
+    confidence: observed-in-code
+    summary: SQL cursor over ORDERCUS with customer id/name; 14 rows per load; ordered by date desc, id desc.
+    entrypoints:
+      - kind: screen
+        locator: ORD201 CTL01/SFL01
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:98-130"]
+    dependencies: [ORDERCUS.VIEW, ISOTODATE4.SQLUDF]
+    open_questions: []
+  - id: ord-maintain-ord201-c02
+    name: F6 create -> ORD100C2
+    status: candidate
+    confidence: observed-in-code
+    summary: Calls ORD100C2 (no customer parm); closes cursor and reloads.
+    entrypoints:
+      - kind: other
+        locator: ORD201 F6 -> extpgm ORD100C2
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:155-158"]
+    dependencies: [ORD100C2.PGM.CLLE]
+    open_questions: []
+  - id: ord-maintain-ord201-c03
+    name: Option 2 update -> ORD101 with correct closed guard
+    status: candidate
+    confidence: observed-in-code
+    summary: (opt 2 or 4) and closed -> rejected; otherwise ORD101(orid).
+    entrypoints:
+      - kind: other
+        locator: ORD201 opt 2
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:191-199", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:229-232"]
+    dependencies: [ORD101.PGM.RPGLE]
+    open_questions: []
+  - id: ord-maintain-ord201-c04
+    name: Option 4 delete lines then header
+    status: candidate
+    confidence: observed-in-code
+    summary: Loop-delete DETORD1 by ORID, then delete ORDER1; clears row ids.
+    entrypoints:
+      - kind: screen
+        locator: ORD201 opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:233-241"]
+    dependencies: [ORDER1.LF, DETORD1.LF]
+    open_questions: ["No confirmation prompt."]
+  - id: ord-maintain-ord201-c05
+    name: Option 5 display / option 6 print
+    status: candidate
+    confidence: observed-in-code
+    summary: ORD202(orid), ORD500(orid).
+    entrypoints:
+      - kind: other
+        locator: ORD201 opt 5/6
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:242-249"]
+    dependencies: [ORD202.PGM.RPGLE, ORD500.PGM.RPGLE]
+    open_questions: []
+  - id: ord-maintain-ord201-c06
+    name: Option 7 close / option 8 deliver (shared with ORD200)
+    status: candidate
+    confidence: observed-in-code
+    summary: Same rules as ord-maintain-ord200-c06/c07.
+    entrypoints:
+      - kind: screen
+        locator: ORD201 opt 7/8
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:250-278"]
+    dependencies: [ORDER1.LF, DETORD1.LF]
+    open_questions: ["Pack B: one shared card set referenced by both slices."]
+  - id: ord-maintain-ord201-c07
+    name: Option guards and dead option 3
+    status: candidate
+    confidence: observed-in-code
+    summary: 7 if closed, 8 if delivered, 4 if any delivered line, 1 / >8 invalid; option 3 passes validation with no action.
+    entrypoints:
+      - kind: screen
+        locator: ORD201 S01chk / S01act
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:172-216", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:224-282"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord201-c08
+    name: F5 refresh
+    status: candidate
+    confidence: observed-in-code
+    summary: Closes cursor and reloads from the first row.
+    entrypoints:
+      - kind: screen
+        locator: ORD201 F5
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:152-154"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord201-c09
+    name: Menu entry option 3
+    status: candidate
+    confidence: observed-in-code
+    summary: SAMMNU 'Work with Customer Orders' calls ORD201.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opt 3
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:92-95"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord201-c10
+    name: Unused file declarations CUSTOME1, ARTICLE1
+    status: candidate
+    confidence: observed-in-code
+    summary: Declared in F-specs; no I/O observed.
+    entrypoints:
+      - kind: other
+        locator: ORD201 F-specs
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:8-9"]
+    dependencies: []
+    open_questions: []
+  - id: ord-maintain-ord201-c11
+    name: Cursor closed at end
+    status: candidate
+    confidence: observed-in-code
+    summary: pnl00 closes c1 before *inlr; ORD200 does not.
+    entrypoints:
+      - kind: other
+        locator: ORD201 pnl00
+        evidence: ["ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:291-294"]
+    dependencies: []
+    open_questions: []
