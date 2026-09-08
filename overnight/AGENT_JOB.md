@@ -1,4 +1,14 @@
-DONE
+RUN
+
+# PACK B — Document-slices conveyor (atuMerlin) — FIRE run 4 after run 3 DONE
+# Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
+# Accepted slices: cus-interactive (documented), cus-modules (documented), ord-entry-ord100 (documented), ord-trigger-ord700 (next).
+# Deferred: ord-batch-ord900. Skip art-* this round.
+# Pick next: prefer ord-trigger-ord700 (last accepted undocumenteds in this bind set).
+# inferred / needs-SME stay needs-SME — do not promote to observed.
+# CHARACTERIZATION: deferred-waived. No convert in this job (convert is a separate AGENT_JOB after paste + ROOM_OK).
+# Architecture pack atu-merlin-ts-cus-v1 is BOUND for CUS only — do not convert ORD here.
+# See overnight/BIND_RECORD.md and discovery/*/BIND.md. Prior brief: overnight/MORNING_BRIEF.md (run 3).
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRE run 3 after run 2 DONE
 # Stay on branch cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
