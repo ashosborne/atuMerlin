@@ -9,143 +9,167 @@ out_of_scope_hints:
   - ORD200 order list behaviour (ord-maintain-ord200)
   - FCUSTOMER internals (cus-modules)
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T13:20:29Z
+phase: B
+updated_at: 2026-09-08T13:30:00Z
 bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 1, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN."
 
 features:
   - id: cus-interactive-c01
     name: List customers by name with position-to and paging
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Subfile over CUSTOME2 (CUSTNM, CUID); loads 14 rows per page; position-to by name; restores last read on page down.
+    summary: Subfile over CUSTOME2 (CUSTNM, CUID); loads 14 rows per load (SFLPAG 7); 10-char position-to by name prefix; page down resumes from saved last-read key; F12 on the list ends the program; rows never refreshed after save.
     entrypoints:
       - kind: screen
         locator: CUS200 CTL01/SFL01
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:129-155", "ATU_SRC/QDDSSRC/CUS200D.DSPF:27-41"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:117-191", "ATU_SRC/QDDSSRC/CUS200D.DSPF:12-71", "ATU_SRC/QPNLSRC/SAMMNU.MENU:87-90"]
+    behaviour_doc: features/cus-interactive-c01.md
     dependencies: [CUSTOME2.LF, CUSTOMER.PF]
     open_questions: []
   - id: cus-interactive-c02
     name: Create customer with id from CUSSEQ sequence
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: F6 resets FCUST, sets CUID = NEXT VALUE FOR CUSSEQ, then writes on save.
+    summary: F6 resets FCUST (to *INZSR values), sets CUID = NEXT VALUE FOR CUSSEQ, skips S02prp and shows FMT02 in CRT mode; Enter writes on clean check. Sequence value consumed even if cancelled; CUCREA = program start date.
     entrypoints:
       - kind: screen
         locator: CUS200 F6 -> FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:179-185", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:321-328", "ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ:5-9"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:179-185", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:321-329", "ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ:5-9"]
+    behaviour_doc: features/cus-interactive-c02.md
     dependencies: [CUSSEQ.SQLSEQ, CUSTOME1.LF]
-    open_questions: ["Sequence value is consumed even if the create is cancelled (F12) — intended?"]
+    open_questions: ["Sequence value is consumed even if the create is cancelled (F12) — acceptable as-is, or is gap-free id a hidden requirement?"]
   - id: cus-interactive-c03
     name: Update customer (option 2)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 2 chains CUSTOME1, shows FMT02, updates FCUST on Enter after validation.
+    summary: Option 2 chains CUSTOME1 (record locked across the screen, %found not tested), shows FMT02 in UPD mode, updates FCUST on Enter after validation; multiple option-2 rows processed one after another.
     entrypoints:
       - kind: screen
         locator: CUS200 opt 2 -> FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:224-229", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:324-325"]
-    dependencies: [CUSTOME1.LF]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:224-229", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:257-266", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:321-329"]
+    behaviour_doc: features/cus-interactive-c03.md
+    dependencies: [CUSTOME1.LF, FCOUNTRY.ILESRVPGM]
     open_questions: []
   - id: cus-interactive-c04
     name: Customer validation rules
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Country must exist (FCOUNTRY); name mandatory; phone mandatory and numeric; duplicate UPPER(name)+phone rejected (create dup>0, update dup>1).
+    summary: Country must exist (FCOUNTRY.ExistCountry); name mandatory; phone mandatory, trimmed in place, digits only; duplicate UPPER(name)+phone via SQL count (CRT dup>0, UPD dup>1). All rules evaluated in one pass. Other fields unvalidated. UPD duplicate check passes when values change to collide with exactly one other row.
     entrypoints:
       - kind: screen
         locator: CUS200 FMT02 S02chk
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:290-317", "ATU_SRC/QDDSSRC/CUS200D.DSPF:106-132", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:14-22"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:290-319", "ATU_SRC/QDDSSRC/CUS200D.DSPF:105-117", "ATU_SRC/QDDSSRC/CUS200D.DSPF:131-132", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:11-12", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:27-32"]
+    behaviour_doc: features/cus-interactive-c04.md
     dependencies: [FCOUNTRY.ILESRVPGM, SAMMSGF.MSGF, CUSTOMER.PF]
-    open_questions: ["Duplicate check compares trimmed phone against untrimmed stored value — is stored CUPHONE always trimmed?"]
+    open_questions:
+      - "needs-SME: update-mode duplicate check (dup > 1) does not catch a change that collides with exactly one other customer — known/accepted defect?"
+      - "needs-SME/data: stored CUPHONE values written outside CUS200 with leading blanks would escape the duplicate match."
   - id: cus-interactive-c05
     name: Country prompt via FCOUNTRY selector
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: F4 on FMT02 calls SltCountry then GetCountryName.
+    summary: F4 on FMT02 calls SltCountry(cucoun) (returns default on cancel), then GetCountryName (blank if unknown); redisplays without validation.
     entrypoints:
       - kind: screen
         locator: CUS200 FMT02 F4
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:281-284"]
-    dependencies: [FCOUNTRY.ILESRVPGM, COUNTRY.RPGLEINC]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:281-284", "ATU_SRC/QDDSSRC/CUS200D.DSPF:86", "ATU_SRC/QRPGLESRC/COU301.RPGLE:85-92", "ATU_SRC/QRPGLESRC/COU300.RPGLE:19-27"]
+    behaviour_doc: features/cus-interactive-c05.md
+    dependencies: [FCOUNTRY.ILESRVPGM, COUNTRY.RPGLEINC, COU301D.DSPF]
     open_questions: []
   - id: cus-interactive-c06
     name: Navigate to customer's orders (option 5 -> ORD200)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 5 calls ORD200(cuid) as external program.
+    summary: Option 5 calls ORD200(cuid) synchronously as external program (5P 0 parameter, *LIBL resolution); option cleared on return; list not re-read. Seam edge only — ORD200 behaviour stays in ord-maintain-ord200.
     entrypoints:
       - kind: other
         locator: CUS200 opt 5 -> extpgm ORD200
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:37-38", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:230-233"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:37-38", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:230-233", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:18-19"]
+    behaviour_doc: features/cus-interactive-c06.md
     dependencies: [ORD200.PGM.SQLRPGLE]
     open_questions: []
   - id: cus-interactive-c07
-    name: Sentinel last-order date (0 -> 1940-01-01)
-    status: accepted
+    name: Sentinel last-order date (0 -> 1940-01-01 -> blank)
+    status: documented
     confidence: observed-in-code
-    summary: CULASTORD numeric 0 displayed as date constant d'1940-01-01'.
+    summary: CUS200 maps CULASTORD 0 to d'1940-01-01', which DDS MAPVAL renders blank; non-zero shown as *JOB date. CUS250 shows the raw 8-digit numeric. LASTORD is screen-only; CULASTORD written only by ORD701/ORD901/ART801.
     entrypoints:
       - kind: screen
-        locator: CUS200 FMT02 LASTORD
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:89", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:260-264"]
-    dependencies: []
-    open_questions: ["Same sentinel used by ISOTODATE40 UDF and ORD200/201/202 — one shared card or per slice?"]
+        locator: CUS200 FMT02 LASTORD / CUS250 FMT02 CULASTORD
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:89", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:260-264", "ATU_SRC/QDDSSRC/CUS200D.DSPF:144-145", "ATU_SRC/QDDSSRC/CUS250D.DSPF:69"]
+    behaviour_doc: features/cus-interactive-c07.md
+    dependencies: [CUSTOMER.PF]
+    open_questions: ["Same sentinel used by ISOTODATE40 UDF and ORD200/201/202 — this card owns the CUS presentation only; shared-convention card deferred to those binds."]
   - id: cus-interactive-c08
     name: Audit stamping on save
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CUMOD timestamp and CUMODID user on every save; CUCREA date set at program init.
+    summary: CUMOD = %timestamp() on every save. CUMODID (*USER) and CUCREA (%date) are set once at *INZSR and reach the row on create only; on update the chain reloads stored CUMODID/CUCREA, so CUMODID is NOT refreshed and CUCREA is preserved. (Corrects Phase A summary.)
     entrypoints:
       - kind: screen
         locator: CUS200 S02act / *inzsr
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:323", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:334-335"]
-    dependencies: []
-    open_questions: ["CUCREA is set at *inzsr, so an update after a create in the same call keeps the create date — but a pure update call also stamps CUCREA into the buffer; verify whether update overwrites CUCREA."]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:75", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:258", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:321-329", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:333-337", "ATU_SRC/QDDSSRC/CUSTOMER.PF:23-28"]
+    behaviour_doc: features/cus-interactive-c08.md
+    dependencies: [CUSTOMER.PF]
+    open_questions: ["needs-SME: CUMODID not refreshed on update — intended or latent defect to preserve as-is?"]
   - id: cus-interactive-c09
     name: Customer-by-id inquiry with prompt and not-found message
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CUS250 FMT01 takes CUID; F4 calls SltCustomer; chain CUSTOME1; not found -> ERR0103 with edited id.
+    summary: CUS250 FMT01 takes CUID; F4 calls SltCustomer (default returned on cancel) then checks immediately; chain CUSTOME1 input-only; not found -> ERR0103 with %editc(id:'Z'); F12 on FMT01 ends the program; no CUDEL test.
     entrypoints:
       - kind: screen
         locator: CUS250 FMT01
-        evidence: ["ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:85-87", "ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:96-104", "ATU_SRC/QDDSSRC/CUS250D.DSPF:28"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:69-110", "ATU_SRC/QDDSSRC/CUS250D.DSPF:13-32", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:19-20", "ATU_SRC/QPNLSRC/SAMMNU.MENU:111-114"]
+    behaviour_doc: features/cus-interactive-c09.md
     dependencies: [FCUSTOMER.ILESRVPGM, CUSTOME1.LF, SAMMSGF.MSGF]
     open_questions: []
   - id: cus-interactive-c10
     name: Customer detail display with country name
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CUS250 FMT02 shows the chained record with GetCountryName(CUCOUN).
+    summary: CUS250 FMT02 shows the chained record read-only with GetCountryName(CUCOUN); Enter, F3 and F12 all return to FMT01 (F3 does not exit); audit fields and CUDEL not shown.
     entrypoints:
       - kind: screen
         locator: CUS250 FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:129-137"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:129-161", "ATU_SRC/QDDSSRC/CUS250D.DSPF:33-70"]
+    behaviour_doc: features/cus-interactive-c10.md
     dependencies: [FCOUNTRY.ILESRVPGM]
     open_questions: []
   - id: cus-interactive-c11
     name: No delete path for customers in this seam (CUDEL never set)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CUSTOMER.PF has CUDEL; CUS200 allows options 2 and 5 only. Deletion surface unknown.
+    summary: CUSTOMER.PF has CUDEL ('X' = deleted); CUS200 allows options 2 and 5 only, lists and edits flagged rows unfiltered; CUS250 displays them. FCUSTOMER.ExistCus excludes 'X' rows (asymmetry). No writer of CUDEL found under ATU_SRC.
     entrypoints:
       - kind: other
         locator: CUSTOMER.PF CUDEL
-        evidence: ["ATU_SRC/QDDSSRC/CUSTOMER.PF:28", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:199"]
+        evidence: ["ATU_SRC/QDDSSRC/CUSTOMER.PF:29", "ATU_SRC/QDDSSRC/SAMREF.PF:26-27", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:199", "ATU_SRC/QDDSSRC/CUS200D.DSPF:22", "ATU_SRC/QRPGLESRC/CUS300.RPGLE:155-171"]
+    behaviour_doc: features/cus-interactive-c11.md
     dependencies: []
-    open_questions: ["Is customer soft-delete performed outside ATU_SRC, or never?"]
+    open_questions: ["needs-SME: is customer soft-delete performed outside ATU_SRC, or never?"]
   - id: cus-interactive-c12
     name: Subfile option validation (2, 5 only)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Invalid options reverse-imaged with SFLMSG 'Invalid Option'; cursor positioned to first error row.
+    summary: Invalid options reverse-imaged (DSPATR RI/PC) with SFLMSG 'Invalid Option'; cursor to first error row; all changed rows re-marked via SFLNXTCHG; actions run only when every option is valid.
     entrypoints:
       - kind: screen
         locator: CUS200 S01chk
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:193-213", "ATU_SRC/QDDSSRC/CUS200D.DSPF:40"]
+        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:193-213", "ATU_SRC/QDDSSRC/CUS200D.DSPF:14-18", "ATU_SRC/QDDSSRC/CUS200D.DSPF:40"]
+    behaviour_doc: features/cus-interactive-c12.md
     dependencies: []
     open_questions: []
+
+needs_sme:
+  - cus-interactive-c04  # update-mode duplicate gap; stored phone data hygiene
+  - cus-interactive-c08  # CUMODID not refreshed on update
+  - cus-interactive-c11  # where (if anywhere) customers are soft-deleted
+blocked: []
 
 unknown_surfaces:
   - locator: ATU_SRC/QDDSSRC/CUSTADRE.PF
