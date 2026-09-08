@@ -1,13 +1,18 @@
 RUN
+station: discovery-phase-a
+ROOM_OK: false
+requested_by: Migration Engineer
+requested_at: 2026-09-08T12:12:52Z
 
-STATION: Discovery Pack A — estate radar (Phase A candidates only)
-
-Read and execute in full: operator/atu-merlin-factory-loop/PASTE-estate-discovery-atu-merlin.md
+Read and run operator/atu-merlin-factory-loop/PASTE-estate-discovery-atu-merlin.md on branch cursor/atu-merlin-estate-discovery.
 
 Hard rules:
-- Phase A candidates only. No bind, no Phase B deepen, no convert, no test-gen.
-- Never edit ATU_SRC/**.
-- Stay on branch cursor/atu-merlin-estate-discovery; PR to master.
-- Write overnight/MORNING_BRIEF.md with banner PHASE A ONLY - UNBOUND CANDIDATES.
-- completeness: incomplete. No percent-complete claims.
-- When finished, set line 1 of overnight/AGENT_JOB.md to DONE, commit, push.
+- Phase A candidates only
+- No bind, no Phase B, no convert
+- Never edit ATU_SRC/**
+- Honour overnight/stop.txt
+- Write overnight/MORNING_BRIEF.md and discovery/inventory artefacts per the paste
+- Open or update PR to master
+- When finished, rewrite this file so line 1 is exactly DONE
+
+Do not claim the estate is complete.
