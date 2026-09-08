@@ -1,0 +1,136 @@
+slice_id: cus-modules
+seed: "Customer ILE modules CUS300 (getters/exists) + CUS301 (SltCustomer) forming FCUSTOMER"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/CUS300.RPGLE
+  - ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+  - ATU_SRC/QDDSSRC/CUS301D.DSPF
+out_of_scope_hints:
+  - CUS200 screens (cus-interactive)
+  - FCUSTOMER export/signature policy (srvpgm-fcustomer) — overlap flagged
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T12:50:00Z
+bind_status: unbound
+
+features:
+  - id: cus-modules-c01
+    name: Customer getter family (GetCus*)
+    status: candidate
+    confidence: observed-in-code
+    summary: Eleven exported procedures each chain CUSTOME1 by CUID and return one column.
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER GetCusName..GetCusCredit
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:19-137", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:5-17"]
+    dependencies: [CUSTOME1.LF, CUSTOMER.RPGLEINC]
+    open_questions: []
+  - id: cus-modules-c02
+    name: ExistCus (found and not deleted)
+    status: candidate
+    confidence: observed-in-code
+    summary: Returns %found(CUSTOME1) and CUDEL <> 'X'.
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER ExistCus
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:152-160"]
+    dependencies: [CUSTOME1.LF]
+    open_questions: []
+  - id: cus-modules-c03
+    name: IsCusDeleted
+    status: candidate
+    confidence: observed-in-code
+    summary: Returns CUDEL = 'X' after chain.
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER IsCusDeleted
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:163-171"]
+    dependencies: [CUSTOME1.LF]
+    open_questions: []
+  - id: cus-modules-c04
+    name: Lazy open and last-key cache in chainCUSTOME1
+    status: candidate
+    confidence: observed-in-code
+    summary: Opens CUSTOME1 on first use; skips chain when the requested CUID equals the buffered CUID; clears buffer before chain so missing ids yield blanks/zeros.
+    entrypoints:
+      - kind: other
+        locator: CUS300 chainCUSTOME1
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:173-186"]
+    dependencies: []
+    open_questions: ["Getters on a missing id return blank/zero silently — preserve or surface as error in target?"]
+  - id: cus-modules-c05
+    name: CloseCUSTOME1 prototyped but not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: Procedure exists and is in the include, but FCUSTOMER.BND does not export it.
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER (missing export CLOSECUSTOME1)
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:188-195", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:54-56", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:5-17"]
+    dependencies: []
+    open_questions: ["Intentional (file lifetime = activation group) or oversight?"]
+  - id: cus-modules-c06
+    name: SltCustomer selection window
+    status: candidate
+    confidence: observed-in-code
+    summary: Dynamic SQL over CUSTOMER filtered by name and/or city LIKE, ordered by name, paged 14; returns selected CUID or the passed default.
+    entrypoints:
+      - kind: screen
+        locator: CUS301D CTL01/SFL01 via SltCustomer(pcod)
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:54-124", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:211-227", "ATU_SRC/QDDSSRC/CUS301D.DSPF:24-37"]
+    dependencies: [CUSTOMER.PF, CUS301D.DSPF]
+    open_questions: []
+  - id: cus-modules-c07
+    name: Selection rules (option 1 only, single selection)
+    status: candidate
+    confidence: observed-in-code
+    summary: Non-1 options and second selections are flagged with SFLMSG and reverse image; cursor to first error.
+    entrypoints:
+      - kind: screen
+        locator: CUS301 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:168-209", "ATU_SRC/QDDSSRC/CUS301D.DSPF:35-36"]
+    dependencies: []
+    open_questions: []
+  - id: cus-modules-c08
+    name: Criteria change re-prepares; F3/F12 return default
+    status: candidate
+    confidence: observed-in-code
+    summary: If search fields changed since last load the cursor is closed and rebuilt; exit/cancel return the input default unchanged.
+    entrypoints:
+      - kind: screen
+        locator: CUS301 S01act / S01key
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:214-216", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:157-160"]
+    dependencies: []
+    open_questions: []
+  - id: cus-modules-c09
+    name: Dynamic SQL string concatenation of user input
+    status: candidate
+    confidence: observed-in-code
+    summary: Search text is trimmed and concatenated into the SELECT; single quotes in input would break or alter the statement.
+    entrypoints:
+      - kind: other
+        locator: CUS301 s01prp stm build
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:103-121"]
+    dependencies: []
+    open_questions: ["Preserve as-is quirk or treat as defect to fix during conversion? (SME/architecture decision, not Discovery)"]
+  - id: cus-modules-c10
+    name: Dormant GetCusLastOrdDate scaffold
+    status: candidate
+    confidence: inferred
+    summary: Commented-out procedure and prototype left as a training exercise; not compiled, not exported.
+    entrypoints:
+      - kind: other
+        locator: CUS300 comment block
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:139-150", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:37-40"]
+    dependencies: []
+    open_questions: ["Recommend reject at bind."]
+  - id: cus-modules-c11
+    name: Blank criteria list-all semantics
+    status: candidate
+    confidence: observed-in-code
+    summary: With both search fields blank the city branch is taken and LIKE '%%' matches every customer.
+    entrypoints:
+      - kind: screen
+        locator: CUS301 s01prp else-branch
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:104-114"]
+    dependencies: []
+    open_questions: []
