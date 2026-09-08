@@ -1,13 +1,11 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — FIRE after residual bind 2026-09-08
-# Bind tip: overnight/BIND_RECORD_RESIDUAL_2026-09-08.md @ d24702f — read BIND.md before deepen.
+# PACK B — Document-slices conveyor (atuMerlin) — run 6 after residual bind
+# Prefer: dat-utils (8 accepted). Then cou-maintain FCOUNTRY half (c07–c12).
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# Accepted this wave: vat-module, dat-utils, cou-maintain (FCOUNTRY half only — deepen accepted features only; skip deferred COU200).
-# Prefer order: vat-module, then dat-utils, then cou-maintain FCOUNTRY features.
-# Cap 1 slice per run. inferred/needs-SME stay needs-SME. CHARACTERIZATION deferred-waived.
-# Do not convert. Do not widen atu-merlin-ts-cus-v1. Full-repo migrate continues after ORD bind wave.
-# See overnight/BIND_RECORD_RESIDUAL_2026-09-08.md
+# Bind tip: overnight/BIND_RECORD_RESIDUAL_2026-09-08.md + discovery/*/BIND.md
+# Cap 1 slice per run. vat-module DONE run 5. CHARACTERIZATION deferred-waived.
+# Do not convert. Do not widen atu-merlin-ts-cus-v1.
 
 # PASTE THIS as the entire Cloud Agent prompt
 # PACK B — Document-slices conveyor (atuMerlin)
