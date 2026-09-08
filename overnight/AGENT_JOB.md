@@ -1,6 +1,7 @@
 RUN
 
 # PACK B — Document-slices conveyor (atuMerlin) — FIRE after residual bind 2026-09-08
+# Bind tip: overnight/BIND_RECORD_RESIDUAL_2026-09-08.md @ d24702f — read BIND.md before deepen.
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
 # Accepted this wave: vat-module, dat-utils, cou-maintain (FCOUNTRY half only — deepen accepted features only; skip deferred COU200).
 # Prefer order: vat-module, then dat-utils, then cou-maintain FCOUNTRY features.
