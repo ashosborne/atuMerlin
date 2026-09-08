@@ -1,0 +1,420 @@
+# atuMerlin operator charter — TWO packs (do not merge)
+# Repo: https://github.com/ashosborne/atuMerlin  (Arcad IBM i sample, ATU_SRC)
+# APP_ID: atu-merlin
+# Law: FIELD-GUIDE / estate-discovery-loop / discovery-agent-v0.2 — do not invent factory rules
+# House style: never use pin / pinned / landed
+# Shared PF/LF (+ protos used as includes) are DEPS, not slices. Slice by callable seam.
+
+OPERATOR: Ash Osborne
+APP_ID: atu-merlin
+REPO: https://github.com/ashosborne/atuMerlin
+DEFAULT_BRANCH: master
+REPO_ROOT: .
+FACTORY_ROOT: migration-factory
+ALLOWLIST_PATHS:
+  - ATU_SRC/**
+ATU_SRC_WRITE: false
+NO_COMMITS_TO_DEFAULT_BRANCH: true
+
+OUT_OF_SCOPE_ALWAYS:
+  - conversion / modern target implementation
+  - test generation / RECORD / REPLAY / goldens
+  - Architecture PACK BIND
+  - editing ATU_SRC/**
+  - merging ORD* flows into one mega-slice
+  - claiming % complete or "all slices found"
+
+# ---------------------------------------------------------------------------
+# PACK A — Estate radar (Phase A candidates ONLY)
+# Paste: PASTE-estate-discovery-atu-merlin.md
+# ---------------------------------------------------------------------------
+PACK_A_ESTATE_RADAR:
+  PURPOSE: Grow honest candidate inventory (surfaces/behaviours as candidate|unknown)
+  BRANCH: cursor/atu-merlin-estate-discovery
+  PR_TARGET: master
+  PHASE_B: false
+  AUTO_BIND: false
+  AUTO_ACCEPT: false
+  ALLOW_CONVERSION: false
+  ALLOW_TEST_GEN: false
+  ALLOW_TEST_EXEC: false
+  WRITE_SCOPE: factory-artefacts-only   # discovery/**, inventory/**, overnight/** only
+  OPTIONAL_DUAL_WRITE_INDEX: true       # may refresh docs/estate/INDEX.md status from APP_MANIFEST for Ash
+  RESUME: additive-from-APP_MANIFEST
+  MAX_ITERATIONS: 12
+  MAX_NEW_SEEDS_PER_ITER: 1
+  STOP_WHEN_NO_NEW_SURFACES: 2
+  COMMIT_AS: estate-discovery-loop
+  MORNING_BRIEF_BANNER: "PHASE A ONLY - UNBOUND CANDIDATES"
+  COMPLETENESS: incomplete
+  METHOD_COVERAGE_IBM_I:
+    - DSPF
+    - CMD
+    - CL
+    - SQLRPGLE
+    - RPGLE
+    - RPG
+    - COBOL
+    - SRVPGM
+    - SQL
+    - SYSTRG
+
+# ---------------------------------------------------------------------------
+# PACK B — Document-slices conveyor (Phase B behaviour cards ONLY)
+# Paste: PASTE-document-slices-conveyor-atu-merlin.md
+# Prerequisite: human bind (record-bind) of accepted SLICE_IDs from Pack A
+# NOT goldens / characterization / conversion — documentation from source only
+# ---------------------------------------------------------------------------
+PACK_B_DOCUMENT_CONVEYOR:
+  PURPOSE: Deepen accepted slices to behaviour cards; mark documented; regenerate COVERAGE
+  BRANCH: factory/atu-merlin-document-slices
+  PR_TARGET: master
+  PHASE_A: false                        # do not re-hunt estate; pick next accepted undocumenteds
+  PHASE_B: true
+  AUTO_ACCEPT_POLICY: observed-in-code-within-seed-only   # inferred stay needs-SME
+  ALLOW_CONVERSION: false
+  ALLOW_TEST_GEN: false
+  ALLOW_TEST_EXEC: false
+  CHARACTERIZATION: deferred-waived     # IBM i not runnable here — document from source only
+  CAP_SLICES_PER_RUN: 1                 # re-runnable overnight loop
+  WRITE_SCOPE:
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - docs/estate/**                    # dual-write INDEX status for Ash readability
+    - migration-factory/**              # copy pack in if missing
+  COMMIT_AS: document-slices-conveyor
+  STOP_WHEN: no-remaining-accepted-undocumented-seeds
+  MORNING_BRIEF_WHEN_REMAINING: true
+
+# ---------------------------------------------------------------------------
+# INITIAL_SEEDS — callable seams by domain (PF/LF listed as deps, not seeds)
+# Prefer mid-size seams (entry PGM + related DSPF/CL/CMD), not whole ORD*
+# ---------------------------------------------------------------------------
+INITIAL_SEEDS:
+  # --- CUS ---
+  - domain: CUS
+    slice_id: cus-interactive
+    seed: Customer interactive inquiry/maintain (CUS200/CUS250 entry programs)
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE
+      - ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE
+      - ATU_SRC/QDDSSRC/CUS200D.DSPF
+      - ATU_SRC/QDDSSRC/CUS250D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/CUSTOMER.PF
+      - ATU_SRC/QDDSSRC/CUSTOME1.LF
+      - ATU_SRC/QDDSSRC/CUSTOME2.LF
+      - ATU_SRC/QDDSSRC/CUSTADRE.PF
+      - ATU_SRC/QDDSSRC/ADDRESS.PF
+      - ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+
+  - domain: CUS
+    slice_id: cus-modules
+    seed: Customer ILE modules CUS300/CUS301
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/CUS300.RPGLE
+      - ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+      - ATU_SRC/QDDSSRC/CUS301D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/CUSTOMER.PF
+      - ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+
+  # --- ART ---
+  - domain: ART
+    slice_id: art-interactive
+    seed: Article interactive inquiry/maintain ART200/201/202/250
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE
+      - ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE
+      - ATU_SRC/QDDSSRC/ART200D.DSPF
+      - ATU_SRC/QDDSSRC/ART201D.DSPF
+      - ATU_SRC/QDDSSRC/ART202D.DSPF
+      - ATU_SRC/QDDSSRC/ART250D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ARTICLE.PF
+      - ATU_SRC/QDDSSRC/ARTICLE1.LF
+      - ATU_SRC/QDDSSRC/ARTICLE2.LF
+      - ATU_SRC/QDDSSRC/ARTIPROV.PF
+      - ATU_SRC/QPROTOSRC/ARTICLE.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+
+  - domain: ART
+    slice_id: art-modules
+    seed: Article ILE/SQL modules ART300/301/302
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ART300.RPGLE
+      - ATU_SRC/QRPGLESRC/ART301.SQLRPGLE
+      - ATU_SRC/QRPGLESRC/ART302.SQLRPGLE
+      - ATU_SRC/QDDSSRC/ART301D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ARTICLE.PF
+      - ATU_SRC/QPROTOSRC/ARTICLE.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+
+  # --- ORD (thin callable seams — shared ORDER.PF is a dep only) ---
+  - domain: ORD
+    slice_id: ord-entry-ord100
+    seed: Order entry ORD100 + CL wrappers (+ CRTORD CMD if wired here)
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE
+      - ATU_SRC/QCLSRC/ORD100C.PGM.CLLE
+      - ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE
+      - ATU_SRC/QDDSSRC/ORD100D.DSPF
+      - ATU_SRC/QCMDSRC/CRTORD.CMD
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+      - ATU_SRC/QDDSSRC/DETORD.PF
+      - ATU_SRC/QDTASRC/LASTORDNO.DTAARA
+
+  - domain: ORD
+    slice_id: ord-entry-ord101
+    seed: Order entry follow-on ORD101
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE
+      - ATU_SRC/QDDSSRC/ORD101D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+      - ATU_SRC/QDDSSRC/DETORD.PF
+
+  - domain: ORD
+    slice_id: ord-maintain-ord200
+    seed: Order maintain/inquiry ORD200
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE
+      - ATU_SRC/QDDSSRC/ORD200D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+      - ATU_SRC/QDDSSRC/ORDER1.LF
+      - ATU_SRC/QDDSSRC/ORDER2.LF
+      - ATU_SRC/QDDSSRC/ORDER3.LF
+
+  - domain: ORD
+    slice_id: ord-maintain-ord201
+    seed: Order maintain ORD201
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
+      - ATU_SRC/QDDSSRC/ORD201D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+
+  - domain: ORD
+    slice_id: ord-maintain-ord202
+    seed: Order maintain ORD202
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE
+      - ATU_SRC/QDDSSRC/ORD202D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+
+  - domain: ORD
+    slice_id: ord-print-ord500
+    seed: Order print ORD500 + CL + PRTF
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+      - ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+      - ATU_SRC/QDDSSRC/ORD500O.PRTF
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+      - ATU_SRC/QDDSSRC/DETORD.PF
+
+  - domain: ORD
+    slice_id: ord-trigger-ord700
+    seed: Order trigger seam ORD700 + SYSTRG + SQLTRG
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE
+      - ATU_SRC/QTRGSRC/ORD700A.SYSTRG
+      - ATU_SRC/QTRGSRC/ORD700D.SYSTRG
+      - ATU_SRC/QTRGSRC/ORD700U.SYSTRG
+      - ATU_SRC/QSQLSRC/ORD701.SQLTRG
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+
+  - domain: ORD
+    slice_id: ord-batch-ord900
+    seed: Order batch/utility ORD900/ORD901
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
+    deps:
+      - ATU_SRC/QDDSSRC/ORDER.PF
+
+  # --- PRO ---
+  - domain: PRO
+    slice_id: pro-interactive
+    seed: Provider interactive RPGLE + DSPF (non-COBOL)
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/PRO200.RPGLE
+      - ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE
+      - ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE
+      - ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE
+      - ATU_SRC/QDDSSRC/PRO200D.DSPF
+      - ATU_SRC/QDDSSRC/PRO201D.DSPF
+      - ATU_SRC/QDDSSRC/PRO202D.DSPF
+      - ATU_SRC/QDDSSRC/PRO250D.DSPF
+      - ATU_SRC/QILESRC/PRO200.ILEPGM
+    deps:
+      - ATU_SRC/QDDSSRC/PROVIDER.PF
+      - ATU_SRC/QPROTOSRC/PROVIDER.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+
+  - domain: PRO
+    slice_id: pro-modules
+    seed: Provider ILE modules PRO300/PRO301
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/PRO300.RPGLE
+      - ATU_SRC/QRPGLESRC/PRO301.SQLRPGLE
+      - ATU_SRC/QDDSSRC/PRO301D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/PROVIDER.PF
+      - ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+
+  - domain: PRO
+    slice_id: pro-cobol-pro201
+    seed: Provider COBOL PRO201 callable program
+    entrypoints:
+      - ATU_SRC/QCBLSRC/PRO201.CBL
+    deps:
+      - ATU_SRC/QDDSSRC/PROVIDER.PF
+      - ATU_SRC/QDDSSRC/PRO201D.DSPF
+
+  # --- FAM / COU / PAR / VAT / LOG / DAT ---
+  - domain: FAM
+    slice_id: fam-maintain
+    seed: Family maintain FAM300/FAM301
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/FAM300.RPGLE
+      - ATU_SRC/QRPGLESRC/FAM301.RPGLE
+      - ATU_SRC/QDDSSRC/FAM301D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/FAMILLY.PF
+      - ATU_SRC/QDDSSRC/FAMILL1.LF
+      - ATU_SRC/QPROTOSRC/FAMILLY.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+
+  - domain: COU
+    slice_id: cou-maintain
+    seed: Country maintain COU200/COU300/COU301
+    entrypoints:
+      - ATU_SRC/QRPGSRC/COU200.RPG
+      - ATU_SRC/QRPGLESRC/COU300.RPGLE
+      - ATU_SRC/QRPGLESRC/COU301.RPGLE
+      - ATU_SRC/QDDSSRC/COU200D.DSPF
+      - ATU_SRC/QDDSSRC/COU301D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/COUNTRY.PF
+      - ATU_SRC/QDDSSRC/COUNTR1.LF
+      - ATU_SRC/QPROTOSRC/COUNTRY.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+
+  - domain: PAR
+    slice_id: par-maintain
+    seed: Parameter maintain PAR200 + PAR201 CL/ILE + PAR300
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/PAR300.RPGLE
+      - ATU_SRC/QCLSRC/PAR201.CLLE
+      - ATU_SRC/QILESRC/PAR201.ILEPGM
+      - ATU_SRC/QDDSSRC/PAR200D.DSPF
+    deps:
+      - ATU_SRC/QDDSSRC/PARAMETER.PF
+      - ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+
+  - domain: VAT
+    slice_id: vat-module
+    seed: VAT module VAT300 (callable)
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/VAT300.RPGLE
+    deps:
+      - ATU_SRC/QDDSSRC/VATDEF.PF
+      - ATU_SRC/QPROTOSRC/VAT.RPGLEINC
+      - ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+
+  - domain: LOG
+    slice_id: log-programs
+    seed: Logging programs LOG100/LOG300
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/LOG300.RPGLE
+    deps:
+      - ATU_SRC/QPROTOSRC/LOG.RPGLEINC
+      - ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+
+  - domain: DAT
+    slice_id: dat-utils
+    seed: Date utility programs DAT001/DAT002
+    entrypoints:
+      - ATU_SRC/QRPGLESRC/DAT001.PGM.RPGLE
+      - ATU_SRC/QRPGLESRC/DAT002.PGM.RPGLE
+    deps: []
+
+  # --- callable service-program seams (optional after domain PGMs) ---
+  - domain: SRVPGM
+    slice_id: srvpgm-fcustomer
+    seed: FCUSTOMER service program API seam
+    entrypoints:
+      - ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM
+      - ATU_SRC/QSRVSRC/FCUSTOMER.BND
+      - ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC
+    deps:
+      - ATU_SRC/QDDSSRC/CUSTOMER.PF
+
+  - domain: SRVPGM
+    slice_id: srvpgm-farticle
+    seed: FARTICLE service program API seam
+    entrypoints:
+      - ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM
+      - ATU_SRC/QSRVSRC/FARTICLE.BND
+      - ATU_SRC/QPROTOSRC/ARTICLE.RPGLEINC
+    deps:
+      - ATU_SRC/QDDSSRC/ARTICLE.PF
+
+  - domain: SRVPGM
+    slice_id: srvpgm-fprovider
+    seed: FPROVIDER service program API seam
+    entrypoints:
+      - ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM
+      - ATU_SRC/QSRVSRC/FPROVIDER.BND
+    deps:
+      - ATU_SRC/QDDSSRC/PROVIDER.PF
+
+  - domain: SRVPGM
+    slice_id: srvpgm-supporting
+    seed: Remaining F* + LOG SRVPGM seams (FFAMILLY FCOUNTRY FPARAMETER FVAT LOG) + SAMPLE.BNDDIR
+    entrypoints:
+      - ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+      - ATU_SRC/QILESRVSRC/FCOUNTRY.ILESRVPGM
+      - ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+      - ATU_SRC/QILESRVSRC/FVAT.ILESRVPGM
+      - ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+      - ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
+    deps: []
+
+  # --- residual callable / shell ---
+  - domain: SHELL
+    slice_id: menu-cmd-shell
+    seed: Menu/panel/message/cmd shell not owned by a domain entry PGM
+    entrypoints:
+      - ATU_SRC/QPNLSRC/SAMMNU.MENU
+      - ATU_SRC/QPNLSRC/SAMHELP.PNLGRP
+      - ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
+      - ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
+    deps: []
+
+  - domain: SQL
+    slice_id: sql-objects
+    seed: SQL tables/views/UDFs/procs/seqs (non-ORD701 trigger — that stays under ord-trigger-ord700)
+    entrypoints:
+      - ATU_SRC/QSQLSRC/ART801.SQLPRC
+      - ATU_SRC/QSQLSRC/ARTIINF.TABLE
+      - ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
+      - ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
+      - ATU_SRC/QSQLSRC/ISOTODATE.SQLUDF
+      - ATU_SRC/QSQLSRC/ISOTODATE4.SQLUDF
+      - ATU_SRC/QSQLSRC/ORDERCUS.VIEW
+    deps: []
