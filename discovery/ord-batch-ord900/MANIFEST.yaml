@@ -1,0 +1,113 @@
+slice_id: ord-batch-ord900
+seed: "Order batch/utility programs ORD900 (reset LASTORDNO) and ORD901 (shift order dates to today)"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
+  - ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
+out_of_scope_hints:
+  - ART801 (sql-objects seed)
+  - interactive ORD screens
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T14:10:00Z
+bind_status: unbound
+
+features:
+  - id: ord-batch-ord900-c01
+    name: ORD900 reset LASTORDNO to max order id
+    status: candidate
+    confidence: observed-in-code
+    summary: Reads last ORDER1 key, locks data area, writes ORID.
+    entrypoints:
+      - kind: job
+        locator: ORD900 (menu opt 80)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE:4-11", "ATU_SRC/QPNLSRC/SAMMNU.MENU:143-146"]
+    dependencies: [ORDER1.LF, LASTORDNO.DTAARA]
+    open_questions: ["Empty ORDER file -> readp fails/undefined; not guarded."]
+  - id: ord-batch-ord900-c02
+    name: ORD901 early exit when no orders
+    status: candidate
+    confidence: observed-in-code
+    summary: select max(ordate) = 0 -> return.
+    entrypoints:
+      - kind: job
+        locator: ORD901 entry
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:11-15"]
+    dependencies: [ORDER.PF]
+    open_questions: []
+  - id: ord-batch-ord900-c03
+    name: ORD901 shift order dates so newest = today
+    status: candidate
+    confidence: observed-in-code
+    summary: days = today - max(ORDATE); ORDATE += days; ORYEAR recomputed.
+    entrypoints:
+      - kind: job
+        locator: ORD901 main loop
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-21", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:38-39"]
+    dependencies: [ORDER.PF]
+    open_questions: []
+  - id: ord-batch-ord900-c04
+    name: ORD901 derived delivery/close date rules
+    status: candidate
+    confidence: observed-in-code
+    summary: Shift ORDATDEL/ORDATCLO; future -> 0; delivered >10 days ago and not closed -> ORDATCLO = ORDATDEL + 10.
+    entrypoints:
+      - kind: job
+        locator: ORD901 main loop
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:22-37"]
+    dependencies: [ORDER.PF]
+    open_questions: []
+  - id: ord-batch-ord900-c05
+    name: ORD901 resync DETORD.ODYEAR and CUSTOMER.CULASTORD
+    status: candidate
+    confidence: observed-in-code
+    summary: Two SQL UPDATEs after the loop.
+    entrypoints:
+      - kind: job
+        locator: ORD901 tail
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:42-50"]
+    dependencies: [DETORD.PF, CUSTOMER.PF]
+    open_questions: ["Same CULASTORD rule as ART801 - one card, two implementations?"]
+  - id: ord-batch-ord900-c06
+    name: ORD901 whole-file rewrite without commitment control
+    status: candidate
+    confidence: observed-in-code
+    summary: Arrival-sequence read/update of every ORDER row.
+    entrypoints:
+      - kind: job
+        locator: ORD901 F-spec / loop
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:4", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:19-41"]
+    dependencies: []
+    open_questions: []
+  - id: ord-batch-ord900-c07
+    name: Purpose - demo-data refresh utilities
+    status: candidate
+    confidence: inferred
+    summary: Menu 'Utilities' group and 'Reset ...' texts suggest sample maintenance, not business batch.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opts 80/81
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:143-150"]
+    dependencies: []
+    open_questions: ["If confirmed, recommend defer from conversion scope."]
+  - id: ord-batch-ord900-c08
+    name: No scheduling or parameters (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: Menu CALL only; no CL wrappers or job schedule entries in tree.
+    entrypoints:
+      - kind: other
+        locator: SAMMNU
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:143-150"]
+    dependencies: []
+    open_questions: ["Runtime JOBSCDE cannot be seen from source."]
+  - id: ord-batch-ord900-c09
+    name: Variable reuse trap in ORD901
+    status: candidate
+    confidence: observed-in-code
+    summary: lastdate is reassigned to today-10 after computing the shift.
+    entrypoints:
+      - kind: other
+        locator: ORD901 lines 16-18, 34
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-18", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:34"]
+    dependencies: []
+    open_questions: []
