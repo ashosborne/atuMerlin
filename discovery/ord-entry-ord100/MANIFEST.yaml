@@ -10,97 +10,117 @@ out_of_scope_hints:
   - ORD101 line maintenance, ORD200/201 lists, ORD500 print, ORD700 triggers
   - whole-ORD mega-slice
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T13:20:29Z
+phase: B
+updated_at: 2026-09-08T16:40:00Z
 bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 3, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as cus-interactive and cus-modules."
+needs_sme:
+  - "c09 (inferred): CRTORD -> ORD100 binding is not in source; confirm from compiled object / ARCAD."
+  - "c11 (inferred): whether ORD700 / ORD701 triggers are attached on the box; owned by ord-trigger-ord700."
+  - "c03/c13: F3/F12 on the add-line screen reached via F6 end the program (staged order lost silently); after F6, cancelling the article prompt re-prompts until an article is chosen. Known to users?"
+  - "c05: TOTVAT footer drifts after a delete (ODTOTVAT is not a subfile field); c04: footer totals not refreshed after an edit. Display-only; preserve or fix is a later-station decision."
+  - "c07: DETORD.ODYEAR is written as 0 by ORD100 and only backfilled by batch ORD901 (deferred slice). Accepted as-is?"
+  - "c07: no commitment control around header + lines; zero-line orders can be confirmed."
+  - "c14: no credit / stock / existence checks at entry — confirm nothing enforces them elsewhere."
 
 features:
   - id: ord-entry-ord100-c01
     name: Customer selection at entry
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Optional CUID parameter; when absent or zero, SltCustomer(0) is shown and a zero result aborts; header shows GetCusName.
+    summary: "Optional CUID parm (5P 0, *nopass). Absent or 0 -> SltCustomer(0); 0 result ends the program before any screen. Otherwise the id is taken as given (no existence / soft-delete check); CUSTNAME = GetCusName. Program then starts directly in the add-line panel (panel 2, create forced on). Mainline is driven by the RPG cycle until *inlr (panel 0)."
     entrypoints:
       - kind: other
         locator: ORD100 *inzsr
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:22-28", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:318-331"]
-    dependencies: [FCUSTOMER.ILESRVPGM]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:22-28", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:72-79", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:318-335", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:4-5", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:11"]
+    behaviour_doc: features/ord-entry-ord100-c01.md
+    dependencies: [FCUSTOMER.ILESRVPGM, CUSTOMER.RPGLEINC, SAMPLE.BNDDIR, ORDER.PF]
+    open_questions: ["needs-SME: orders can be created for a non-existent or soft-deleted customer id (no guard) — does that happen in practice?"]
   - id: ord-entry-ord100-c02
     name: Lines staged in QTEMP copy of DETORD (triggers/constraints off)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CL wrappers DLTF + CRTDUPOBJ DETORD to QTEMP with CST(*NO) TRG(*NO) and OVRDBF TMPDETORD before calling the program.
+    summary: "Both CL wrappers: DLTF QTEMP/DETORD (MONMSG CPF0000), CRTDUPOBJ DETORD *LIBL -> QTEMP CST(*NO) TRG(*NO), OVRDBF TMPDETORD -> QTEMP/DETORD, then CRTORD CUID(&CUID) or CALL ORD100. ORD100 stages through TMPDETORD (uf a, keyed, format renamed TMPREC) and writes the real DETORD only at confirm. No DLTOVR/DLTF afterwards; the copy persists in the job."
     entrypoints:
       - kind: job
         locator: ORD100C / ORD100C2
-        evidence: ["ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-10", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:5-10", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:12"]
-    dependencies: [DETORD.PF]
-    open_questions: ["Calling ORD100 directly (without CL) leaves TMPDETORD unresolved — is that ever done?"]
+        evidence: ["ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-12", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:5-11", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:4-5", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:11-12"]
+    behaviour_doc: features/ord-entry-ord100-c02.md
+    dependencies: [DETORD.PF, DETORD1.LF]
+    open_questions: ["Calling ORD100 directly (without CL) leaves TMPDETORD unresolved (open fails) — is that ever done? No direct caller found in ATU_SRC."]
   - id: ord-entry-ord100-c03
     name: Add order line with article prompt and default pricing
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: F6 prompts SltArticle; qty 1; price GetArtRefSalPrice; VAT CLCVat(GetArtVatCode); rate GetVatRate.
+    summary: "F6 (or first pass after customer) -> SltArticle(' '); qty 1; price GetArtRefSalPrice; ODTOT = qty*price; VAT CLCVat(GetArtVatCode); GetVatRate shown. FMT02 inputs are qty and price only (article fixed); Enter with a modified field (CHANGE(27)) recomputes and redisplays, Enter unmodified writes TMPREC and reloads the list. Cancelled article prompt still bumps the line counter; after F6 the cancel re-prompts until an article is chosen, and F3/F12 on FMT02 reached via F6 end the program. Staged row has ODORID=0, ODYEAR=0, ODQTYLIV=0."
     entrypoints:
       - kind: screen
         locator: ORD100 F6 -> FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:252-270"]
-    dependencies: [FARTICLE.ILESRVPGM, FVAT.ILESRVPGM]
-    open_questions: ["Price is copied at entry time — no later re-pricing observed."]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:148-150", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:251-313", "ATU_SRC/QDDSSRC/ORD100D.DSPF:89-127"]
+    behaviour_doc: features/ord-entry-ord100-c03.md
+    dependencies: [FARTICLE.ILESRVPGM, FVAT.ILESRVPGM, ARTICLE.RPGLEINC, VAT.RPGLEINC]
+    open_questions: ["Price is copied at entry time — no later re-pricing observed.", "needs-SME: are the F6 re-prompt loop and the F3/F12-ends-program path known behaviour?"]
   - id: ord-entry-ord100-c04
     name: Edit staged line and recompute totals
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: ODTOT = qty*price; VAT recomputed; F27 redisplays without saving.
+    summary: "Option 2 -> chain (ODLINE) TMPDETORD -> FMT02 (qty/price input). Enter recomputes ODTOT, VAT, ODTOTVAT; if any field changed (CHANGE(27)) redisplay only, else update TMPREC + subfile row, step01 = dsp. Footer TOT/TOTVAT are NOT refreshed after an edit (only on reload). Correction to Phase A: there is no F27; 27 is the CHANGE response indicator."
     entrypoints:
       - kind: screen
         locator: ORD100 opt 2 -> FMT02
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:264", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:291-312"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:214-220", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:263-270", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:291-313", "ATU_SRC/QDDSSRC/ORD100D.DSPF:91", "ATU_SRC/QDDSSRC/ORD100D.DSPF:114-127"]
+    behaviour_doc: features/ord-entry-ord100-c04.md
+    dependencies: [FVAT.ILESRVPGM, FARTICLE.ILESRVPGM]
+    open_questions: ["Option 2 on an already-deleted row chains a missing key and then updates without a prior read (runtime exception expected; not confirmed)."]
   - id: ord-entry-ord100-c05
     name: Delete staged line
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Option 4 deletes from temp file, adjusts running totals, marks row '**** Delete ***'.
+    summary: "Option 4: delete (ODLINE) TMPDETORD, TOT -= ODTOT (from the subfile row), TOTVAT -= ODTOTVAT (NOT a subfile field -> stale program value, usually another row's), row rewritten blank with '**** Delete ***' and kept in the subfile until reload. Consecutive 4s processed in one pass; no confirmation; count not decremented."
     entrypoints:
       - kind: screen
         locator: ORD100 opt 4
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:221-231"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:214-232", "ATU_SRC/QDDSSRC/ORD100D.DSPF:12-25"]
+    behaviour_doc: features/ord-entry-ord100-c05.md
     dependencies: []
-    open_questions: []
+    open_questions: ["needs-SME: TOTVAT drift after delete is display-only (confirm builds from the file) — preserve or fix later?"]
   - id: ord-entry-ord100-c06
     name: Confirm blocked while options pending
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: F8 with any row option 2/4 shows SFLMSG 36 and does not confirm.
+    summary: "s01chk on every Enter/F8: option not in {0,2,4} -> row RI/PC + SFLMSG 35 'Invalid Option'; F8 with any row 2/4 -> row RI/PC + SFLMSG 36; step01 back to dsp positioned on the first offending row; nothing actioned. F8 on an empty list passes. Indicators 35/36 are never reset in code (persistence is a runtime question)."
     entrypoints:
       - kind: screen
         locator: ORD100 S01chk
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:171-179", "ATU_SRC/QDDSSRC/ORD100D.DSPF:39"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:156-185", "ATU_SRC/QDDSSRC/ORD100D.DSPF:32", "ATU_SRC/QDDSSRC/ORD100D.DSPF:38-41"]
+    behaviour_doc: features/ord-entry-ord100-c06.md
     dependencies: []
-    open_questions: []
+    open_questions: ["Do SFLMSG 35/36 persist on later displays (INDARA refill semantics; runtime)?"]
   - id: ord-entry-ord100-c07
     name: Confirm writes ORDER header and DETORD lines
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: LASTORDNO incremented under *lock; ORYEAR=*year; ORDATE=today; delivery/close 0; staged lines copied with ODLINE renumbered 1..n.
+    summary: "F8: IN *LOCK LASTORDNO, +1, OUT; ORDER row ORID/ORYEAR=*year/ORCUID/ORDATE=yyyymmdd/ORDATDEL=0/ORDATCLO=0 written first; then each staged row copied to DETORD with ODORID set and ODLINE renumbered 1..n. ODYEAR is never assigned (written 0; only batch ORD901 backfills it). No commitment control. Zero-line order can be confirmed."
     entrypoints:
       - kind: screen
         locator: ORD100 F8 S01act
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:56", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:188-208"]
-    dependencies: [LASTORDNO.DTAARA, ORDER.PF, DETORD.PF]
-    open_questions: ["No commitment control — partial failure mid-loop leaves header without all lines."]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:56", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:187-213", "ATU_SRC/QDDSSRC/ORDER.PF:5-14", "ATU_SRC/QDDSSRC/DETORD.PF:5-23", "ATU_SRC/QDTASRC/LASTORDNO.DTAARA:8"]
+    behaviour_doc: features/ord-entry-ord100-c07.md
+    dependencies: [LASTORDNO.DTAARA, ORDER.PF, DETORD.PF, ORD500.PGM.RPGLE, ORD901.PGM.SQLRPGLE (pointer: ODYEAR backfill)]
+    open_questions: ["No commitment control — partial failure mid-loop leaves header without all lines (accepted failure mode?).", "needs-SME: ODYEAR = 0 until ORD901 runs — accepted as-is?", "Is LASTORDNO the single source of order numbers (ORD900 resets it)?"]
   - id: ord-entry-ord100-c08
     name: Print and acknowledge after confirm
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Calls ORD500(orid), shows FMT03, ends program.
+    summary: "prtOrd(orid) -> ORD500 (synchronous, unmonitored, no return value), then WINDOW FMT03 'Order n has been create for user ... The order is printed.' Any key ends the program. Thin seam-edge card; ORD500 internals belong to ord-print-ord500."
     entrypoints:
       - kind: other
         locator: ORD100 -> extpgm ORD500
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:209-212"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:209-212", "ATU_SRC/QDDSSRC/ORD100D.DSPF:128-141", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:15-19"]
+    behaviour_doc: features/ord-entry-ord100-c08.md
     dependencies: [ORD500.PGM.RPGLE]
     open_questions: []
   - id: ord-entry-ord100-c09
@@ -111,20 +131,21 @@ features:
     entrypoints:
       - kind: other
         locator: CRTORD.CMD
-        evidence: ["ATU_SRC/QCMDSRC/CRTORD.CMD:4-6", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:11"]
+        evidence: ["ATU_SRC/QCMDSRC/CRTORD.CMD:4-6", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:12"]
     dependencies: []
     open_questions: ["Confirm CRTCMD PGM(ORD100) from compiled object or ARCAD repository."]
   - id: ord-entry-ord100-c10
     name: Entry paths into order creation
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: Menu opt 6 -> ORD100C2; ORD200 F6 -> ORD100C(cuid); ORD201 F6 -> ORD100C2.
+    summary: "Menu SAMMNU opt 6 -> ORD100C2; ORD200 F6 -> ORD100C(cuid) (customer preselected); ORD201 F6 -> ORD100C2. Both list programs reload after return; no result is passed back. ORD100 has no direct caller in ATU_SRC other than ORD100C2; CRTORD is used only by ORD100C."
     entrypoints:
       - kind: other
         locator: SAMMNU / ORD200 / ORD201
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:104-107", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:154-156", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:155-158"]
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:104-106", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:154-156", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:16", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:155-158"]
+    behaviour_doc: features/ord-entry-ord100-c10.md
     dependencies: []
-    open_questions: []
+    open_questions: ["Callers outside ATU_SRC (schedulers, other menus) not observable."]
   - id: ord-entry-ord100-c11
     name: Trigger side effects on confirm (pointer)
     status: needs-SME
@@ -133,39 +154,42 @@ features:
     entrypoints:
       - kind: other
         locator: DETORD / ORDER triggers
-        evidence: ["ATU_SRC/QTRGSRC/ORD700A.SYSTRG:4-7", "ATU_SRC/QSQLSRC/ORD701.SQLTRG:4-14"]
+        evidence: ["ATU_SRC/QTRGSRC/ORD700A.SYSTRG:4-7", "ATU_SRC/QSQLSRC/ORD701.SQLTRG:5-16"]
     dependencies: [ORD700.PGM.RPGLE]
     open_questions: ["Own this under ord-trigger-ord700; keep pointer only here."]
   - id: ord-entry-ord100-c12
     name: Staged line numbering gaps until confirm
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: count increments on add, not decremented on delete; confirm renumbers.
+    summary: "count (3 0) increments on every add attempt (including a cancelled article prompt), never decrements on delete; staged ODLINE shows gaps; confirm resets count and renumbers 1..n in staged-key order. Numbers the user sees during entry differ from those stored/printed."
     entrypoints:
       - kind: other
         locator: ORD100 count / odline
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:261-262", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:204-205"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:62", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:253-262", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:201-206", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:330"]
+    behaviour_doc: features/ord-entry-ord100-c12.md
     dependencies: []
     open_questions: []
   - id: ord-entry-ord100-c13
     name: Abandon before confirm writes nothing
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: F3/F12 exit without writing ORDER/DETORD; QTEMP copy discarded on next run.
+    summary: "F3/F12 on the list (CA keys: typed options discarded) -> panel 0 -> *inlr; nothing written to ORDER/DETORD/LASTORDNO; no warning; staged rows stay in QTEMP until the next wrapper DLTF or job end. Extra silent abandon paths: cancelled customer prompt (c01) and F3/F12 on FMT02 reached via F6 (c03). F3/F12 on the first-pass add screen or the edit screen return to the list."
     entrypoints:
       - kind: screen
         locator: ORD100 exit/cancel
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:140-145", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-7"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:138-145", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:333-335", "ATU_SRC/QDDSSRC/ORD100D.DSPF:8-9", "ATU_SRC/QCLSRC/ORD100C.PGM.CLLE:6-7"]
+    behaviour_doc: features/ord-entry-ord100-c13.md
     dependencies: []
-    open_questions: []
+    open_questions: ["needs-SME: is losing staged lines without a warning acceptable as-is?"]
   - id: ord-entry-ord100-c14
     name: No stock / credit / date checks at entry (absence)
-    status: accepted
+    status: documented
     confidence: observed-in-code
-    summary: CULIMCRE, CUCREDIT, ARSTOCK are never read by ORD100.
+    summary: "ORD100 opens no CUSTOMER/ARTICLE file and calls only SltCustomer, GetCusName, SltArticle, GetArtDesc, GetArtRefSalPrice, GetArtVatCode, CLCVat, GetVatRate. CULIMCRE, CUCREDIT, ARSTOCK never read; ExistCus/IsCusDeleted/ExistArt/IsArtDeleted never called; ORDATDEL written 0; qty/price unvalidated; no duplicate-article check. Recorded absence so later stations do not invent checks."
     entrypoints:
       - kind: other
         locator: ORD100 (absence)
-        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE", "ATU_SRC/QDDSSRC/CUSTOMER.PF:20-22"]
-    dependencies: []
-    open_questions: ["Record as known absence so conversion does not invent checks."]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:10-20", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:253-269", "ATU_SRC/QDDSSRC/CUSTOMER.PF:17-20", "ATU_SRC/QDDSSRC/ARTICLE.PF:17"]
+    behaviour_doc: features/ord-entry-ord100-c14.md
+    dependencies: [CUSTOMER.RPGLEINC, ARTICLE.RPGLEINC]
+    open_questions: ["Record as known absence so conversion does not invent checks.", "needs-SME: is credit/stock control expected elsewhere (batch, outside ATU_SRC)?"]
