@@ -1,12 +1,12 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — ORD wave after bind 2026-09-08
-# Prefer order: ord-entry-ord101, ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
+# PACK B — Document-slices conveyor (atuMerlin) — ORD wave run 9
+# Prefer: ord-maintain-ord200, then ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
 # Bind tip: overnight/BIND_RECORD_ORD_WAVE_2026-09-08.md + discovery/*/BIND.md
-# Cap 1 slice per run. inferred/needs-SME stay needs-SME. CHARACTERIZATION deferred-waived.
+# Cap 1 slice. ord-entry-ord101 DONE run 8. CHARACTERIZATION deferred-waived.
 # Do not convert. Do not widen atu-merlin-ts-cus-v1. Planted defects: document as-is, do not fix.
-# After these five carded: ME drafts new ORD Architecture pack (ROOM_OK then).
+# After five ORD carded: ME drafts new ORD Architecture pack (ROOM_OK then).
 
 # PASTE THIS as the entire Cloud Agent prompt
 # PACK B — Document-slices conveyor (atuMerlin)
