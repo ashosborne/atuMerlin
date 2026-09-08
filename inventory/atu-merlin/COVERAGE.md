@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T22:11:07Z` by `document-slices-conveyor`
+- last_updated: `2026-09-08T22:45:56Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -16,20 +16,21 @@
   - Pack B run 7 (2026-09-08): cou-maintain FCOUNTRY half c07-c12 6/6 accepted behaviours documented (cards discovery/cou-maintain/features/); c01-c06, c13 deferred (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION: deferred-waived. No conversion, no tests.
   - Pack B run 8 (2026-09-08): ord-entry-ord101 documented (11 cards; c11 needs-SME); ORD wave queue left: ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
   - Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
+  - Pack B run 10 (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 21 |
-| surfaces `candidate` | 40 |
+| surfaces `accepted` | 22 |
+| surfaces `candidate` | 39 |
 | surfaces `deferred` | 3 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 172 |
+| behaviours `candidate` | 161 |
 | behaviours `deferred` | 7 |
-| behaviours `documented` | 89 |
+| behaviours `documented` | 100 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -55,7 +56,7 @@
 | `ord-entry-ord100` | 4 | 14 | 12 | `candidate` |
 | `ord-entry-ord101` | 1 | 12 | 11 | `candidate` |
 | `ord-maintain-ord200` | 1 | 13 | 12 | `candidate` |
-| `ord-maintain-ord201` | 1 | 11 | 0 | `candidate` |
+| `ord-maintain-ord201` | 1 | 11 | 11 | `documented` |
 | `ord-maintain-ord202` | 1 | 6 | 0 | `candidate` |
 | `ord-print-ord500` | 2 | 8 | 0 | `candidate` |
 | `ord-trigger-ord700` | 3 | 11 | 8 | `candidate` |

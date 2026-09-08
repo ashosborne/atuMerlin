@@ -15,7 +15,8 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   deferred-waived. No conversion, no tests. | Pack B run 7 (2026-09-08): cou-maintain FCOUNTRY half c07-c12 6/6 accepted behaviours documented (cards discovery/cou-maintain/features/); c01-c06, c13 deferred
   (bind mirror); surfaces srvpgm:FCOUNTRY / mod:COU300 / mod:COU301 candidate -> accepted, pgm:COU200 -> deferred. Residual-wave queue empty; conveyor idle until the next ORD bind wave. CHARACTERIZATION:
   deferred-waived. No conversion, no tests. | Pack B run 8 (2026-09-08): ord-entry-ord101 documented (11 cards; c11 needs-SME); ORD wave queue left: ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202,
-  ord-print-ord500 | Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500'
+  ord-print-ord500 | Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500 | Pack B run 10
+  (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -300,7 +301,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-maintain-ord201
   notes: '*PGM SQLRPGLE - Work with Customer Orders (menu opt 3); screen ORD201D'
   discovery_evidence:
@@ -2309,9 +2310,9 @@ behaviours:
 - behaviour_id: ord-maintain-ord201-c01
   surface_id: pgm:ORD201
   name: List all orders paged from ORDERCUS
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2320,13 +2321,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; SQL cursor over ORDERCUS with customer id/name; 14 rows per load; ordered by date desc, id desc.'
+  notes: 'confidence: observed-in-code; SQL cursor over ORDERCUS with no WHERE (inner join -> only orders with a CUSTOMER row), ISOTODATE40 on the three dates, TOTVAL (VAT-inclusive), orcuid/custnm per
+    row; ORDER BY datord DESC, orid DESC (tie-breaker present). 14 rows per fetch batch, cursor kept open, PAGEDOWN (N80) fetches the next batch; the screen page is 7 two-line rows (SFLPAG 7, customer on
+    line 2) - Phase A''s ''14 per page'' is the batch. sflend on any non-zero SQLCOD (incl. -305 on a NULL date) -> silent truncation; inferred: a NULL ORDATE sorts first in DESC and empties the whole list.
+    F11 SFLDROP handled by the display. rrs01 preserves the RRN high-water mark across READC. Dead declarations mode/User/crt/upd/help/prompt/morekeys. Panel id literal ''ORD200-1''.'
 - behaviour_id: ord-maintain-ord201-c02
   surface_id: pgm:ORD201
   name: F6 create -> ORD100C2
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2335,13 +2339,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Calls ORD100C2 (no customer parm); closes cursor and reloads.'
+  notes: 'confidence: observed-in-code; F6 (CF06) calls ORD100C2 with no parameters - CL stages QTEMP/DETORD (CST(*NO) TRG(*NO)), OVRDBF TMPDETORD, CALL ORD100 where the customer is chosen inside - then
+    step01 = prp and close c1: whole list rebuilt from row 1 unconditionally (also after a cancelled create); position lost; options typed on the F6 pass discarded (keys precede options, then SFLCLR). New
+    order appears at the top by the sort. ORD200 calls ORD100C(cuid) instead. Override scope is a build property (ord-entry-ord100 owns).'
 - behaviour_id: ord-maintain-ord201-c03
   surface_id: pgm:ORD201
   name: Option 2 update -> ORD101 with correct closed guard
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2350,13 +2356,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; (opt 2 or 4) and closed -> rejected; otherwise ORD101(orid).'
+  notes: 'confidence: observed-in-code; Guard ''(opt01 = 2 or opt01 = 4) and datclo > datBlank'' (parentheses present; ORD200:187 lacks them) refuses 2 only on a closed order (SFLMSG 36); open order ->
+    ORD101(orid) by reference, synchronous; opt cleared, row rewritten, no reload -> SUMORD (Value) stale after line edits until F5/F6. Only working path to ORD101 in the estate. Guard reads the screen
+    copy of datclo (order closed by another job after the load still opens); delivered-not-closed orders editable (ORD101 has no test). Ghost row (orid 0 after 4) passes -> ORD101(0), callee chain misses
+    silently. ORD201 holds no ORDER1 lock at call time.'
 - behaviour_id: ord-maintain-ord201-c04
   surface_id: pgm:ORD201
   name: Option 4 delete lines then header
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2365,13 +2374,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Loop-delete DETORD1 by ORID, then delete ORDER1; clears row ids.'
+  notes: 'confidence: observed-in-code; After the c07 guards: ''dou not %found / delete orid detord1'' by partial key until none, then ''delete orid order1'' (%found untested), then orid = 0 / oryear =
+    0 / opt01 = 0 / update sfl01 -> order number and year blank (EDTCDE 2 / Z) while date, value, delivery/close and customer stay displayed. No confirmation, no commitment control. Each line delete fires
+    ORD700 delete (full ODQTY since ODQTYLIV = 0) and logs; no ORDER delete trigger (CULASTORD not maintained). Failure residue = header with no lines (header locked by an open ORD101 session fails after
+    the lines are gone); ORD200 is header-first (orphan lines). Ghost row is cosmetic not a guard: 4 -> silent no-op, 5/6 -> callee with orid 0, 7/8 -> chain miss then update forde -> unmonitored exception.'
 - behaviour_id: ord-maintain-ord201-c05
   surface_id: pgm:ORD201
   name: Option 5 display / option 6 print
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2380,13 +2392,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ORD202(orid), ORD500(orid).'
+  notes: 'confidence: observed-in-code; 5 -> ORD202(orid), 6 -> ORD500(orid) (spool + ORD500C PDF), synchronous, orid by reference; option cleared, row rewritten, no reload. No state or existence guard:
+    closed, delivered and ghost (orid 0) orders can be displayed/printed - both callees chain order1 first; their not-found handling belongs to ord-maintain-ord202 / ord-print-ord500. Legend ''6=Print''
+    (ORD200D: ''6=Print  '').'
 - behaviour_id: ord-maintain-ord201-c06
   surface_id: pgm:ORD201
   name: Option 7 close / option 8 deliver (shared with ORD200)
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2395,13 +2409,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Same rules as ord-maintain-ord200-c06/c07.'
+  notes: 'confidence: observed-in-code; Guard (181-190) and actions (250-278) are byte-identical to ORD200:177-186 / 244-272 (diff-verified); rule detail and needs-SME questions owned by ord-maintain-ord200-c06
+    (close) and -c07 (deliver), cross-referenced not duplicated. In brief: already-closed 7 / already-delivered 8 refused with the generic ''Invalid Option'' (35); chain %found untested (ghost row -> unmonitored
+    exception); 7 stamps ORDATDEL when blank + ORDATCLO, lines untouched; 8 stamps ORDATDEL then sets ODQTYLIV = ODQTY on lines at 0 (with lock), skips partial lines, does not close. Sharpening for both
+    twins: ORD700U is TRGUPDCND(*CHANGE), so an unchanged zero-quantity line rewritten by 8 does not invoke the trigger. Paged list -> the screen-copy guard window is longer than in ORD200.'
 - behaviour_id: ord-maintain-ord201-c07
   surface_id: pgm:ORD201
   name: Option guards and dead option 3
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2410,13 +2427,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; 7 if closed, 8 if delivered, 4 if any delivered line, 1 / >8 invalid; option 3 passes validation with no action.'
+  notes: 'confidence: observed-in-code; s01chk per changed row, four independent tests: 1 / >8 (35); 7 if screen datclo set or 8 if screen datliv set (35 - generic text for state refusals); 2 or 4 if closed
+    (36); 4 with any line ODQTYLIV > 0 by live reade(n) (37, DDS ''whith''). Any hit: DSPATR(RI/PC), first-error page positioning, step01 = dsp - one bad row cancels every action on the pass, valid options
+    stay typed; tests not exclusive (36 + 37 co-fire; ERRSFL). Rows are updated with SFLNXTCHG on so s01act re-reads them, one action per cycle. Option 3 passes and hits s01act''s empty ''other'' with no
+    update -> stays typed and re-read on every Enter (dead, sticky); ORD200 rejects 3. Options typed before PAGEDOWN survive (no SFLCLR) and run on the next Enter. Message indicators never set off by the
+    program (INDARA refresh relied on). s01chk differs from ORD200 on exactly two lines (option 3, parentheses).'
 - behaviour_id: ord-maintain-ord201-c08
   surface_id: pgm:ORD201
   name: F5 refresh
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2425,13 +2446,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Closes cursor and reloads from the first row.'
+  notes: 'confidence: observed-in-code; CA05 labelled ''F5=Refresh'': s01key ''when refresh'' -> step01 = prp, close c1 -> SFLCLR, cursor re-declared/re-opened, first batch of 14 loaded, RRB01 = 1; position
+    lost; options typed on the pass discarded (CA key, keys precede options). Only in-program way to re-read displayed rows (2/5/6 do not reload; 4/7/8 update in place) and the antidote to the stale screen-copy
+    guards. Same two statements as F6 without the call. ORD200D enables CA05 but neither labels nor handles it.'
 - behaviour_id: ord-maintain-ord201-c09
   surface_id: pgm:ORD201
   name: Menu entry option 3
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2440,13 +2463,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; SAMMNU ''Work with Customer Orders'' calls ORD201.'
+  notes: 'confidence: observed-in-code; SAMMNU option 3 ''Work with Customer Orders'' -> ''cmd call ORD201'' - the only caller under ATU_SRC (no CL, command or program call site; CUS200 calls ORD200). No
+    parameters; User captured and unused. F3 and F12 both -> panel 0 -> pnl00 (Cancel = Exit; one panel). Menu item help= points at cus200 (mis-mapped). Panel id literal ''ORD200-1'' shared with ORD200D.
+    PRINT keyword on the file. Activation group inferred QILE (no ACTGRP) - build owner to confirm.'
 - behaviour_id: ord-maintain-ord201-c10
   surface_id: pgm:ORD201
   name: Unused file declarations CUSTOME1, ARTICLE1
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2455,13 +2480,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Declared in F-specs; no I/O observed.'
+  notes: 'confidence: observed-in-code; Both declared ''if e k disk'' and never read/chained/positioned (grep: F-specs only); opened at start and closed at *inlr, so CUSTOMER and ARTICLE must exist on *LIBL
+    for the list to run. CUSTOME1''s FCUST format supplies CUID/CUSTNM field definitions that the fetch writes (also defined by SFL01 REFFLD); ARTICLE1''s FARTI fields unreferenced. ORD200 declares CUSTOME1
+    (chains it once for the header) and not ARTICLE1 - both dead declarations are ORD201-specific. Copy-and-edit residue alongside the shared panel id and dead scalars.'
 - behaviour_id: ord-maintain-ord201-c11
   surface_id: pgm:ORD201
   name: Cursor closed at end
-  status: candidate
+  status: documented
   slice_id: ord-maintain-ord201
-  discovery_card: null
+  discovery_card: discovery/ord-maintain-ord201/features/ord-maintain-ord201-c11.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2470,7 +2497,10 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; pnl00 closes c1 before *inlr; ORD200 does not.'
+  notes: 'confidence: observed-in-code; pnl00 (panel 0 after F3/F12) runs ''exec sql close c1'' then *inlr = *on - needed because ORD201 pages and the cursor is normally still open on exit; ORD200 closes
+    in s01lod after loading everything and its pnl00 has no close. Every normal exit path closes (F5/F6 before reload, F3/F12 in pnl00). *inzsr only presets the three dates to 1940-01-01 (no parameter,
+    no header chain). Inferred: an abnormal end (ghost-row 7/8, lock time-out) leaves c1 open in the activation group; the next call in the same job gets -502 on open and shows an empty list with no message
+    - runtime-confirmable, depends on CLOSQLCSR/ACTGRP.'
 - behaviour_id: ord-maintain-ord202-c01
   surface_id: pgm:ORD202
   name: Order header display with sentinel dates
@@ -4951,5 +4981,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T22:11:07Z'
+last_updated: '2026-09-08T22:45:56Z'
 updated_by: document-slices-conveyor
