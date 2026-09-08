@@ -12,8 +12,8 @@ out_of_scope_hints:
   - customer / provider screens (callers only)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+updated_at: 2026-09-08T20:00:37Z
+bind_status: accepted
 
 features:
   - id: cou-maintain-c01
@@ -84,7 +84,7 @@ features:
     open_questions: []
   - id: cou-maintain-c07
     name: GetCountryName / GetCountryIso3 / ExistCountry
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Cached COUNTRY chain by 2A code; unknown -> blanks; ExistCountry = %found (no delete flag exists).
     entrypoints:
@@ -95,7 +95,7 @@ features:
     open_questions: []
   - id: cou-maintain-c08
     name: GetCountryIso3 unused; closeCOUNTRY not exported
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No caller of GetCountryIso3 in ATU_SRC; close procedure not in FCOUNTRY.BND.
     entrypoints:
@@ -106,7 +106,7 @@ features:
     open_questions: []
   - id: cou-maintain-c09
     name: SltCountry selection window (keyed read, by code or name)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Native keyed read over COUNTRY or COUNTR1 positioned at pcod; 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns COID; F3/F12 return pcod.
     entrypoints:
@@ -117,7 +117,7 @@ features:
     open_questions: []
   - id: cou-maintain-c10
     name: F8 toggle clears the key of the mode entered (opposite of FAM301)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: bydesc -> clear KEYDES so the new order restarts from the top.
     entrypoints:
@@ -128,7 +128,7 @@ features:
     open_questions: []
   - id: cou-maintain-c11
     name: Position-to option 8, guards 41/42 and row rules 35/36
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Identical to SltArtFam.
     entrypoints:
@@ -139,7 +139,7 @@ features:
     open_questions: []
   - id: cou-maintain-c12
     name: Export surface, binding and callers
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: 4 exports SIGNATURE('V1') ACTGRP(*CALLER); in SAMPLE.BNDDIR and PRO200.ILEPGM; callers CUS200, CUS250, PRO200, PRO250.
     entrypoints:

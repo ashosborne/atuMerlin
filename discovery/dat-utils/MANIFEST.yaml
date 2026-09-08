@@ -10,13 +10,13 @@ out_of_scope_hints:
   - the screens that call the UDFs
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+updated_at: 2026-09-08T20:00:37Z
+bind_status: accepted
 
 features:
   - id: dat-utils-c01
     name: ISOTODATE40 sentinel conversion (0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: DAT002 special-cases 0 and *HIVAL, otherwise test(de) *iso + %date; invalid sets the null indicator; NULL in -> NULL out.
     entrypoints:
@@ -27,7 +27,7 @@ features:
     open_questions: []
   - id: dat-utils-c02
     name: ISO_Num_To_Date plain conversion (0 -> NULL)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: DAT001 has no special values; 0 is an invalid ISO date and returns NULL.
     entrypoints:
@@ -38,7 +38,7 @@ features:
     open_questions: []
   - id: dat-utils-c03
     name: Callers - ISOTODATE40 from ORD200/ORD201; ISO_Num_To_Date unused
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORDERCUS cursors in ORD200 and ORD201 wrap ORDATE/ORDATDEL/ORDATCLO; no caller of ISO_Num_To_Date in ATU_SRC.
     entrypoints:
@@ -49,7 +49,7 @@ features:
     open_questions: ["Do the QM queries (not in tree) use ISO_Num_To_Date?"]
   - id: dat-utils-c04
     name: UDF interface contract (PARAMETER STYLE SQL, DETERMINISTIC, NO SQL)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: LANGUAGE RPGLE, DETERMINISTIC, NO SQL, NO EXTERNAL ACTION, RETURNS NULL ON NULL INPUT; 9-parameter external interface.
     entrypoints:
@@ -60,7 +60,7 @@ features:
     open_questions: []
   - id: dat-utils-c05
     name: Error path SQLSTATE 38I02 with exception text
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: "*PSSR sets SQL_State '38I02' and Msg_Text = first 70 chars of the program status exception text."
     entrypoints:
@@ -71,7 +71,7 @@ features:
     open_questions: []
   - id: dat-utils-c06
     name: Programs stay active between rows (return without *inlr)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No state kept between calls.
     entrypoints:
@@ -82,7 +82,7 @@ features:
     open_questions: []
   - id: dat-utils-c07
     name: 0 -> 1940-01-01 sentinel implemented three times across the estate
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: DAT002 (SQL), CUS200 (RPG, documented cus-interactive-c07), ORD202 (RPG, ord-maintain-ord202-c01); only the SQL variant also maps 99999999.
     entrypoints:
@@ -93,7 +93,7 @@ features:
     open_questions: ["Collapse into one rule in the target?"]
   - id: dat-utils-c08
     name: Result value unassigned on invalid input (port trap)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Only the null indicator is set; the date parameter keeps whatever it held.
     entrypoints:

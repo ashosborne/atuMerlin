@@ -10,13 +10,13 @@ out_of_scope_hints:
   - FAMILLY.FAVATCD (fam-maintain)
   - conversion / test generation / bind
 phase: A
-updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+updated_at: 2026-09-08T20:00:37Z
+bind_status: accepted
 
 features:
   - id: vat-module-c01
     name: ClcVAT arithmetic (net x rate / 100, half-adjust to 2 dp)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: "%dech((net * VATRATE) / 100 : 9 : 2) with an 11P 4 intermediate; net and result 9P 2 by value."
     entrypoints:
@@ -27,7 +27,7 @@ features:
     open_questions: []
   - id: vat-module-c02
     name: Unknown VAT code -> rate 0 -> zero VAT silently
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Buffer cleared on miss so VATRATE = 0; ClcVAT and GetVATRate return 0; no caller checks ExistVATRate first.
     entrypoints:
@@ -38,7 +38,7 @@ features:
     open_questions: ["Should a bad VAT code be an error in the target?"]
   - id: vat-module-c03
     name: GetVATRate / GetVATDesc getters (GetVATDesc unused)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Return VATRATE (4P 2) / VATDESC (20A); no caller of GetVATDesc.
     entrypoints:
@@ -49,7 +49,7 @@ features:
     open_questions: []
   - id: vat-module-c04
     name: ExistVATRate respects the delete flag but has no caller
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: "%found and VATDEL <> 'X'; unused in ATU_SRC."
     entrypoints:
@@ -60,7 +60,7 @@ features:
     open_questions: []
   - id: vat-module-c05
     name: Lazy open and last-key cache; closeVATDEF not exported
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: USROPN input-only; chain skipped on same code; close present but not in FVAT.BND.
     entrypoints:
@@ -71,7 +71,7 @@ features:
     open_questions: []
   - id: vat-module-c06
     name: Rate cache stale for the activation group after a VATDEF change
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Same code requested twice never re-reads; a rate change is invisible until another code is requested in between.
     entrypoints:
@@ -82,7 +82,7 @@ features:
     open_questions: ["Do rates change while jobs run in the real deployment?"]
   - id: vat-module-c07
     name: No maintenance path for VAT rates (absence)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No VAT200, no menu option, no writer of VATDEF in ATU_SRC; audit and delete columns have no writer.
     entrypoints:
@@ -93,7 +93,7 @@ features:
     open_questions: ["How are rates maintained on the box?"]
   - id: vat-module-c08
     name: VAT code comes from the article via GetArtVatCode (two srvpgm hops)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Every caller does CLCVat(GetArtVatCode(arid), net); FVAT never sees an article id.
     entrypoints:
@@ -104,7 +104,7 @@ features:
     open_questions: []
   - id: vat-module-c09
     name: Export surface and binding
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: 4 exports SIGNATURE('V1') ACTGRP(*CALLER); in SAMPLE.BNDDIR.
     entrypoints:
@@ -115,7 +115,7 @@ features:
     open_questions: []
   - id: vat-module-c10
     name: Copybook / module parameter-type drift on CLCVat
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Prototype declares the code as '1' (no A), module as '1A'; same storage.
     entrypoints:
