@@ -13,12 +13,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; document as-is; PRO planted-bug/XSS residual
+bind_record: BIND.md
 
 features:
   - id: pro-modules-c01
     name: Provider getter family (GetPro*)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Eleven exported getters each chain PROVIDE1 by PRID and return one column from the module buffer; unknown id -> blanks, no found signal.
     entrypoints:
@@ -29,7 +30,7 @@ features:
     open_questions: []
   - id: pro-modules-c02
     name: ExistProvider / IsProDeleted
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ExistProvider = %found and PRDEL <> 'X'; IsProDeleted = PRDEL = 'X'; unknown id -> false for both.
     entrypoints:
@@ -40,7 +41,7 @@ features:
     open_questions: []
   - id: pro-modules-c03
     name: Lazy open and last-key cache in chainPROVIDE1
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: USROPN input-only open on first use; chain skipped when id equals buffered PRID; misses clear the buffer and are not cached.
     entrypoints:
@@ -51,7 +52,7 @@ features:
     open_questions: []
   - id: pro-modules-c04
     name: ClosePROVIDE1 prototyped but not exported
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No export keyword, not in FPROVIDER.BND, prototyped in PROVIDER.RPGLEINC, no caller.
     entrypoints:
@@ -62,7 +63,7 @@ features:
     open_questions: []
   - id: pro-modules-c05
     name: SltProvider selection window
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Dynamic SQL over PROVIDER with contains-LIKE on UPPER(provnm) and/or UPPER(prcity), ORDER BY provnm; 14 rows per page; option 1 returns PRID; F3/F12 return pcod.
     entrypoints:
@@ -73,7 +74,7 @@ features:
     open_questions: []
   - id: pro-modules-c06
     name: Selection rules (option 1 only, single selection)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Non-1 option -> 35; second 1 -> 36; error rows RI/PC; all changed rows re-marked SFLNXTCHG; act only when clean.
     entrypoints:
@@ -84,7 +85,7 @@ features:
     open_questions: []
   - id: pro-modules-c07
     name: Criteria change re-prepares and discards pending selection
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Saved name/city compared first; any change closes c1 and restarts prp, dropping an option 1 typed on the old list.
     entrypoints:
@@ -95,7 +96,7 @@ features:
     open_questions: []
   - id: pro-modules-c08
     name: Dynamic SQL string concatenation of user input
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Search text concatenated into LIKE literals; no escaping, no parameter markers, no SQLCODE check (empty list on error).
     entrypoints:
@@ -106,7 +107,7 @@ features:
     open_questions: []
   - id: pro-modules-c09
     name: Blank criteria list-all semantics; soft-deleted rows listed
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Both blank -> UPPER(prcity) LIKE '%%' lists every provider; no PRDEL predicate.
     entrypoints:
@@ -117,7 +118,7 @@ features:
     open_questions: []
   - id: pro-modules-c10
     name: F8 dead in SltProvider (acts as Enter)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: in08 never assigned; s01key has no cf08 branch; F8=By code label conditioned on indicator 40 that nothing sets.
     entrypoints:
@@ -128,7 +129,7 @@ features:
     open_questions: []
   - id: pro-modules-c11
     name: Versioned binder source (SIGNATURE *GEN with *PRV block)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: FPROVIDER.BND is the only binder in the tree with LVLCHK(*YES) SIGNATURE(*GEN) and a PGMLVL(*PRV) block; SLTPROVIDER added as new export.
     entrypoints:
@@ -139,7 +140,7 @@ features:
     open_questions: []
   - id: pro-modules-c12
     name: FPROVIDER export surface and binding (folded srvpgm-fprovider)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: 14 exported symbols; MODULE(PRO300 PRO301) ACTGRP(*CALLER) EXPORT(*SRCFILE); listed in SAMPLE.BNDDIR.
     entrypoints:
@@ -150,7 +151,7 @@ features:
     open_questions: []
   - id: pro-modules-c13
     name: Callers in ATU_SRC (GetProName x2, SltProvider x1; 12 exports unused)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ART201 and ART202 call GetProName; PRO250 calls SltProvider; no other export has a caller in the tree.
     entrypoints:
@@ -161,7 +162,7 @@ features:
     open_questions: []
   - id: pro-modules-c14
     name: Search input not uppercased by the module
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: UPPER(column) compared to raw %trim(input); relies on the 5250 session uppercasing (no CHECK(LC) on the fields).
     entrypoints:
