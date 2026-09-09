@@ -1,4 +1,21 @@
-RUN
+DONE
+
+# RESULT — CONVERT ORD vertical (atuMerlin) — atu-merlin-ts-ord-v1@1 — 2026-09-09
+# Station: Convert · ROOM_OK honoured (body) · pack BOUND @ 1308260 · WAIVED_PATHFINDER · PARITY=UNVERIFIED
+# Branch: cursor/atu-merlin-estate-discovery · PR to master opened/updated by the runner
+# Result paths:
+#   modern/src/features/order/**            ORD100 / ORD101 / ORD200 / ORD201 / ORD202 / ORD500 (types, repository, service, document, routes, web, seed)
+#   modern/src/shared/farticle/, fvat/      FARTICLE / FVAT read-only dependency surfaces (ART, VAT stay legacy)
+#   modern/db/schema.sql                    ORD section APPENDED: orders, detord, article, vatdef, samlog, lastordno, ordercus view, ORD700/ORD701 Postgres triggers
+#   modern/openapi/order.yaml               HTTP JSON contract (inferred, authored at convert)
+#   modern/test/order.api.test.ts (47), modern/test/order.web.test.ts (9); helpers/db.ts reset widened — 111/111 green, typecheck clean
+#   modern/README.md                        ORD section: mapping rules, trigger choice, card coverage, SME open questions, CR-O1..CR-O11
+#   architecture/atu-merlin-ord/CONVERT_RECORD.md
+# Preserved planted defects: ORD200 option-2 unreachable (per-customer list refuses every 2=Edit), ORDERCUS inner join, VAT silent zero.
+# Not invented (needs-SME, open): not-found on display/print (API answers 404, recorded CR-O1), PDF / CVTSPLPDF / 5-char name, sync print on confirm, description-until-F11 (reproduced as default + toggle), ORD200/201 SoT twin.
+# Not touched: ATU_SRC/**, discovery/**, inventory/**, modern/src/features/customer/**, modern/openapi/customer.yaml, modern/src/db/**, architecture/atu-merlin/** (CUS pack not widened).
+# Talk-track: ORD lives in TypeScript under waiver — not repo fully migrated.
+# Next: Verification station for ORD (COMPARE at TS API, decide CR-O1..CR-O11); SME sign-off on the seven ord-* SME_BRIEFs.
 
 # CONVERT — ORD vertical (atuMerlin) — FIRE after Field+CTO ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
