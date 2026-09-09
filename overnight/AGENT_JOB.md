@@ -1,52 +1,36 @@
-DONE
+RUN
 
-# RESULT — CONVERT VAT vertical (atuMerlin) — atu-merlin-ts-vat-v1@1 — 2026-09-09
-# Station: Convert · ROOM_OK honoured (body) · pack BOUND @ ad697f3 · WAIVED_PATHFINDER · PARITY=UNVERIFIED
-# Branch: cursor/atu-merlin-estate-discovery · PR #1 to master updated by the runner · convert commit 02a9916
-# Result paths:
-#   modern/src/shared/fvat/index.ts         FVAT (VAT300) as shared module: getVatRate / getVatDesc / clcVat / existVatRate; clcVatWithRate; normaliseVatCode (1A contract)
-#   modern/db/schema.sql                    VAT section APPENDED (vatdef mapping note + COMMENT ON); CUS and ORD objects byte-identical, vatdef not altered
-#   modern/test/fvat.test.ts (27)           138/138 green (55 CUS, 56 ORD unchanged, 27 VAT), typecheck clean
-#   modern/README.md                        VAT section: edit surface, mapping rules, card coverage c01-c10, SME open questions, CR-V1..CR-V4, known_risks table
-#   architecture/atu-merlin-vat/CONVERT_RECORD.md
-# Preserved planted defects / known_risks: VAT silent zero (c02), soft-deleted VATDEL still applied (c04), blank code never reads (c05); dead ART200 fields untouched (c03).
-# Residual / not reproduced: last-key cache (c06, CR-V1 stateless); binder signature / BNDDIR / ACTGRP (c09, CR-V2).
-# Not invented (needs-SME, open): unknown-code policy (c02), soft-delete semantics (c04), intra-day rate changes (c06), VATDEF maintenance path (c07) — no route, no screen, no seed of its own (fixture rows via ORD dev seed, CR-V4).
-# No HTTP / OpenAPI surface (contract_paths empty); no features/vat/; app.ts / server.ts untouched. ORD callers reuse shared fvat unchanged (c08).
-# Not touched: ATU_SRC/**, discovery/**, inventory/**, modern/src/features/customer/**, modern/src/features/order/**, both openapi files, modern/src/db/**, architecture/atu-merlin/**, architecture/atu-merlin-ord/**, architecture/atu-merlin-{dat,cou,par,log}/** — CUS/ORD never widened.
-# Talk-track: VAT rule lives in TypeScript under waiver — not Merlin migrated.
-# Next: Verification station for VAT (COMPARE at TS API, decide CR-V1..CR-V4); SME sign-off on discovery/vat-module/SME_BRIEF.md; then per header dat -> cou -> par -> log (each needs its own ROOM_OK in this body).
-
-# CONVERT — VAT vertical (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
+# CONVERT — DAT vertical (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# ROOM_OK: convert VAT only (atu-merlin-ts-vat-v1@1 BOUND tip ad697f3 / pack at architecture/atu-merlin-vat/)
-# Field + CTO Convert ROOM_OK 2026-09-09 (batch of five). Paste: PASTE-convert-vat-vertical-atu-merlin.md
-# WAIVED_PATHFINDER — COMPARE at TypeScript API only. No IBM i goldens. No REPLAY_GREEN claim.
+# ROOM_OK: convert DAT only (atu-merlin-ts-dat-v1@1 BOUND tip ad697f3 / pack at architecture/atu-merlin-dat/)
+# Field + CTO Convert ROOM_OK 2026-09-09 (batch of five). Paste: PASTE-convert-dat-vertical-atu-merlin.md
+# WAIVED_PATHFINDER — COMPARE at TypeScript API only. Date lock matches ORD (NULL / sentinel at boundary).
 # edit_surface STRICT: never rewrite Customer/Order; modern/db/** + tests additive/pack-scoped; sibling architecture deny
-# known_risks as-is — silent zero VAT etc. Never claim Merlin migrated.
-# Next after DONE: dat → cou → par → log. Hold Pack B until Convert wave or idle gap.
+# known_risks as-is. Never claim Merlin migrated.
+# Done: VAT Convert. Next after DONE: cou → par → log. Pack B held.
 # House style: never use pin / pinned / landed.
 
-# PASTE — Convert VAT vertical (atuMerlin)
+# PASTE — Convert DAT vertical (atuMerlin)
 
-Use only after Architecture pack `atu-merlin-ts-vat-v1` is **BOUND** and the job body contains convert **ROOM_OK**.
+Use only after Architecture pack `atu-merlin-ts-dat-v1` is **BOUND** and the job body contains convert **ROOM_OK**.
 
 ## Hard gate
 
-1. Read `architecture/atu-merlin-vat/PACK.yaml`. Refuse if status is not BOUND.
+1. Read `architecture/atu-merlin-dat/PACK.yaml`. Refuse if status is not BOUND.
 2. Refuse if job body does not contain ROOM_OK for convert.
-3. Cite pack_id@version `atu-merlin-ts-vat-v1@1` in every commit and PR description.
+3. Cite pack_id@version `atu-merlin-ts-dat-v1@1` in every commit and PR description.
 4. Never edit ATU_SRC/**. Never push master directly. Open or update PR to master.
 5. Honour edit_surface STRICTLY from BOUND pack:
 
    ALLOW only:
 
-   - modern/src/shared/fvat/**
-   - modern/db/** (additive VAT tables only — do not reshape CUS or ORD schema)
-   - modern/test/** for vat/fvat only (pack-scoped)
+   - modern/src/shared/dat/**
+   - modern/src/features/dat/**
+   - modern/db/** (additive DAT only — do not reshape CUS or ORD schema)
+   - modern/test/** for dat only (pack-scoped)
    - modern/src/app.ts, modern/src/server.ts (additive wiring only)
    - modern/package.json, package-lock.json, tsconfig.json, vitest.config.ts, README.md, .gitignore, scripts/**
-   - architecture/atu-merlin-vat/**
+   - architecture/atu-merlin-dat/**
 
    DENY:
 
@@ -57,44 +41,45 @@ Use only after Architecture pack `atu-merlin-ts-vat-v1` is **BOUND** and the job
    - modern/openapi/order.yaml
    - architecture/atu-merlin/** (CUS pack)
    - architecture/atu-merlin-ord/**
-   - architecture/atu-merlin-dat/**
+   - architecture/atu-merlin-vat/**
    - architecture/atu-merlin-cou/**
    - architecture/atu-merlin-par/**
    - architecture/atu-merlin-log/**
 
 6. Characterization WAIVED_PATHFINDER. No invent IBM i goldens. No claim REPLAY_GREEN against legacy.
-7. Scope: vat-module only. Never widen or edit atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1. Never rewrite customer or order features. No ART.
+7. Scope: dat-utils only. Never widen or edit atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1. Never rewrite customer or order features. No ART.
+8. Date lock MUST match ORD. Refuse any different blank/never sentinel.
 
 ## Target (from BOUND pack)
 
 - TypeScript modular monolith Node 20 + Fastify
-- PostgreSQL for VATDEF and related PFs (additive)
-- Prefer shared module under modern/src/shared/fvat/
-- Feature surface under modern/src/features/vat/ only if Convert needs it and pack allows via shared path first
-- OpenAPI not required by pack (contract_paths empty); prefer shared reuse by ORD/CUS callers
-- Callers already under ORD/CUS must reuse shared fvat; do not rewrite those feature trees
+- Shared date helpers under modern/src/shared/dat/ (or features/dat if needed)
+- Date lock matching ORD: store NULL in Postgres for blank/never; map IBM i 1940-01-01 / zero-date only at the boundary
+- Do NOT invent a different sentinel
+- Prefer shared helpers consumed by existing verticals; HTTP only if Convert needs it
 
 ## Inputs (read-only)
 
-- architecture/atu-merlin-vat/PACK.yaml (BOUND)
-- architecture/atu-merlin-vat/ADR/0001-vat-shared-fvat-ts-postgres.md
-- discovery/vat-module/features/*.md
-- discovery/vat-module/SME_BRIEF.md — open SME questions stay as-is; do not invent answers
+- architecture/atu-merlin-dat/PACK.yaml (BOUND)
+- architecture/atu-merlin-dat/ADR/0001-dat-utils-ts-postgres.md
+- discovery/dat-utils/features/*.md
+- discovery/dat-utils/SME_BRIEF.md — open SME questions stay as-is; do not invent answers
 
 ## Work
 
-1. Extend modern/src/shared/fvat for VAT helpers. Do not rewrite customer or order features.
-2. Implement documented VAT behaviours from accepted cards only. Leave inferred/needs-SME stubbed with TODO citing card id.
-3. Map PF→Postgres (VATDEF, …); LF→index/query. Prefer GetVATRate, GetVATDesc, ClcVAT, ExistVATRate as shared exports.
-4. modern/db and modern/test are additive and pack-scoped only.
-5. Preserve planted defects as-is/residual: VAT silent zero (c02), soft-deleted VATDEL still applied (c04), session-buffered rates (c06), VATDEF maintenance path unknown (c07), dead ART200 VATRATE/VATDESC (c03) — do not “fix”.
-6. Do not invent SME answers for known_risks.
-7. Add API tests at TypeScript boundary only.
-8. Keep known_risks visible in modern/README.md (VAT section).
+1. Extend modern/src/shared/dat for date utilities. Do not rewrite customer or order features.
+2. Implement documented DAT behaviours from accepted cards only. Leave inferred/needs-SME stubbed with TODO citing card id.
+3. Enforce date lock matching ORD: NULL for blank/never; sentinel only at boundary. Do not store 1940-01-01 as a real date.
+4. Preserve 99999999 branch (c01) as known_risk until SME names parity. Do not invent.
+5. Dead ISO_Num_To_Date if QM queries unused (c03) stays residual.
+6. modern/db and modern/test are additive and pack-scoped only.
+7. Align with existing ORD/CUS date boundary rules without widening those packs.
+8. Add API tests at TypeScript boundary only.
+9. Keep known_risks visible in modern/README.md (DAT section).
 
 ## Done
 
-- Documented VAT behaviours present in TypeScript, or listed as residual.
+- Documented DAT behaviours present in TypeScript, or listed as residual.
 - Talk-track: residual lives in TypeScript under waiver — not Merlin migrated.
 - Tests pass for what you claimed.
 - PR to master updated; description cites pack + WAIVED_PATHFINDER.
@@ -104,10 +89,11 @@ Use only after Architecture pack `atu-merlin-ts-vat-v1` is **BOUND** and the job
 
 - Convert while pack DRAFT
 - Whole-estate convert / ART work
+- Inventing a different date sentinel than ORD
 - Rewrite CUS under modern/src/features/customer/** or modern/openapi/customer.yaml
 - Rewrite ORD under modern/src/features/order/** or modern/openapi/order.yaml
 - Reshape CUS or ORD schema under modern/db/**
-- Edit sibling architecture packs (CUS/ORD/DAT/COU/PAR/LOG)
+- Edit sibling architecture packs (CUS/ORD/VAT/COU/PAR/LOG)
 - Silent overwrite of Discovery cards
-- Claiming Merlin is fully migrated / claiming VAT is fully migrated
+- Claiming Merlin is fully migrated / claiming DAT is fully migrated
 - Inventing SME answers or “fixing” planted defects
