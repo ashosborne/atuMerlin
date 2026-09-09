@@ -1,6 +1,6 @@
-# atuMerlin — modern CUS + ORD + VAT + DAT + COU verticals (pathfinder)
+# atuMerlin — modern CUS + ORD + VAT + DAT + COU + PAR verticals (pathfinder)
 
-TypeScript modular monolith holding five converted verticals, each under its own BOUND
+TypeScript modular monolith holding six converted verticals, each under its own BOUND
 Architecture pack with a separate convert `ROOM_OK`:
 
 - **CUS** (`cus-interactive` + `cus-modules`) — pack **`atu-merlin-ts-cus-v1@1`**
@@ -15,18 +15,22 @@ Architecture pack with a separate convert `ROOM_OK`:
   See [DAT utilities](#dat-utilities-pack-atu-merlin-ts-dat-v11).
 - **COU** (`cou-maintain`, FCOUNTRY half only) — pack **`atu-merlin-ts-cou-v1@1`**
   (`architecture/atu-merlin-cou/PACK.yaml`). See
-  [COU vertical](#cou-vertical-fcountry-half-pack-atu-merlin-ts-cou-v11) at the end of this file.
+  [COU vertical](#cou-vertical-fcountry-half-pack-atu-merlin-ts-cou-v11).
+- **PAR** (`par-maintain`) — pack **`atu-merlin-ts-par-v1@1`** (`architecture/atu-merlin-par/PACK.yaml`).
+  See [PAR vertical](#par-vertical-pack-atu-merlin-ts-par-v11) at the end of this file.
 
-This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule, the DAT date rule and the
-FCOUNTRY half of COU live in TypeScript under the waiver; ART, country (COU200) / VAT / article
-maintenance, the ORD9xx batches and everything else stay on IBM i. Characterization is
+This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule, the DAT date rule, the
+FCOUNTRY half of COU and the PAR parameter store live in TypeScript under the waiver; ART, country
+(COU200) / VAT / article maintenance, PAR201's IFS panel, the ORD9xx batches and everything else
+stay on IBM i. Characterization is
 `WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`; behaviour is compared at the
 TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the waiver
 (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity: TS_BOUNDARY_GREEN** under
 the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`); DAT: **parity:
 TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`); VAT:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`);
-COU: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
+COU: **PARITY=UNVERIFIED** (Verification deferred); PAR: **PARITY=UNVERIFIED** (Verification
+deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -47,7 +51,8 @@ modern/
                                    ordercus view, ORD700 / ORD701 triggers); VAT section appended (vatdef
                                    mapping note + comments, nothing altered); DAT section appended (date-lock
                                    functions dat_iso_num_to_date / dat_date_to_iso_num, no table); COU section
-                                   appended (COUNTR1 LF -> countr1 index + comments on country, nothing altered)
+                                   appended (COUNTR1 LF -> countr1 index + comments on country, nothing altered);
+                                   PAR section appended (PARAMETER.PF -> parameter table, no seed row)
   openapi/customer.yaml            HTTP contract (CUS)
   openapi/order.yaml               HTTP contract (ORD)
   src/app.ts, src/server.ts        Fastify app / entry
@@ -58,9 +63,11 @@ modern/
   src/shared/farticle/             FARTICLE dependency surface (GetArtDesc, GetArtRefSalPrice, GetArtVatCode, list) — read-only
   src/shared/fvat/                 FVAT (VAT300 GetVATRate, GetVATDesc, ClcVAT, ExistVATRate) — VAT vertical, shared by ORD
   src/shared/dat/                  DAT (ISO_Num_To_Date / DAT001, ISOTODATE40 / DAT002, the date lock) — DAT utilities
+  src/shared/parm/                 FPARAMETER (PAR300 GetPARM1..5, getPath = GetParm2('PATH':' '), PAR201 pattern) — PAR vertical
   src/features/customer/           CUS200 / CUS250: types, repository, service (validation), routes, web
   src/features/order/              ORD100 / ORD101 / ORD200 / ORD201 / ORD202 / ORD500: types, repository,
                                    service, document (ORD500O), routes, web, seed (ORD fixtures)
+  src/features/par/                PAR200 "Work with Parameters" as a JSON maintain API: repository, service, routes (no web page)
   test/                            vitest suites at the TS boundary (real Postgres)
   scripts/local-pg.sh              throw-away local Postgres cluster
 ```
@@ -742,4 +749,150 @@ card id). Nothing below is a target decision.
 - IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
 - Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`,
   `atu-merlin-ts-dat-v1` or the residual DRAFT packs (`par`, `log`); edits under `ATU_SRC/**`,
+  `discovery/**`, `inventory/**`, `src/db/**`.
+
+---
+
+# PAR vertical (pack `atu-merlin-ts-par-v1@1`)
+
+Converted under Architecture pack **`atu-merlin-ts-par-v1@1`** (`architecture/atu-merlin-par/PACK.yaml`,
+`status: BOUND`, bound 2026-09-09T11:12:14Z) with a separate convert `ROOM_OK` carried in
+`overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
+`architecture/atu-merlin-par/ADR/0001-par-maintain-ts-postgres.md`.
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
+PARITY=UNVERIFIED** — Verification is deferred (`verification: DEFERRED` in the pack); nothing here
+is parity against IBM i.
+
+**Talk-track:** the PAR parameter store lives in TypeScript under the waiver — the repo is not
+fully migrated, and PAR is not "fully migrated" either: the thirteen accepted `par-maintain` cards
+are present at the TS boundary or listed as residual below; PAR201's `WRKLNK` panel, the 5250
+subfile mechanics, the `PATH`-as-configuration decision (c11) and every needs-SME item stay on
+IBM i or open.
+
+## Edit surface honoured
+
+Written: `src/shared/parm/index.ts` (new), `src/features/par/{index,par.repository,par.service,par.routes}.ts`
+(new), `db/schema.sql` (PAR section **appended** — the CUS, ORD, VAT, DAT and COU objects above it
+are byte-identical; one new table `parameter`, nothing altered), `test/parm.test.ts` and
+`test/par.api.test.ts` (new, pack-scoped; `test/helpers/db.ts` not touched), `src/app.ts` (additive:
+register the feature, chain `parApiErrorHandler` in front of the ORD / CUS handlers),
+`package.json` (description), this README, `architecture/atu-merlin-par/CONVERT_RECORD.md`.
+Untouched: `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/features/customer/**`,
+`src/features/order/**`, `openapi/customer.yaml`, `openapi/order.yaml`, `src/db/**`, `src/server.ts`,
+`architecture/atu-merlin/**`, `architecture/atu-merlin-ord/**`, the sibling packs (`vat`, `dat`,
+`cou`, `log`). No `openapi/par.yaml`: the pack's `contract_paths` is empty and `openapi/**` is not
+on the allow list — the contract is `par.routes.ts` and the table below.
+
+## Mapping rules applied
+
+| Rule | Where |
+| --- | --- |
+| RPGLE FPARM / PAR maintain programs -> TS shared module and/or features/par | `src/shared/parm/index.ts`: `createFParameter(db)` returns the five binder exports `getParm1` .. `getParm5` (PAR300 over one keyed chain, no cache) plus `getPath()` — the literal `GetParm2('PATH':' ')` every in-tree consumer makes (c11); `normaliseParameterKey` is the `10A` by-value parameter; `wrklnkPattern` is PAR201's `&PATH *TCAT '*'` (c07). `src/features/par/`: PAR200 (c01–c06) as a JSON maintain API |
+| PF PARM / PATH -> postgres table or config surface (**choose at convert; document choice; c11 open**) | **Chosen: table.** `PARAMETER.PF` -> `parameter` (composite PK = the PF `UNIQUE`, `varchar` for the `A` fields, `smallint` + width `CHECK` for the two zoned fields). Why: the thirteen accepted cards describe a maintained table with one live row, and a table keeps every card true as-is; a configuration reader would have answered c11 (see below). `getPath()` is the **config surface** consumers reuse — it hides where the value comes from, so a switch to environment configuration, if the room decides it, is a second `FParameter` implementation behind the same interface, not a rewrite of any consumer. **The disposition itself (retire `PAR200` / `PARAMETER` in favour of configuration) is not decided here.** No `PATH` row is seeded (c08: installation data) |
+| DSPF -> web (if Convert includes maintain UI) | PAR200D mapped to **HTTP JSON only** — no server-rendered page. The pack says "HTTP maintain UI only if Convert needs it": Convert needs *a writer* (PAR200 is the only writer of `PARAMETER` on the box and there is no seed), and the smallest one is the API. A web page over it is left for after c11 (building a screen the room may retire is the wrong bet) |
+| PATH consumers (ORD500) -> reuse of config, do not rewrite the order feature | `features/order/**` **not touched**. The converted ORD500 renders the spool text and has no PDF / `PATH` step (`ord-print-ord500-c02`/`c04`, needs-SME — see ORD section). When that step is converted under an ORD pack version, it reads `fparameter.getPath()` (or `GET /api/parameters/path`) — the same one value, no second copy of the key |
+| PAR201 / WRKLNK (c07) -> not carried | `wrklnkPattern(path)` reproduces the pattern PAR201 would open (`'*'` for blank, the 100-byte truncation); the interactive IFS panel is not invented (no route, no IFS access) |
+
+### HTTP surface (new-http-json, inferred)
+
+| Legacy | HTTP | Notes |
+| --- | --- | --- |
+| PAR200 CTL01/SFL01 list, Page Down | `GET /api/parameters[?offset=N]` | 14 rows in key order, `more` / `nextOffset` by look-ahead (c01); rows carry `parm2s` (32) not `parm2` |
+| PAR200 option 2 -> FMT02 entry (`chain`) | `GET /api/parameters/:pacode/:pasubcode` | full row; blank key segment = `%20` (a single blank), keys upper-cased like the display |
+| PAR200 F6 -> FMT03 Enter | `POST /api/parameters` | 201 row; duplicate key -> `400 VALIDATION` `DUPLICATE_KEY` with the DDS text `This code/sub-code already exist.` (c02) |
+| PAR200 FMT02 Enter | `PUT /api/parameters/:pacode/:pasubcode` | unconditional update of `parm1`..`parm5` (c04); key immutable; gone -> `404 PARAMETER_NOT_FOUND` (CR-P5) |
+| PAR200 option 4 | `DELETE /api/parameters/:pacode/:pasubcode` | 204 always — no confirmation, not-found silent, no in-use check (c05) |
+| `GetParm2('PATH':' ')` (ORD500, PRO202, PRO203, PAR201) | `GET /api/parameters/path` | `{ "path": "<as stored>" }`, `""` when missing / blank (c08, c11); no trailing-slash normalisation (c07) |
+| PAR201 (menu opt 83) | none | not carried |
+
+## Card coverage
+
+`converted` = behaviour present at the TS boundary with a test; `as-is` = converted with a known
+legacy quirk deliberately preserved; `residual` = not carried, with the reason; `needs-SME` = left
+open on purpose (no answer invented).
+
+### par-maintain
+
+| Card | Behaviour | Status | Notes |
+| --- | --- | --- | --- |
+| c01 | List every row in key order, 14 per load, exact Bottom by look-ahead, options 2 / 4 only, PARM2S = first 32 of PARM2, no filter / position-to / search, empty file -> headings only | converted / residual | `GET /api/parameters` (paging by offset, `more` = the 15th row exists); `parm2s` on list rows and no `parm2`; empty -> `rows: []`. Byte order stands in for the EBCDIC key order (CR-P3). Subfile mechanics (option column, `Invalid Option` reverse-image, SFLNXTCHG, one changed row per cycle pass, options surviving Page Down / F6, `RRB01 = LRRN`) are residual (CR-P2) |
+| c02 | F6 create: duplicate-key check only; blank code / sub-code accepted; values unvalidated; no audit; no success message; keys and non-`CHECK(LC)` fields upper-cased by the display | converted (**as-is**) | `POST /api/parameters`; only `DUPLICATE_KEY` is a rule; the blank/blank row can be created; `pacode` / `pasubcode` / `parm1` / `parm3` folded to upper case, `parm2` as typed (CR-P4); the lock on the existing row during the error and the `chain`/`write` race (01021) have no HTTP equivalent — the race answers the same duplicate error (CR-P2, CR-P5) |
+| c03 | List not refreshed after create; duplicate last row after Bottom | **residual** | the list is re-read on every call; a created row is visible at once and nothing is duplicated (CR-P2). Tested as the delta |
+| c04 | Option 2 edit: chain with lock, FMT02, `update fparam` unconditionally, no validation, no audit; list keeps pre-edit values; ghost / vanished row -> 01221 | converted (**as-is**) / residual | `GET` + `PUT /api/parameters/:pacode/:pasubcode`; an unchanged or partial body still updates (absent field -> blank / zero, as `clear` + typed values); key output-only. No lock (CR-P2); the list shows the new values (CR-P2); vanished row -> `404` (CR-P5) |
+| c05 | Option 4: immediate keyed delete, no confirmation, no in-use check, not-found silent; `'*** Deleted ****'` marker never displayed; ghost row selectable; blank/blank key deletes the blank/blank row | converted (**as-is**) / residual | `DELETE` answers 204 whether or not the row existed; `PATH` deletable while `getPath` consumers exist (then `""`); a blank/blank key deletes the blank/blank row if present. No ghost row (the list re-reads) and no marker (CR-P2) |
+| c06 | F3 = F12 on the list (exit); F3 = F12 on FMT02 / FMT03 (back, lock kept); F5 refresh; Page Down live while More...; dead indicators | **residual** | stateless HTTP: every `GET` is an F5; no panel to leave; `PAGEDOWN` = `?offset=` (CR-P2) |
+| c07 | PAR201: `GetParm2('PATH')` -> `*TCAT '*'` -> `WRKLNK`; `'<dir>/*'` vs `'<dir>*'`; blank -> `'*'`; 100-char PATH loses the `*` | converted (pattern) / **residual** (panel) | `wrklnkPattern` carries the string rule and its edge cases (tested); `WRKLNK` and its operator powers are not invented; the trailing-slash contract stays a **known_risk** — nothing normalises it (needs-SME: does the value on the box end with `/`?) |
+| c08 | Blank / missing PATH is silent end to end: getter returns blanks, no consumer tests it | converted (**as-is**, `inferred` kept) | `getPath()` / `GET /api/parameters/path` return `""` for both a missing row and a blank `PARM2`; no error raised. `TODO(par-maintain-c08)`: required setting vs default location is a target decision. The runtime half (where relative names resolve, `CVTSPLPDF` / XML / XSS behaviour) is outside the tree |
+| c09 | GetPARM1..5 over one private chain: buffer-keyed cache, miss -> cleared buffer (blanks / zeros, no `%found`), miss never cached, blank/blank key never reads, case-sensitive 10A compare, USROPN open never closed | converted (**as-is**) / residual | five getters with the miss / blank-key / case / 10A-cut semantics (tested); the hit cache and the activation-group lifetime are **not** reproduced — every call reads `parameter` (CR-P1, tested as the delta: a `PATH` edit or delete is seen by the next call, not by the next job) |
+| c10 | `EXPORT(*ALL)` exports the five getters only (corrected run 16); `ClosePARAMETER` prototype has no export; no binder source, no `*PRV` | converted / n/a | `FParameter` has exactly the five getters + `getPath`; nothing to close (test asserts the surface). Signature / BNDDIR / `ACTGRP(*CALLER)` have no TS equivalent (CR-P7) |
+| c11 | Only `('PATH', ' ')` is live; four literal readers; `GetPARM1/3/4/5` unused; implicit PATH contract (<= 100, IFS dir, ending with `/`, case kept, read once per job, blank tolerated) | converted (**as-is**) / **needs-SME** | `getPath()` named for the one call; `PARM1`/`3`/`4`/`5` carried, maintained by the API, read by nobody — no consumer invented. **PATH as configuration vs maintained row is NOT decided**: table chosen as the mapping, disposition left to the room (checklist item 2 of `SME_BRIEF.md`) |
+| c12 | `PARAMETER`: `UNIQUE (PACODE, PASUBCODE)`, five typed columns, no delete flag, no audit, no LF / view / trigger / SQL consumer, blank/blank legal, physical deletes | converted | `parameter` table: composite PK, `varchar(10/10/10/100/2)`, `smallint` + `CHECK` for the zoned `1 0` / `3 0`; nothing else added (no audit — c12 says that would be a design question, not a card). Tested: PK, CHECKs, column widths |
+| c13 | LOG100 uses `PARAMETER`'s library as the log's location anchor | **residual** (LOG pack) | the table exists in the modern schema, so the *object* the anchor depends on exists; what `log-programs` does with "the application library" is that pack's decision (`architecture/atu-merlin-log/**` deny-listed here). Nothing coded |
+
+## SME open questions — kept visible, not answered here
+
+From `discovery/par-maintain/SME_BRIEF.md` (unsigned); preserved as-is in the code (comments cite the
+card id). Nothing below is a target decision.
+
+- **c11 (room)** — `PATH` as target configuration instead of a maintained row? Mapped as a table
+  here so every card holds; `getPath()` is the seam. If the room says "configuration", the second
+  implementation goes behind `FParameter` and `features/par` (c01–c06) has nothing left to
+  maintain — a pack version bump + SUPERSEDE + re-bind, not an edit in place.
+- **c07 / c11 (data)** — does the `PATH` value on the box end with `/`? Which file system? Any other
+  rows? The API stores and returns the value verbatim; nothing normalises a separator.
+- **c08** — blank / missing `PATH`: fail fast or default location? As-is: `""`, silent.
+- **c09** — read-once-per-job cache: acceptable, or read-through? The module reads per call
+  (CR-P1); if the stale-read behaviour must be reproduced it is a pack version bump.
+- **c05** — unconfirmed physical delete of the one live setting, no in-use check: as-is over HTTP
+  (`DELETE` is immediate).
+- **c03 / c04 / c05 / c06** — subfile quirks (duplicate row after create at Bottom, pre-edit values
+  after edit, ghost row, F3 / F12 routing): not reproducible over stateless HTTP; recorded as
+  CR-P2, nothing to decide unless a 5250-faithful screen is wanted.
+- **c02 / c04** — locks across the panel, unconditional update, 01221 on a vanished row: no lock
+  over HTTP; `404` recorded as CR-P5, not as the answer. One lock / ghost-row answer for the
+  estate's list/edit template (CUS200, ORD200/201 are the same shape — CR-8, CR-O8).
+- **c10 / c12** — activation group of `ORD500` / `PRO203`, how they bind `FPARAMETER`, `WAITRCD`
+  / journaling / CCSID of the object: build questions with no TS counterpart (CR-P7).
+- **c13** — `SAMLOG` location rule if `PARAMETER` is not carried: `log-programs` (LOG pack).
+
+## Deliberate deltas (CONTRACT_RISK — left open for Verification)
+
+| Id | Delta | Why |
+| --- | --- | --- |
+| CR-P1 | No last-key cache, no held `PARAMETER` open, nothing to close: every getter call reads `parameter`; a `PATH` change or delete is seen by the next call | The legacy cache key is the record buffer's own key with the lifetime of the `QILE` activation group (c09); a process-wide singleton would be wrong in a request-serving Node process and a per-request cache would be an invention. Same stance as CR-8 / CR-O8 / CR-V1 / CR-C1. Tested |
+| CR-P2 | No subfile snapshot, no panel state, no record locks: the list is re-read per call, edits are seen at once, deleted rows disappear, no ghost row, no `'*** Deleted ****'` buffer, no `WAITRCD` / 01218, F3 / F5 / F12 / Page Down have no equivalent beyond `GET` and `?offset=` | Stateless HTTP; the c03 / c04 / c05 / c06 quirks are properties of one long-lived program instance and its subfile. Tested as deltas (c03 / c06 block) |
+| CR-P3 | Key order is byte order of the stored text (`COLLATE "C"`), not EBCDIC | No IBM i collation in Postgres (same as CR-1 / CR-C4); blank/blank still sorts first, digits before upper before lower hold in both |
+| CR-P4 | `pacode`, `pasubcode`, `parm1`, `parm3` are upper-cased **by the service** on create / update; `parm2` keeps case | On the box the folding belonged to the 5250 device (every field without `CHECK(LC)`), so it is presentation — but it is also the only reason `GetParm2('PATH':' ')` finds a row typed as `path` (c02, c09), and this API is the writer that replaces the screen. Reproduced at the boundary rather than lost; the getters themselves stay case-sensitive. Tested |
+| CR-P5 | `PUT` on a vanished row -> `404 PARAMETER_NOT_FOUND`; a lost `chain`/`write` race on `POST` -> the same `400 DUPLICATE_KEY` | Legacy: unmonitored RPG 01221 / 01021 (inquiry message in the session). HTTP must answer something; the answer is recorded, not decided (same stance as CR-4 / CR-O1) |
+| CR-P6 | Over-long fields -> `400 FIELD_TOO_LONG`; non-integer / out-of-width `parm4` / `parm5` -> `400 FIELD_INVALID`; trailing blanks trimmed on store | 5250 field widths made this impossible; the modern boundary must decide — reject rather than truncate (same as CR-5 / CR-O10). Negative zoned values are accepted (the sign nibble allowed them; nothing in the cards says otherwise) |
+| CR-P7 | No binder signature, no `BNDDIR`, no `ACTGRP(*CALLER)`, no `*LIBL` resolution; the export surface is a TypeScript interface | Build metadata with no TS equivalent (c10, c12). `LOG100`'s library anchor (c13) is therefore not derivable here — LOG pack |
+
+## known_risks (from the BOUND pack) — where each lives
+
+| Risk | Status here |
+| --- | --- |
+| Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API | `test/parm.test.ts` / `test/par.api.test.ts` expected values derived from the cards, not recorded on the box |
+| PATH as config vs maintained table (c11) — do not invent disposition | table chosen as the **mapping**, `getPath()` as the reusable **config surface**; the disposition (retire the screen / table) is left to the room; recorded above and in `CONVERT_RECORD.md` |
+| PATH trailing slash / filesystem semantics (c07) | stored and returned verbatim; `wrklnkPattern` shows the two outcomes; no normalisation, no default — needs-SME data question stays open |
+| Unused GetPARM getters — do not invent consumers | `getParm1` / `3` / `4` / `5` exported, tested, called by nothing in `src/` |
+| PATH consumers ORD500 already converted — do not rewrite order feature; document interop as reuse of config | `features/order/**` untouched (ORD suites unchanged and green); interop documented as `getPath()` / `GET /api/parameters/path` for the not-yet-converted PDF step |
+| Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required | ROOM_OK carried in `overnight/AGENT_JOB.md` body (line 4) |
+| CUS and ORD modern already exist; accidental re-scope is a fail | `features/customer/**`, `features/order/**`, both OpenAPI files, both packs untouched; CUS / ORD / VAT / DAT / COU suites unchanged and green |
+| `modern/db/**` additive only — do not reshape CUS or ORD schema | PAR section appended: one `CREATE TABLE IF NOT EXISTS parameter` + `COMMENT ON`; everything above the section byte-identical |
+
+## Not done in this pack
+
+- The `PATH`-as-configuration decision (c11) and, following it, any environment-backed `FParameter`
+  or retirement of `features/par` — room decision; SUPERSEDE + re-bind.
+- A server-rendered PAR200 page over the API (`ui: simple-web`); the 5250 subfile mechanics.
+- PAR201 / `WRKLNK`: no IFS browser, no filesystem access of any kind.
+- The ORD500 PDF step (`CVTSPLPDF`, `Custord<id>.pdf`, `TODIR(&PATH)`) — `ord-print-ord500-c02`/`c04`
+  needs-SME, ORD pack; when converted it reuses `getPath()`.
+- PRO202 / PRO203 (`pro-interactive`, unbound) — the other two `PATH` consumers.
+- `LOG100`'s library anchor (c13) — LOG pack.
+- A seed / fixture `PATH` row: its presence and value are installation data (c08).
+- Any OpenAPI file for PAR (`contract_paths: []`, `openapi/**` not on the allow list).
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
+- Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`,
+  `atu-merlin-ts-dat-v1`, `atu-merlin-ts-cou-v1` or the `log` DRAFT pack; edits under `ATU_SRC/**`,
   `discovery/**`, `inventory/**`, `src/db/**`.
