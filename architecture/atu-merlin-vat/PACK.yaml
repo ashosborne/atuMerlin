@@ -1,0 +1,149 @@
+pack_id: atu-merlin-ts-vat-v1
+version: 1
+status: DRAFT
+migration_id: atu-merlin
+slice_ids:
+  - vat-module
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: features/vat/ or shared/fvat
+  preferred_paths:
+    - modern/src/shared/fvat/**
+    - modern/src/features/vat/**   # only if a feature surface is required
+
+boundaries:
+  in_scope:
+    - VAT module only (vat-module)
+    - VATDEF / FVAT exports GetVATRate, GetVATDesc, ClcVAT, ExistVATRate
+  stay_legacy:
+    - ART (including dead ART200 VATRATE/VATDESC fields — residual)
+    - ATU_SRC
+    - CUS (stays under pack atu-merlin-ts-cus-v1; do not re-convert CUS)
+    - ORD (stays under pack atu-merlin-ts-ord-v1; do not re-convert ORD)
+    - unbound residuals and other non-VAT domains
+  anti_corruption: "VAT modern vertical / shared fvat only; do not bridge CUS or ORD feature trees into this pack; may extend modern/src/shared/fvat without rewriting customer/** or order/**"
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths: []
+  sourced_vs_inferred: inferred
+  notes: "Shared VAT helpers may expose HTTP only if Convert needs it; prefer shared module reuse by ORD/CUS callers. Not preserve-wire against IBM i 5250"
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: additive-only
+  migration_tool: null
+  notes: "Map VATDEF (and related) into Postgres tables additively under modern/db/**; do not reshape CUS or ORD schema"
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM"
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+  notes: "Callers already converted under ORD/CUS must reuse shared fvat; do not rewrite those feature trees"
+
+mapping_rules:
+  - from: RPGLE service program FVAT
+    to: TS shared module (modern/src/shared/fvat)
+  - from: PF VATDEF
+    to: postgres table (additive)
+  - from: LF
+    to: index/query
+
+non_goals:
+  - "No CUS or ORD conversion in this pack"
+  - "No edits under ATU_SRC/**"
+  - "No widening or editing pack atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
+  - "No rewrite of modern/src/features/customer/** or modern/src/features/order/**"
+  - "No IBM i characterisation goldens / REPLAY_GREEN required for pathfinder"
+  - "No microservice split; modular monolith only"
+  - "Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required"
+  - "Do not “fix” planted defects in discovery/architecture"
+  - "Do not claim fully migrated"
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TS API only"
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
+  - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
+  - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
+  - "Reshape CUS or ORD schema under modern/db/** — VAT tables additive only"
+  - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
+  - "Convert consuming status DRAFT"
+  - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
+  - "Invent SME answers for known_risks below"
+  - "“Fix” planted defects (VAT silent zero and related) during Architecture — preserve as-is/residual"
+  - "String-concat SQL in repositories"
+  - "Rewrite discovery cards during Convert"
+  - "Claim fully migrated"
+
+edit_surface:
+  allow:
+    - modern/src/shared/fvat/**
+    - modern/db/**   # additive only
+    - modern/test/**   # for vat
+    - modern/src/app.ts   # additive
+    - modern/src/server.ts   # additive
+    - modern/package.json
+    - modern/package-lock.json
+    - modern/tsconfig.json
+    - modern/vitest.config.ts
+    - modern/README.md
+    - modern/.gitignore
+    - modern/scripts/**
+    - architecture/atu-merlin-vat/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**
+    - architecture/atu-merlin-ord/**
+    - modern/src/features/customer/**
+    - modern/src/features/order/**
+    - modern/openapi/customer.yaml
+    - modern/openapi/order.yaml
+
+known_risks:
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
+  - "Silent zero for unknown VAT (c02) — planted; stays residual; do not “fix” in Architecture"
+  - "Soft-deleted VATDEL still applied (c04)"
+  - "Session-buffered rates (c06)"
+  - "VATDEF maintenance path unknown (c07)"
+  - "Dead ART200 VATRATE/VATDESC fields (c03) — residual; do not invent ART scope"
+  - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
+  - "CUS and ORD modern already exist; accidental re-scope of those packs is a fail"
+  - "modern/db/** additive VAT tables only — do not reshape CUS or ORD schema"
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/vat-module/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-vat/ADR/0001-vat-shared-fvat-ts-postgres.md
+
+bound_by: null
+bound_at: null
+change_policy: "DRAFT does not authorize Convert. Convert requires human-bound pack (status: BOUND) plus separate ROOM_OK. To change architecture after BOUND, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+reference_skeleton: null

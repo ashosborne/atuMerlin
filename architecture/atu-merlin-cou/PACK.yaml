@@ -1,0 +1,151 @@
+pack_id: atu-merlin-ts-cou-v1
+version: 1
+status: DRAFT
+migration_id: atu-merlin
+slice_ids:
+  - cou-maintain
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: shared/fcountry (extend existing CUS dependency surface)
+  preferred_paths:
+    - modern/src/shared/fcountry/**
+
+boundaries:
+  in_scope:
+    - Cou-maintain FCOUNTRY / COU300 / COU301 half only (already carded)
+    - GetCountryName, GetCountryIso3, ExistCountry, SltCountry behaviour as documented
+  stay_legacy:
+    - COU200 panel half (c01–c06, c13) — OUT OF SCOPE until Pack B cards it; deferred
+    - ATU_SRC
+    - CUS (stays under pack atu-merlin-ts-cus-v1; do not re-convert CUS)
+    - ORD (stays under pack atu-merlin-ts-ord-v1; do not re-convert ORD)
+    - unbound residuals and other non-COU domains
+  deferred:
+    - "COU200 Work with Countries panel presentation and direct COUNTRY writer path — stay_legacy until Pack B cards it; do not invent COU200 presentation in this pack"
+  anti_corruption: "Extend shared/fcountry without rewriting modern/src/features/customer/**; do not bridge ORD/ART into this pack; do not invent COU200 UI"
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths: []
+  sourced_vs_inferred: inferred
+  notes: "Prefer extending modern/src/shared/fcountry already used by CUS; HTTP only if Convert needs it. Not preserve-wire against IBM i 5250"
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: additive-only
+  migration_tool: null
+  notes: "COUNTRY / related mappings additive under modern/db/**; do not reshape CUS or ORD schema; modern already has shared/fcountry from CUS"
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM"
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+  notes: "May extend shared/fcountry for CUS callers without rewriting the customer feature tree"
+
+mapping_rules:
+  - from: RPGLE service program FCOUNTRY (COU300 / COU301)
+    to: TS shared module (modern/src/shared/fcountry)
+  - from: PF COUNTRY / LF COUNTR1
+    to: postgres table / index (additive)
+  - from: DSPF COU301D
+    to: web selector (if Convert includes SltCountry UI)
+  - from: DSPF COU200D / program COU200
+    to: deferred — stay_legacy until Pack B cards panel half
+
+non_goals:
+  - "No COU200 panel conversion in this pack"
+  - "No inventing COU200 presentation"
+  - "No CUS or ORD conversion in this pack"
+  - "No edits under ATU_SRC/**"
+  - "No widening or editing pack atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
+  - "No rewrite of modern/src/features/customer/** or modern/src/features/order/**"
+  - "No IBM i characterisation goldens / REPLAY_GREEN required for pathfinder"
+  - "No microservice split; modular monolith only"
+  - "Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required"
+  - "Do not claim fully migrated"
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TS API only"
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
+  - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
+  - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
+  - "Reshape CUS or ORD schema under modern/db/** — COU tables additive only"
+  - "Invent COU200 presentation or convert COU200 panel half while deferred"
+  - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
+  - "Convert consuming status DRAFT"
+  - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
+  - "Invent SME answers for known_risks below"
+  - "String-concat SQL in repositories"
+  - "Rewrite discovery cards during Convert"
+  - "Claim fully migrated"
+
+edit_surface:
+  allow:
+    - modern/src/shared/fcountry/**
+    - modern/db/**   # additive only
+    - modern/test/**   # for cou / fcountry
+    - modern/src/app.ts   # additive
+    - modern/src/server.ts   # additive
+    - modern/package.json
+    - modern/package-lock.json
+    - modern/tsconfig.json
+    - modern/vitest.config.ts
+    - modern/README.md
+    - modern/.gitignore
+    - modern/scripts/**
+    - architecture/atu-merlin-cou/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**
+    - architecture/atu-merlin-ord/**
+    - modern/src/features/customer/**
+    - modern/src/features/order/**
+    - modern/openapi/customer.yaml
+    - modern/openapi/order.yaml
+
+known_risks:
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
+  - "GetCountryIso3 unused export (c08) — do not invent consumer or dispose COISO without SME"
+  - "Do not invent COU200 presentation — panel half stay_legacy / deferred"
+  - "COU301 selector open questions (empty position message, F8 position retention) stay needs-SME"
+  - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
+  - "CUS modern already has shared/fcountry; accidental rewrite of customer feature or widen of CUS pack is a fail"
+  - "modern/db/** additive only — do not reshape CUS or ORD schema"
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/cou-maintain/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-cou/ADR/0001-cou-fcountry-ts-postgres.md
+
+bound_by: null
+bound_at: null
+change_policy: "DRAFT does not authorize Convert. Convert requires human-bound pack (status: BOUND) plus separate ROOM_OK. To change architecture after BOUND, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+reference_skeleton: null
