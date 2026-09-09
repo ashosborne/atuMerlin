@@ -1,4 +1,23 @@
-RUN
+DONE
+
+# RESULT — CONVERT DAT utilities (atuMerlin) — atu-merlin-ts-dat-v1@1 — 2026-09-09
+# Station: Convert · ROOM_OK honoured (body) · pack BOUND @ ad697f3 · WAIVED_PATHFINDER · PARITY=UNVERIFIED
+# Branch: cursor/atu-merlin-estate-discovery · PR #1 to master updated by the runner · convert commit 03e8bc1
+# Result paths:
+#   modern/src/shared/dat/index.ts          DAT001 / DAT002 as shared module: isoToDate40 (c01 as-is), isoNumToDate (c02), testIsoNum, DatArgumentError 38I02 (c05); date lock matching ORD: fromLegacyIsoNum / toLegacyIsoNum (0 <-> null), fromLegacySentinelDate / toLegacySentinelDate (1940-01-01 <-> null); LEGACY_LOVAL_DATE single sentinel definition (c07)
+#   modern/db/schema.sql                    DAT section APPENDED: dat_iso_num_to_date(integer) STRICT IMMUTABLE, dat_date_to_iso_num(date) IMMUTABLE; no table; CUS / ORD / VAT objects byte-identical
+#   modern/test/dat.test.ts (63)            201/201 green (55 CUS, 56 ORD, 27 VAT unchanged, 63 DAT incl. 3 SQL), typecheck clean
+#   modern/README.md                        DAT section: edit surface, mapping rules, card coverage c01-c08, SME open questions, CR-D1..CR-D4, known_risks table
+#   architecture/atu-merlin-dat/CONVERT_RECORD.md
+# Date lock: NULL inside, 0 / 1940-01-01 only at the boundary — same rule as ORD (ORD701 expression equivalence tested) and CUS (lastOrderDateOf agreement tested read-only); no sentinel stored; no other sentinel invented.
+# Preserved known_risks (as-is): 99999999 -> 2039-12-31 branch in isoToDate40 (c01, not a "never" in the lock); ISO_Num_To_Date carried as one function, no SQL name created (c02/c03 dead-or-not open); 38I02 is an error class, not a NULL row (c05).
+# Residual: c03 callers (modern ORD lists read date NULL columns, no UDF; list-truncation defect has no path, CR-D2); c04 indicators / names / *LIBL / FENCED (CR-D1).
+# FINDING for the CUS pack (not fixed — features/customer/** deny): lastOrderDateOf returns null for CULASTORD years 0001-0099 (Date.UTC reads year 1 as 1901) where test(de) *iso accepts them — CR-D3, out of any business window; decide at the next CUS pack version.
+# No HTTP / OpenAPI surface (contract_paths empty); no features/dat/; app.ts / server.ts untouched. Nothing consumes the module yet (CUS / ORD copies of the lock stay; adopting it is their pack version bump).
+# Not touched: ATU_SRC/**, discovery/**, inventory/**, modern/src/features/customer/**, modern/src/features/order/**, both openapi files, modern/src/db/**, architecture/atu-merlin/**, architecture/atu-merlin-ord/**, architecture/atu-merlin-{vat,cou,par,log}/** — CUS/ORD/VAT never widened.
+# Talk-track: DAT date rule lives in TypeScript under waiver — not Merlin migrated.
+# Next: Verification station for DAT (COMPARE at TS API, decide CR-D1..CR-D4); SME sign-off on discovery/dat-utils/SME_BRIEF.md; then per header cou -> par -> log (each needs its own ROOM_OK in this body). Pack B night-residual queue still held.
+
 
 # CONVERT — DAT vertical (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
