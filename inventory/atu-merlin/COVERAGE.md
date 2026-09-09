@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-09T11:03:49Z` by `document-slices-conveyor`
+- last_updated: `2026-09-09T11:47:58Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -22,20 +22,21 @@
   - Pack B run 13 (2026-09-09): par-maintain 13/13 accepted behaviours documented (cards discovery/par-maintain/features/); c08 inferred carded (bind accepted it); surfaces pgm:PAR200 / cl:PAR201 / srvpgm:FPARAMETER / mod:PAR300 candidate -> accepted. Night residual-wave queue left: log-programs, menu-cmd-shell, srvpgm-supporting, sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.
   - Pack B run 14 (2026-09-09): log-programs 10/10 accepted behaviours documented (cards discovery/log-programs/features/); c04, c06, c09, c10 inferred carded (bind accepted them); surfaces pgm:LOG100 / srvpgm:LOG / mod:LOG300 candidate -> accepted. Night residual-wave queue left: menu-cmd-shell, srvpgm-supporting, sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.
   - Pack B run 15 (2026-09-09): menu-cmd-shell 9/9 accepted behaviours documented (cards discovery/menu-cmd-shell/features/); c02 inferred carded (bind accepted it); surfaces menu:SAMMNU / pnlgrp:SAMHELP / msgf:SAMMSGF / cmd:CVTSPLPDF candidate -> accepted. Phase A corrected: ERR0001 is live (ART200D.DSPF:98) - dead messages are ERR0003/0004/0005 (three). Night residual-wave queue left: srvpgm-supporting, sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.
+  - Pack B run 16 (2026-09-09): srvpgm-supporting 9/9 accepted behaviours documented (cards discovery/srvpgm-supporting/features/); c05 inferred carded (bind accepted it); surface bnddir:SAMPLE candidate -> accepted; srvpgm:XML / XSS / ORDER / TXT stay unknown (absence recorded in c02). Phase A c07 corrected: default activation group is QILE (job-wide caches), not new-per-program - runtime-confirm. par-maintain-c10 corrected via srvpgm-supporting-c06: EXPORT(*ALL) exports 5 (not 7). CHARACTERIZATION deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 36 |
-| surfaces `candidate` | 25 |
+| surfaces `accepted` | 37 |
+| surfaces `candidate` | 24 |
 | surfaces `deferred` | 3 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 116 |
+| behaviours `candidate` | 107 |
 | behaviours `deferred` | 7 |
-| behaviours `documented` | 145 |
+| behaviours `documented` | 154 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -70,7 +71,7 @@
 | `pro-interactive` | 4 | 15 | 0 | `candidate` |
 | `pro-modules` | 3 | 14 | 0 | `candidate` |
 | `sql-objects` | 5 | 10 | 0 | `candidate` |
-| `srvpgm-supporting` | 5 | 9 | 0 | `candidate` |
+| `srvpgm-supporting` | 5 | 9 | 9 | `documented` |
 | `vat-module` | 2 | 10 | 10 | `documented` |
 
 ## Scanned seeds

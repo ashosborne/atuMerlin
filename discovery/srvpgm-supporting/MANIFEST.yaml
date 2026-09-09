@@ -5,124 +5,149 @@ seed_entrypoints:
   - ATU_SRC/QILESRC/PRO200.ILEPGM
   - ATU_SRC/QILESRC/PAR201.ILEPGM
 out_of_scope_hints:
-  - exported procedure behaviour (own seeds)
+  - exported procedure behaviour (own seeds) - modules cited for their export keywords, /COPY lines and bound call sites only
+  - PRO200 / PRO202 / PRO203 / PRO250 behaviour (pro-* slices, queue) - cited for binding facts only; planted defects and XML/XSS untouched ("document as-is, do not fix XSS")
+  - ART302 / GetArtInfo (art-modules, held) - cited only for the source fact that ART302 is in no MODULE() list and ART250 imports GetArtInfo; nothing invented
+  - LASTORDNO.DTAARA (ord-batch-ord900 / ord-entry-ord100) - cited for its ARCAD header only (c09)
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T19:10:00Z
+phase: B
+updated_at: 2026-09-09T12:10:00Z
 bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
 bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 16, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-15."
+needs_sme:
+  - "c02 (source owner - Phase A Q1/Q2): who owns XML / XSS - ARCAD sample libraries or third-party? Can their source, or at least QPROTOSRC/XML + QPROTOSRC/XSS copybooks and one sample output file each, be added to the allowlist? PRO202 and PRO203 do not compile from this tree (member-style /copy of absent members) before any binding question. Are ORDER / TXT dead directory entries? DSPBNDDIR SAMPLE + DSPOBJD on the box answer both."
+  - "c05 (build owner - Phase A Q3, inferred, carded): how do PRO203, ORD500, ORD700 resolve XSS / FPARAMETER / LOG with neither bnddir nor an .ILEPGM? Ask for the elias compile log or ARCAD object attributes, or DSPPGM <pgm> DETAIL(*SRVPGM). Note a build-level BNDDIR(SAMPLE) would bind PRO203 and ORD500 but NOT ORD700 (LOG is not in SAMPLE) - so (a) alone cannot be the answer."
+  - "c07 (build owner / runtime-confirm - Phase A c07 corrected): the 14 ILE programs without an actgrp keyword take the compiler default, which is QILE (*STGMDL), not a new group per program. If so every getter cache is job-wide (all screens, until RCLACTGRP QILE / sign-off), not per calling program. One command settles it: DSPPGM ORD100 DETAIL(*BASIC) (any of the fourteen). Room: which staleness should the target reproduce - none (recommended, as every *-modules card says), per request, or per session?"
+  - "c06 (build owner): were the five hand-fixed SIGNATURE('V1') export lists ever changed after their first build? Source cannot show it (no *PRV, no history). With a fixed signature the export ORDER is the binary contract - FFAMILLY.BND is in source order, the other four alphabetical. ME: the 57 exported names (51 in .BND + 5 FPARAMETER + 1 LOG) are the callable surface; derive the target module API from the imports (c03-c05), not from the copybooks (which advertise seven unexported Close* procedures and GetArtInfo) and not from 'every procedure in the module'."
+  - "c06 / par-maintain-c10 (correction applied this run): EXPORT(*ALL) exports module exports only - PAR300 exports five (GetPARM1-5; chainPARAMETER / closePARAMETER have no export keyword), LOG300 exports one. par-maintain-c10 had read 'all seven procedures'; its card and MANIFEST summary carry a correction note. No code change implied."
+  - "c03 (art-modules, held): ART250 imports GetArtInfo (ARTICLE.RPGLEINC:59, body ART302.SQLRPGLE:11) and no service program in the tree exports it (FARTICLE = ART300 + ART301 only). As the tree stands CRTBNDRPG ART250 fails on an unresolved import unless the build supplies ART302 some other way. This is the existing ART302 question (INDEX row 4); restated as a binding fact, not answered."
+  - "c03 (room, ORD): ORD200 / ORD201 / ORD202 carry bnddir('SAMPLE') and import nothing bound - inert. Already reflected in the ORD conversion (ord-maintain-ord202 'bnddir inert'); no action, recorded so nobody adds a getter dependency to match the keyword."
+  - "c01 (room / ME): the binding directory has no target counterpart; the dependency edges it encodes (c03, c08) are what the target's module layering should preserve or consciously flatten. Recommendation unchanged from Phase A: reject srvpgm-supporting as a conversion slice; carry c01/c03/c06/c07/c08 tables as architecture notes."
+  - "c09 (build owner): the twelve build members are 2022-05-17 ARCAD snapshots of objects in FGRMON_OBJ; DSPOBJD on the box tells whether anything was rebuilt with different options since. iproj.json repository points at AdrianAtArcad/atuMerlin (provenance)."
 
 unknown_surfaces:
   - surface_id: srvpgm:XML
     locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
-    note: "*SRVPGM XML listed in SAMPLE.BNDDIR and bound by PRO200.ILEPGM; procedures called by PRO202; no source or copybook in tree."
+    note: "*SRVPGM XML listed in SAMPLE.BNDDIR and bound by PRO200.ILEPGM; 7 distinct procedures called by PRO202 (xmlopen, xmlStrTable, XmlStrRec, xmladdcol, xmlendrec, xmlEndTable, xmlclose); no source; copybook QPROTOSRC/XML also absent (/copy qprotosrc,xml). Recorded in c02; stays unknown."
   - surface_id: srvpgm:XSS
     locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:11
-    note: "*SRVPGM XSS listed in SAMPLE.BNDDIR; procedures called by PRO203; no source or copybook in tree."
+    note: "*SRVPGM XSS listed in SAMPLE.BNDDIR; 16 distinct procedures called by PRO203; no source; copybook QPROTOSRC/XSS also absent (/copy qprotosrc,Xss); PRO203 has no bnddir either (c05). Recorded in c02; stays unknown."
   - surface_id: srvpgm:ORDER
     locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
-    note: "*SRVPGM ORDER listed in SAMPLE.BNDDIR; no reference anywhere in the tree."
+    note: "*SRVPGM ORDER listed in SAMPLE.BNDDIR; no reference anywhere in the tree (not the ORDER file). Recorded in c02; stays unknown."
   - surface_id: srvpgm:TXT
     locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10
-    note: "*SRVPGM TXT listed in SAMPLE.BNDDIR; no reference anywhere in the tree."
+    note: "*SRVPGM TXT listed in SAMPLE.BNDDIR; no reference anywhere in the tree. Recorded in c02; stays unknown."
 
 features:
   - id: srvpgm-supporting-c01
-    name: SAMPLE.BNDDIR contents (11 srvpgms; LOG absent)
-    status: accepted
+    name: SAMPLE.BNDDIR - eleven *LIBL service-program entries in a fixed order; LOG absent; six entries actually consumed by the bnddir('SAMPLE') programs
+    status: documented
     confidence: observed-in-code
-    summary: XML, ORDER, TXT, XSS, FARTICLE, FCUSTOMER, FFAMILLY, FPARAMETER, FPROVIDER, FVAT, FCOUNTRY via *LIBL; LOG not listed.
+    summary: "CRTBNDDIR + one ADDBNDDIRE: XML, ORDER, TXT, XSS, FARTICLE, FCUSTOMER, FFAMILLY, FPARAMETER, FPROVIDER, FVAT, FCOUNTRY (all *LIBL). LOG not listed (ORD700 cannot resolve AddLogEntry through it). Six entries consumed via bnddir (FARTICLE 5 programs, FCUSTOMER 3, FFAMILLY 2, FPROVIDER 3, FVAT 3, FCOUNTRY 3); FPARAMETER listed but all four consumers bind it by BNDSRVPGM or build metadata; XML bound explicitly by PRO200.ILEPGM; XSS/ORDER/TXT reached by no bnddir program. 57 exported names across the estate are all distinct, so entry order cannot change which service program satisfies an import. No second directory, no RMVBNDDIRE."
     entrypoints:
       - kind: other
         locator: SAMPLE.BNDDIR
-        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:8-14"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:8-14", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "iproj.json"]
+    behaviour_doc: features/srvpgm-supporting-c01.md
+    dependencies: [srvpgm:XML/XSS/ORDER/TXT (unknown), the seven sourced service programs (own slices)]
+    open_questions: ["Which library holds the four sourceless entries on the box (bind-time *LIBL)?"]
   - id: srvpgm-supporting-c02
-    name: Four listed srvpgms have no source (XML, XSS used; ORDER, TXT unreferenced)
-    status: accepted
+    name: Four listed service programs have no source - XML (7 procedures, PRO202) and XSS (16, PRO203) are needed and their copybooks are missing too; ORDER and TXT are referenced by nothing
+    status: documented
     confidence: observed-in-code
-    summary: XML bound by PRO200.ILEPGM and called by PRO202; XSS called by PRO203; ORDER and TXT referenced by nothing.
+    summary: "No CRTSRVPGM member, module, .BND or copybook for XML / XSS / ORDER / TXT. PRO202 calls 7 distinct xml* procedures (:152-174) via /copy qprotosrc,xml; PRO203 calls 16 distinct xss* procedures (:33-94) via /copy qprotosrc,Xss - both member-style copies of members absent from QPROTOSRC (nine members exist), so PRO202/PRO203 do not compile from this tree before any binding question. XML bound by PRO200.ILEPGM BNDSRVPGM; XSS has only the directory entry and its caller has no bnddir. ORDER / TXT: the .BNDDIR line only. The 23 procedure names are the only interface specification the tree holds; the purchase-order XML and article spreadsheet are unspecifiable until the objects or samples are seen. Surfaces stay unknown."
     entrypoints:
       - kind: other
-        locator: SAMPLE.BNDDIR entries
-        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10-11", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:11", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:7"]
-    dependencies: []
-    open_questions: ["ARCAD sample libraries or third-party? Are ORDER/TXT dead entries?"]
+        locator: SAMPLE.BNDDIR entries 1-4
+        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:10-11", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:11,152-174", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:7,33-94", "ATU_SRC/QPROTOSRC/ (nine members)"]
+    behaviour_doc: features/srvpgm-supporting-c02.md
+    dependencies: [pro-interactive c07/c12 (outputs), par-maintain-c11 (PATH)]
+    open_questions: ["ARCAD sample libraries or third-party? Can source or copybooks + sample outputs be supplied?", "Are ORDER/TXT dead entries?"]
   - id: srvpgm-supporting-c03
-    name: Twelve programs bind via bnddir('SAMPLE')
-    status: accepted
+    name: Twelve programs bind through bnddir('SAMPLE') - nine import from six service programs, three (ORD200/ORD201/ORD202) import nothing, one (ART250) imports GetArtInfo which no service program exports
+    status: documented
     confidence: observed-in-code
-    summary: ART200, ART201, ART202, ART250, CUS200, CUS250, ORD100, ORD101, ORD200, ORD201, ORD202, PRO250.
+    summary: "ART200 (FFAMILLY), ART201/ART202 (FARTICLE, FPROVIDER), ART250 (FARTICLE, FFAMILLY, FVAT + GetArtInfo/ART302 - no exporter in tree), CUS200 (FCOUNTRY), CUS250 (FCUSTOMER, FCOUNTRY), ORD100/ORD101 (FARTICLE, FCUSTOMER, FVAT), ORD200/ORD201/ORD202 (none - extpgm calls and own F-specs; bnddir inert), PRO250 (FPROVIDER, FCOUNTRY). Nine fixed-form h specs, three free-form ctl-opt (ART250, CUS250, PRO250); none carries actgrp. No bnddir program imports FPARAMETER, XML, XSS, ORDER or TXT; none calls a Close* procedure. Five H-spec-less programs (DAT001, DAT002, ORD900, ORD901, PAR200), COU200 (RPG III), PRO201.CBL and the CL programs are outside the binding layer."
     entrypoints:
       - kind: other
-        locator: grep bnddir QRPGLESRC
-        evidence: ["ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:26", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:7", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:4"]
-    dependencies: [SAMPLE.BNDDIR]
-    open_questions: []
+        locator: bnddir('SAMPLE') H-spec / ctl-opt lines
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:5", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:4,156", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:26", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:7", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:5,15-30", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:4", "ATU_SRC/QPROTOSRC/ARTICLE.RPGLEINC:59", "ATU_SRC/QRPGLESRC/ART302.SQLRPGLE:11"]
+    behaviour_doc: features/srvpgm-supporting-c03.md
+    dependencies: [SAMPLE.BNDDIR (c01), export lists (c06), activation group (c07), art-modules (ART302, held)]
+    open_questions: ["How is ART250's GetArtInfo import satisfied on the box (ART302 question)?"]
   - id: srvpgm-supporting-c04
-    name: PRO200 and PAR201 built by explicit CRTPGM in ACTGRP(QILE)
-    status: accepted
+    name: PRO200 and PAR201 are built by explicit CRTPGM members with MODULE(), explicit BNDSRVPGM() and ACTGRP(QILE); binder lists match the modules' imports exactly
+    status: documented
     confidence: observed-in-code
-    summary: The only two .ILEPGM sources; the only members running in a named activation group.
+    summary: "PRO200.ILEPGM: MODULE(PRO200 PRO202) ENTMOD(PRO200) BNDSRVPGM(XML FCOUNTRY FPARAMETER) ACTGRP(QILE) - PRO200.RPGLE imports GetCountryName/SltCountry/ExistCountry and calls the PRO202 module main procedure (prpord extproc('PRO202')); PRO202.SQLRPGLE imports getParm2 + 7 xml* - one-to-one with the BNDSRVPGM list. PAR201.ILEPGM: MODULE(PAR201) BNDSRVPGM(FPARAMETER) ACTGRP(QILE) - PAR201.CLLE's single CALLPRC GETPARM2 (*BYVAL x2, RTNVAL 100). Module sources carry no binding keywords (no H-spec / no PGM header); .PGM. infix = program, no infix = module (consistent across 21 .PGM. and 16 MODULE() members). No BNDDIR used. Only two named-activation-group members in the tree; QILE is also the compiler default (c07). PRO202 is not a *PGM - it exists only inside PRO200."
     entrypoints:
       - kind: other
         locator: QILESRC/*.ILEPGM
-        evidence: ["ATU_SRC/QILESRC/PRO200.ILEPGM:8-9", "ATU_SRC/QILESRC/PAR201.ILEPGM:8-9"]
-    dependencies: []
+        evidence: ["ATU_SRC/QILESRC/PRO200.ILEPGM:8-9", "ATU_SRC/QILESRC/PAR201.ILEPGM:8-9", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:16,191,219,238,239,247", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:11-17,151-174", "ATU_SRC/QCLSRC/PAR201.CLLE:4-8"]
+    behaviour_doc: features/srvpgm-supporting-c04.md
+    dependencies: [srvpgm:XML (unknown), FCOUNTRY, FPARAMETER, c07]
     open_questions: []
   - id: srvpgm-supporting-c05
-    name: PRO203 / ORD500 / ORD700 / LOG100 bindings not in source
-    status: accepted
+    name: PRO203 / ORD500 / ORD700 import service-program procedures with neither bnddir nor an .ILEPGM (LOG100 has dftactgrp(*no) but imports nothing) - their binding is build metadata, not source
+    status: documented
     confidence: inferred
-    summary: dftactgrp(*no) with neither bnddir nor .ILEPGM; import resolution is ARCAD/elias build metadata.
+    summary: "Source is exact about WHAT: PRO203 imports GetParm2 (FPARAMETER) + 16 xss* (XSS, sourceless); ORD500 imports getParm2; ORD700 imports addlogEntry (LOG - not even in SAMPLE.BNDDIR); LOG100 only extpgm prototypes (QUSCRTUS, QUSPTRUS, QCMDEXC) - links with nothing bound. Source is silent about HOW: no bnddir, no .ILEPGM, no CRTBNDRPG/CRTSQLRPGI member; iproj.json has no per-object options; .elias/hashList.json has source hashes only. Plausible: (a) build-level BNDDIR(SAMPLE) - binds PRO203/ORD500 but not ORD700; (b) ARCAD cross-reference BNDSRVPGM per object; (c) hand-built / former .ILEPGM. Only (b)/(c) explain ORD700. dftactgrp(*no) count (16) exceeds binder count (14) by exactly these four."
     entrypoints:
       - kind: other
         locator: H-specs without bnddir
-        evidence: ["ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:4", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:4", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:4", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:5"]
-    dependencies: []
-    open_questions: ["Build owner: how do these resolve FPARAMETER / LOG / XSS?"]
+        evidence: ["ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:4,7-8,32", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:4,13,58", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:4,8,78", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:5,9", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:4,14,19", "iproj.json", ".elias/hashList.json"]
+    behaviour_doc: features/srvpgm-supporting-c05.md
+    dependencies: [FPARAMETER, LOG, srvpgm:XSS (unknown), c09]
+    open_questions: ["Build owner: how do PRO203 / ORD500 / ORD700 resolve FPARAMETER / XSS / LOG? (elias compile log, ARCAD object attributes, or DSPPGM DETAIL(*SRVPGM))"]
   - id: srvpgm-supporting-c06
-    name: Inconsistent signature policy across binders
-    status: accepted
+    name: Export and signature contract - six binder sources (five hand-fixed 'V1', one ARCAD *GEN + *PRV), two EXPORT(*ALL); every .BND matches its modules' export keywords exactly; EXPORT(*ALL) exports 5 (FPARAMETER) and 1 (LOG), not every procedure
+    status: documented
     confidence: observed-in-code
-    summary: Five hard-code SIGNATURE('V1'); FPROVIDER uses *GEN + *PRV; FPARAMETER and LOG use EXPORT(*ALL) with no binder.
+    summary: "FARTICLE 10, FCOUNTRY 4, FCUSTOMER 15, FFAMILLY 4, FPROVIDER 14 (*CURRENT, LVLCHK(*YES) SIGNATURE(*GEN)) + 13 (*PRV, 25/10/16, module PRO300 / NEWSAMPLE, before SLTPROVIDER; object renamed PROVIDER -> FPROVIDER), FVAT 4 - all symbol-by-symbol equal to the modules' export P-specs. FPARAMETER EXPORT(*ALL) = PAR300's five exports (GetPARM1-5; chainPARAMETER / closePARAMETER have no export keyword); LOG = AddLogEntry only (init local). 57 distinct exported names estate-wide. Copybooks over-advertise: seven Close* prototypes with no export behind them (nobody calls them) and GetArtInfo (ART302, unbound; ART250 calls it). FFAMILLY.BND in source order, the other 'V1' lists alphabetical - with a fixed signature the order is the binary contract. FFAMILLY.ILESRVPGM %TEXT says 'Functions Country' (copy-paste). Corrects par-maintain-c10 ('all seven')."
     entrypoints:
       - kind: other
-        locator: QSRVSRC/*.BND / *.ILESRVPGM
-        evidence: ["ATU_SRC/QSRVSRC/FCUSTOMER.BND:4", "ATU_SRC/QSRVSRC/FPROVIDER.BND:6", "ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM:8", "ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8"]
-    dependencies: []
-    open_questions: []
+        locator: QSRVSRC/*.BND / QILESRVSRC/*.ILESRVPGM / module export P-specs
+        evidence: ["ATU_SRC/QSRVSRC/FCUSTOMER.BND:4-20", "ATU_SRC/QSRVSRC/FPROVIDER.BND:5-45", "ATU_SRC/QSRVSRC/FFAMILLY.BND:4-9", "ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM:8", "ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:22,34,46,58,70,82,100", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:18,37", "ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC:37", "ATU_SRC/QPROTOSRC/ARTICLE.RPGLEINC:59,64"]
+    behaviour_doc: features/srvpgm-supporting-c06.md
+    dependencies: [every *-modules slice (export keyword lines only), c03/c04/c05 (consumers)]
+    open_questions: ["Were the five 'V1' export lists ever changed after first build?"]
   - id: srvpgm-supporting-c07
-    name: All srvpgms ACTGRP(*CALLER); getter caches scoped per calling program's AG
-    status: accepted
+    name: All eight service programs ACTGRP(*CALLER); source names an activation group only for PRO200 / PAR201 (QILE); the other fourteen ILE programs take the compiler default - also QILE - so the getter caches are most likely one per job, not one per calling program
+    status: documented
     confidence: observed-in-code
-    summary: Every .ILESRVPGM is *CALLER; bnddir programs have no actgrp keyword (default new AG per program) while PRO200/PAR201 share QILE.
+    summary: "Eight ACTGRP(*CALLER); two ACTGRP(QILE); sixteen dftactgrp(*no) with no actgrp keyword; no *NEW, no RCLACTGRP / RCLRSC anywhere. CRTBNDRPG / CRTSQLRPGI default ACTGRP(*STGMDL) -> QILE (single-level storage), so absent a build override all ILE programs and service programs share one persistent QILE per job: the seven usropn files stay open, the seven last-key caches (chain* shape, CUS300:173-186) and LOG300's user-space pointer / User inz(*USER) persist across every screen until RCLACTGRP QILE / sign-off. Phase A's 'per calling program' reading would need ACTGRP(*NEW), which nothing specifies - corrected, flagged runtime-confirm (DSPPGM DETAIL(*BASIC)). PATH read by five programs through one PAR300 buffer while PAR200 writes PARAMETER directly. OPM / H-spec-less / CL / COBOL members do not participate."
     entrypoints:
       - kind: other
-        locator: QILESRVSRC/*.ILESRVPGM ACTGRP
-        evidence: ["ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM:8", "ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM:8", "ATU_SRC/QILESRC/PRO200.ILEPGM:9"]
-    dependencies: []
-    open_questions: []
+        locator: QILESRVSRC/*.ILESRVPGM ACTGRP + the sixteen dftactgrp(*no) lines
+        evidence: ["ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM:8", "ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8", "ATU_SRC/QILESRC/PRO200.ILEPGM:9", "ATU_SRC/QILESRC/PAR201.ILEPGM:9", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:7", "ATU_SRC/QRPGLESRC/CUS300.RPGLE:6,173-186", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:12-16,37-46"]
+    behaviour_doc: features/srvpgm-supporting-c07.md
+    dependencies: [c03, c04, c05 (callers), c06 (unexported close*), cus-modules / vat-module-c06 / par-maintain-c09 / log-programs-c03 (cache mechanism per module)]
+    open_questions: ["DSPPGM <any of the fourteen> DETAIL(*BASIC): QILE (default) or *NEW (Phase A reading)?", "Room: which staleness scope should the target reproduce - none / per request / per session?"]
   - id: srvpgm-supporting-c08
-    name: FARTICLE is the only srvpgm binding another (FFAMILLY)
-    status: accepted
+    name: FARTICLE is the only service program that binds another (BNDSRVPGM(FFAMILLY), because ART301 calls two FFAMILLY procedures); the full binding graph is two levels deep and acyclic
+    status: documented
     confidence: observed-in-code
-    summary: No other inter-service-program dependency in source.
+    summary: "ART301.SQLRPGLE:164-165 sltArtFam + getArtFamDesc -> FARTICLE.ILESRVPGM BNDSRVPGM(FFAMILLY); ART300 imports nothing; CUS301 / COU301 / FAM301 / PRO301 / PAR300 / LOG300 copy only their own copybook. Graph: seven leaves, one edge; longest chain program -> FARTICLE -> FFAMILLY; build order FFAMILLY before FARTICLE, everything else free, programs last. ART250 reaches FFAMILLY two ways (one activation, c07). No service program depends on FPARAMETER or LOG. ART302 has no edge (art-* question, not answered)."
     entrypoints:
       - kind: other
         locator: FARTICLE.ILESRVPGM BNDSRVPGM
-        evidence: ["ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM:8-9"]
-    dependencies: []
+        evidence: ["ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM:8-9", "ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:14,164-165", "ATU_SRC/QRPGLESRC/ART300.RPGLE:8", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:13"]
+    behaviour_doc: features/srvpgm-supporting-c08.md
+    dependencies: [fam-maintain (FFAMILLY exports, held), art-modules (ART301 call lines, held), c01/c03/c04/c05/c06/c07]
     open_questions: []
   - id: srvpgm-supporting-c09
-    name: Build members are ARCAD-generated snapshots (2022-05-17); elias build
-    status: accepted
+    name: The twelve build members (plus LASTORDNO.DTAARA) are ARCAD-generated snapshots of one export (2022-05-17 14:54:17-21, FGRMON_OBJ / FGRMON_DTA); build is elias compile per iproj.json; .elias/hashList.json carries source hashes only
+    status: documented
     confidence: observed-in-code
-    summary: .ILESRVPGM / .ILEPGM / .BNDDIR / .MSGF headers say generated by ARCAD; iproj.json declares elias compile with objlib &verlibatu.
+    summary: "Thirteen members carry 'Source generated by ARCAD Software / Using Direct Object FGRMON_OBJ|FGRMON_DTA/<name> of type *TYPE / Time 2022-05-17-14.54.NN' - one object-to-source export run, ordered *BNDDIR, *DTAARA, *PGM, *SRVPGM (alphabetical), *MSGF, four seconds. &O/&N placeholders; referenced objects unqualified or *LIBL. Five .BND are hand-written (no header); FPROVIDER.BND is ARCAD's binder-source generator. iproj.json: elias compile {branch}, objlib &verlibatu, curlib *CRTDFT, includePath ATU_SRC/QPROTOSRC, arcad code ATU / libraryPrefix ATU, repository AdrianAtArcad/atuMerlin; no per-object options. .elias/hashList.json: branch FT_zel001, 138 source hashes, status DRY. Single-module CRTBNDxxx programs have no generated member (derived from extension + .PGM. infix). Snapshot may be stale vs the box (DSPOBJD). Metadata, not behaviour."
     entrypoints:
       - kind: other
-        locator: generated headers / iproj.json
-        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:4-6", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:4-6", "ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM:4-6"]
-    dependencies: []
-    open_questions: []
+        locator: generated headers / iproj.json / .elias
+        evidence: ["ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:4-6", "ATU_SRC/QILESRVSRC/FPROVIDER.ILESRVPGM:4-6", "ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:4-8", "ATU_SRC/QDTASRC/LASTORDNO.DTAARA:4-6", "ATU_SRC/QSRVSRC/FPROVIDER.BND:2", "iproj.json", ".elias/hashList.json"]
+    behaviour_doc: features/srvpgm-supporting-c09.md
+    dependencies: [c01-c08 (rest on these snapshots), menu-cmd-shell-c05 (SAMMSGF)]
+    open_questions: ["Has anything been rebuilt with different options since 2022-05-17 (DSPOBJD on the box)?"]

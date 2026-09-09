@@ -1,0 +1,13 @@
+# CHARACTERIZATION — srvpgm-supporting
+
+```text
+CHARACTERIZATION: deferred-waived
+Reason: IBM i runtime not available in this environment; documentation from source only.
+No RECORD/REPLAY. No goldens. No Conversion unlock claimed by this conveyor.
+```
+
+Recorded by the Pack B document-slices conveyor on 2026-09-09 (run 16). This is a **stance note**, not a `WAIVED_*` artefact:
+no Test gen pack exists for this slice, so the `waive-characterization` skill was not executed and `testexec/srvpgm-supporting/` was not created.
+`legacy_green` and `parity_green` stay `false` in `inventory/atu-merlin/APP_MANIFEST.yaml`. Residual-wave slices are document-only per the bind record; any Architecture pack for them is a **new** pack (never widen `atu-merlin-ts-cus-v1` or `atu-merlin-ts-ord-v1`; the five BOUND residual packs were not read or touched). This slice is the binding layer — build contracts, not behaviour; the Phase A recommendation to `reject` it as a conversion slice and carry the cards as architecture notes stands. There is nothing here to characterise in the RECORD sense: no screen, no file written, no message.
+
+What a future runtime check would capture (build-time / `DSP*` facts, for the build owner rather than a RECORD station): `DSPBNDDIR SAMPLE` — the eleven entries and their order, and whether `XML` / `XSS` / `ORDER` / `TXT` resolve on the box (`c01`, `c02`); `DSPPGM <pgm> DETAIL(*SRVPGM)` for each of the twelve `bnddir` programs — the service programs actually bound (expect the "imports from" column of `c03`; `ART250` shows how `GetArtInfo` was satisfied) and for `PRO203` / `ORD500` / `ORD700` — the binder that is not in source (`c05`); `DSPPGM <pgm> DETAIL(*BASIC)` for any of the fourteen un-keyworded ILE programs — `QILE` or `*NEW` (`c07`, the one runtime fact that changes a conclusion); `DSPSRVPGM <srvpgm> DETAIL(*PROCEXP)` for the eight — the export lists (expect 10 / 4 / 15 / 4 / 14 / 4 / **5** / **1** — `c06`) and `DETAIL(*SIGNATURE)` (`'V1'` ×5, generated ×2, current + previous for `FPROVIDER`); `DSPSRVPGM FARTICLE DETAIL(*SRVPGM)` — `FFAMILLY` (`c08`); `DSPSRVPGM XML DETAIL(*PROCEXP)` / `DSPSRVPGM XSS DETAIL(*PROCEXP)` — whether the exported names match the 7 + 16 the call sites use (`c02`); `DSPOBJD` on the eight service programs and two `CRTPGM` programs — creation dates vs the 2022-05-17 snapshot (`c09`); `WRKJOB OPTION(*ACTGRP)` on a 5250 session after `CUS250` then `ORD100` — one `QILE` group holding both, or two (`c07`). None of these is a behaviour golden; they are the checks that would confirm or refute the platform-default inferences the cards flag.

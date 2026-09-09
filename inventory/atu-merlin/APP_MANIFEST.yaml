@@ -26,7 +26,10 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 15 (2026-09-09): menu-cmd-shell 9/9
   accepted behaviours documented (cards discovery/menu-cmd-shell/features/); c02 inferred carded (bind accepted it); surfaces menu:SAMMNU / pnlgrp:SAMHELP / msgf:SAMMSGF / cmd:CVTSPLPDF candidate -> accepted.
   Phase A corrected: ERR0001 is live (ART200D.DSPF:98) - dead messages are ERR0003/0004/0005 (three). Night residual-wave queue left: srvpgm-supporting, sql-objects, ord-batch-ord900, cou-maintain COU200
-  half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
+  half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 16 (2026-09-09): srvpgm-supporting 9/9 accepted behaviours documented (cards
+  discovery/srvpgm-supporting/features/); c05 inferred carded (bind accepted it); surface bnddir:SAMPLE candidate -> accepted; srvpgm:XML / XSS / ORDER / TXT stay unknown (absence recorded in c02). Phase
+  A c07 corrected: default activation group is QILE (job-wide caches), not new-per-program - runtime-confirm. par-maintain-c10 corrected via srvpgm-supporting-c06: EXPORT(*ALL) exports 5 (not 7). CHARACTERIZATION
+  deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -702,7 +705,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
   repo_path: ATU_SRC/QBNDSRC/SAMPLE.BNDDIR
-  status: candidate
+  status: accepted
   slice_id: srvpgm-supporting
   notes: '*BNDDIR - 11 srvpgms (XML ORDER TXT XSS without source; LOG absent); bound by 12 programs via bnddir(''SAMPLE'')'
   discovery_evidence:
@@ -4045,7 +4048,7 @@ behaviours:
     ODP per interactive job across all four consumers. Reads through PAR200''s locks (if open). Same idiom as cou-maintain-c07 / FCUSTOMER.'
 - behaviour_id: par-maintain-c10
   surface_id: srvpgm:FPARAMETER
-  name: EXPORT(*ALL) exposes chainPARAMETER / closePARAMETER
+  name: EXPORT(*ALL) exports the five getters only; chainPARAMETER / closePARAMETER are module-local (corrected run 16 - srvpgm-supporting-c06)
   status: documented
   slice_id: par-maintain
   discovery_card: discovery/par-maintain/features/par-maintain-c10.md
@@ -4057,7 +4060,9 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; CRTSRVPGM SRVPGM(&O/&N) MODULE(PAR300) ACTGRP(*CALLER) EXPORT(*ALL); no QSRVSRC/FPARAMETER.BND -> all seven procedures exported in source order, signature generated,
+  notes: 'confidence: observed-in-code; CORRECTED (Pack B run 16, srvpgm-supporting-c06): EXPORT(*ALL) exports module exports only - PAR300 puts export on GetPARM1-5 (:22,34,46,58,70) and not on chainPARAMETER
+    (:82) / closePARAMETER (:100), so FPARAMETER exports FIVE procedures; ClosePARAMETER in the copybook has no export behind it (a call would fail to bind); chainPARAMETER is unreachable from outside.
+    Original text: CRTSRVPGM SRVPGM(&O/&N) MODULE(PAR300) ACTGRP(*CALLER) EXPORT(*ALL); no QSRVSRC/FPARAMETER.BND -> [all seven procedures exported - wrong, see above] in source order, signature generated,
     no *PRV (any export change -> MCH4431 in bound programs until re-bound). Copybook publishes GetPARM1-5 + ClosePARAMETER but not chainPARAMETER. Contrast FCOUNTRY (EXPORT(*SRCFILE) hides closeCOUNTRY
     - cou-maintain-c11), FPROVIDER (only versioned binder). Latent: ClosePARAMETER would close the ODP but not clear the buffer, so the cache key survives a close - a caller adding ClosePARAMETER() to ''refresh''
     PATH would not get a refresh for the same key. Callers bound: PAR201 / PRO200 explicit BNDSRVPGM; SAMPLE.BNDDIR entry for bnddir(''SAMPLE'') programs; ORD500 / PRO203 by build metadata only. Build note;
@@ -4857,10 +4862,10 @@ behaviours:
   notes: 'confidence: observed-in-code; SQL long names and labels on ARTIINF / ARTLSTDAT; "ORDER" must be delimited everywhere.'
 - behaviour_id: srvpgm-supporting-c01
   surface_id: bnddir:SAMPLE
-  name: SAMPLE.BNDDIR contents (11 srvpgms; LOG absent)
-  status: candidate
+  name: SAMPLE.BNDDIR - eleven *LIBL service-program entries in a fixed order; LOG absent; six entries actually consumed by the bnddir('SAMPLE') programs
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4869,13 +4874,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; XML, ORDER, TXT, XSS, FARTICLE, FCUSTOMER, FFAMILLY, FPARAMETER, FPROVIDER, FVAT, FCOUNTRY via *LIBL; LOG not listed.'
+  notes: 'confidence: observed-in-code; CRTBNDDIR + one ADDBNDDIRE: XML, ORDER, TXT, XSS, FARTICLE, FCUSTOMER, FFAMILLY, FPARAMETER, FPROVIDER, FVAT, FCOUNTRY (all *LIBL). LOG not listed (ORD700 cannot
+    resolve AddLogEntry through it). Six entries consumed via bnddir (FARTICLE 5 programs, FCUSTOMER 3, FFAMILLY 2, FPROVIDER 3, FVAT 3, FCOUNTRY 3); FPARAMETER listed but all four consumers bind it by
+    BNDSRVPGM or build metadata; XML bound explicitly by PRO200.ILEPGM; XSS/ORDER/TXT reached by no bnddir program. 57 exported names across the estate are all distinct, so entry order cannot change which
+    service program satisfies an import. No second directory, no RMVBNDDIRE.'
 - behaviour_id: srvpgm-supporting-c02
   surface_id: bnddir:SAMPLE
-  name: Four listed srvpgms have no source (XML, XSS used; ORDER, TXT unreferenced)
-  status: candidate
+  name: Four listed service programs have no source - XML (7 procedures, PRO202) and XSS (16, PRO203) are needed and their copybooks are missing too; ORDER and TXT are referenced by nothing
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4884,13 +4892,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; XML bound by PRO200.ILEPGM and called by PRO202; XSS called by PRO203; ORDER and TXT referenced by nothing.'
+  notes: 'confidence: observed-in-code; No CRTSRVPGM member, module, .BND or copybook for XML / XSS / ORDER / TXT. PRO202 calls 7 distinct xml* procedures (:152-174) via /copy qprotosrc,xml; PRO203 calls
+    16 distinct xss* procedures (:33-94) via /copy qprotosrc,Xss - both member-style copies of members absent from QPROTOSRC (nine members exist), so PRO202/PRO203 do not compile from this tree before any
+    binding question. XML bound by PRO200.ILEPGM BNDSRVPGM; XSS has only the directory entry and its caller has no bnddir. ORDER / TXT: the .BNDDIR line only. The 23 procedure names are the only interface
+    specification the tree holds; the purchase-order XML and article spreadsheet are unspecifiable until the objects or samples are seen. Surfaces stay unknown.'
 - behaviour_id: srvpgm-supporting-c03
   surface_id: bnddir:SAMPLE
-  name: Twelve programs bind via bnddir('SAMPLE')
-  status: candidate
+  name: Twelve programs bind through bnddir('SAMPLE') - nine import from six service programs, three (ORD200/ORD201/ORD202) import nothing, one (ART250) imports GetArtInfo which no service program exports
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4899,13 +4910,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ART200, ART201, ART202, ART250, CUS200, CUS250, ORD100, ORD101, ORD200, ORD201, ORD202, PRO250.'
+  notes: 'confidence: observed-in-code; ART200 (FFAMILLY), ART201/ART202 (FARTICLE, FPROVIDER), ART250 (FARTICLE, FFAMILLY, FVAT + GetArtInfo/ART302 - no exporter in tree), CUS200 (FCOUNTRY), CUS250 (FCUSTOMER,
+    FCOUNTRY), ORD100/ORD101 (FARTICLE, FCUSTOMER, FVAT), ORD200/ORD201/ORD202 (none - extpgm calls and own F-specs; bnddir inert), PRO250 (FPROVIDER, FCOUNTRY). Nine fixed-form h specs, three free-form
+    ctl-opt (ART250, CUS250, PRO250); none carries actgrp. No bnddir program imports FPARAMETER, XML, XSS, ORDER or TXT; none calls a Close* procedure. Five H-spec-less programs (DAT001, DAT002, ORD900,
+    ORD901, PAR200), COU200 (RPG III), PRO201.CBL and the CL programs are outside the binding layer.'
 - behaviour_id: srvpgm-supporting-c04
   surface_id: bnddir:SAMPLE
-  name: PRO200 and PAR201 built by explicit CRTPGM in ACTGRP(QILE)
-  status: candidate
+  name: PRO200 and PAR201 are built by explicit CRTPGM members with MODULE(), explicit BNDSRVPGM() and ACTGRP(QILE); binder lists match the modules' imports exactly
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4914,13 +4928,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; The only two .ILEPGM sources; the only members running in a named activation group.'
+  notes: 'confidence: observed-in-code; PRO200.ILEPGM: MODULE(PRO200 PRO202) ENTMOD(PRO200) BNDSRVPGM(XML FCOUNTRY FPARAMETER) ACTGRP(QILE) - PRO200.RPGLE imports GetCountryName/SltCountry/ExistCountry
+    and calls the PRO202 module main procedure (prpord extproc(''PRO202'')); PRO202.SQLRPGLE imports getParm2 + 7 xml* - one-to-one with the BNDSRVPGM list. PAR201.ILEPGM: MODULE(PAR201) BNDSRVPGM(FPARAMETER)
+    ACTGRP(QILE) - PAR201.CLLE''s single CALLPRC GETPARM2 (*BYVAL x2, RTNVAL 100). Module sources carry no binding keywords (no H-spec / no PGM header); .PGM. infix = program, no infix = module (consistent
+    across 21 .PGM. and 16 MODULE() members). No BNDDIR used. Only two named-activation-group members in the tree; QILE is also the compiler default (c07). PRO202 is not a *PGM - it exists only inside PRO200.'
 - behaviour_id: srvpgm-supporting-c05
   surface_id: bnddir:SAMPLE
-  name: PRO203 / ORD500 / ORD700 / LOG100 bindings not in source
-  status: candidate
+  name: PRO203 / ORD500 / ORD700 import service-program procedures with neither bnddir nor an .ILEPGM (LOG100 has dftactgrp(*no) but imports nothing) - their binding is build metadata, not source
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4929,13 +4946,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; dftactgrp(*no) with neither bnddir nor .ILEPGM; import resolution is ARCAD/elias build metadata.'
+  notes: 'confidence: inferred; Source is exact about WHAT: PRO203 imports GetParm2 (FPARAMETER) + 16 xss* (XSS, sourceless); ORD500 imports getParm2; ORD700 imports addlogEntry (LOG - not even in SAMPLE.BNDDIR);
+    LOG100 only extpgm prototypes (QUSCRTUS, QUSPTRUS, QCMDEXC) - links with nothing bound. Source is silent about HOW: no bnddir, no .ILEPGM, no CRTBNDRPG/CRTSQLRPGI member; iproj.json has no per-object
+    options; .elias/hashList.json has source hashes only. Plausible: (a) build-level BNDDIR(SAMPLE) - binds PRO203/ORD500 but not ORD700; (b) ARCAD cross-reference BNDSRVPGM per object; (c) hand-built /
+    former .ILEPGM. Only (b)/(c) explain ORD700. dftactgrp(*no) count (16) exceeds binder count (14) by exactly these four.'
 - behaviour_id: srvpgm-supporting-c06
   surface_id: bnddir:SAMPLE
-  name: Inconsistent signature policy across binders
-  status: candidate
+  name: Export and signature contract - six binder sources (five hand-fixed 'V1', one ARCAD *GEN + *PRV), two EXPORT(*ALL); every .BND matches its modules' export keywords exactly; EXPORT(*ALL) exports
+    5 (FPARAMETER) and 1 (LOG), not every procedure
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4944,13 +4965,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Five hard-code SIGNATURE(''V1''); FPROVIDER uses *GEN + *PRV; FPARAMETER and LOG use EXPORT(*ALL) with no binder.'
+  notes: 'confidence: observed-in-code; FARTICLE 10, FCOUNTRY 4, FCUSTOMER 15, FFAMILLY 4, FPROVIDER 14 (*CURRENT, LVLCHK(*YES) SIGNATURE(*GEN)) + 13 (*PRV, 25/10/16, module PRO300 / NEWSAMPLE, before SLTPROVIDER;
+    object renamed PROVIDER -> FPROVIDER), FVAT 4 - all symbol-by-symbol equal to the modules'' export P-specs. FPARAMETER EXPORT(*ALL) = PAR300''s five exports (GetPARM1-5; chainPARAMETER / closePARAMETER
+    have no export keyword); LOG = AddLogEntry only (init local). 57 distinct exported names estate-wide. Copybooks over-advertise: seven Close* prototypes with no export behind them (nobody calls them)
+    and GetArtInfo (ART302, unbound; ART250 calls it). FFAMILLY.BND in source order, the other ''V1'' lists alphabetical - with a fixed signature the order is the binary contract. FFAMILLY.ILESRVPGM %TEXT
+    says ''Functions Country'' (copy-paste). Corrects par-maintain-c10 (''all seven'').'
 - behaviour_id: srvpgm-supporting-c07
   surface_id: bnddir:SAMPLE
-  name: All srvpgms ACTGRP(*CALLER); getter caches scoped per calling program's AG
-  status: candidate
+  name: All eight service programs ACTGRP(*CALLER); source names an activation group only for PRO200 / PAR201 (QILE); the other fourteen ILE programs take the compiler default - also QILE - so the getter
+    caches are most likely one per job, not one per calling program
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4959,13 +4985,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Every .ILESRVPGM is *CALLER; bnddir programs have no actgrp keyword (default new AG per program) while PRO200/PAR201 share QILE.'
+  notes: 'confidence: observed-in-code; Eight ACTGRP(*CALLER); two ACTGRP(QILE); sixteen dftactgrp(*no) with no actgrp keyword; no *NEW, no RCLACTGRP / RCLRSC anywhere. CRTBNDRPG / CRTSQLRPGI default ACTGRP(*STGMDL)
+    -> QILE (single-level storage), so absent a build override all ILE programs and service programs share one persistent QILE per job: the seven usropn files stay open, the seven last-key caches (chain*
+    shape, CUS300:173-186) and LOG300''s user-space pointer / User inz(*USER) persist across every screen until RCLACTGRP QILE / sign-off. Phase A''s ''per calling program'' reading would need ACTGRP(*NEW),
+    which nothing specifies - corrected, flagged runtime-confirm (DSPPGM DETAIL(*BASIC)). PATH read by five programs through one PAR300 buffer while PAR200 writes PARAMETER directly. OPM / H-spec-less /
+    CL / COBOL members do not participate.'
 - behaviour_id: srvpgm-supporting-c08
   surface_id: bnddir:SAMPLE
-  name: FARTICLE is the only srvpgm binding another (FFAMILLY)
-  status: candidate
+  name: FARTICLE is the only service program that binds another (BNDSRVPGM(FFAMILLY), because ART301 calls two FFAMILLY procedures); the full binding graph is two levels deep and acyclic
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4974,13 +5004,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No other inter-service-program dependency in source.'
+  notes: 'confidence: observed-in-code; ART301.SQLRPGLE:164-165 sltArtFam + getArtFamDesc -> FARTICLE.ILESRVPGM BNDSRVPGM(FFAMILLY); ART300 imports nothing; CUS301 / COU301 / FAM301 / PRO301 / PAR300 /
+    LOG300 copy only their own copybook. Graph: seven leaves, one edge; longest chain program -> FARTICLE -> FFAMILLY; build order FFAMILLY before FARTICLE, everything else free, programs last. ART250 reaches
+    FFAMILLY two ways (one activation, c07). No service program depends on FPARAMETER or LOG. ART302 has no edge (art-* question, not answered).'
 - behaviour_id: srvpgm-supporting-c09
   surface_id: bnddir:SAMPLE
-  name: Build members are ARCAD-generated snapshots (2022-05-17); elias build
-  status: candidate
+  name: The twelve build members (plus LASTORDNO.DTAARA) are ARCAD-generated snapshots of one export (2022-05-17 14:54:17-21, FGRMON_OBJ / FGRMON_DTA); build is elias compile per iproj.json; .elias/hashList.json
+    carries source hashes only
+  status: documented
   slice_id: srvpgm-supporting
-  discovery_card: null
+  discovery_card: discovery/srvpgm-supporting/features/srvpgm-supporting-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4989,7 +5022,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; .ILESRVPGM / .ILEPGM / .BNDDIR / .MSGF headers say generated by ARCAD; iproj.json declares elias compile with objlib &verlibatu.'
+  notes: 'confidence: observed-in-code; Thirteen members carry ''Source generated by ARCAD Software / Using Direct Object FGRMON_OBJ|FGRMON_DTA/<name> of type *TYPE / Time 2022-05-17-14.54.NN'' - one object-to-source
+    export run, ordered *BNDDIR, *DTAARA, *PGM, *SRVPGM (alphabetical), *MSGF, four seconds. &O/&N placeholders; referenced objects unqualified or *LIBL. Five .BND are hand-written (no header); FPROVIDER.BND
+    is ARCAD''s binder-source generator. iproj.json: elias compile {branch}, objlib &verlibatu, curlib *CRTDFT, includePath ATU_SRC/QPROTOSRC, arcad code ATU / libraryPrefix ATU, repository AdrianAtArcad/atuMerlin;
+    no per-object options. .elias/hashList.json: branch FT_zel001, 138 source hashes, status DRY. Single-module CRTBNDxxx programs have no generated member (derived from extension + .PGM. infix). Snapshot
+    may be stale vs the box (DSPOBJD). Metadata, not behaviour.'
 - behaviour_id: vat-module-c01
   surface_id: srvpgm:FVAT
   name: ClcVAT arithmetic (net x rate / 100, half-adjust to 2 dp)
@@ -5159,5 +5196,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-09T11:03:49Z'
+last_updated: '2026-09-09T11:47:58Z'
 updated_by: document-slices-conveyor
