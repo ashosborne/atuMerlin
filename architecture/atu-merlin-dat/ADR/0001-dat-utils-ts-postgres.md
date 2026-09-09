@@ -22,6 +22,7 @@ Pathfinder modernisation for ATU Merlin date utilities. Discovery covers slice `
 ## Consequences
 
 - Conversion must refuse while pack status is DRAFT.
+- Sibling residual packs (`architecture/atu-merlin-{vat,cou,par,log}/**`) are deny-listed; `modern/db/**` and `modern/test/**` are additive and pack-scoped only.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental re-scope of CUS or ORD modern under this DAT pack is a fail.
 - A different blank/never sentinel than ORD is a fail.

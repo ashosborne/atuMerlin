@@ -46,7 +46,7 @@ data:
   strategy: postgres-greenfield-from-pf
   schema_changes: additive-only
   migration_tool: null
-  notes: "COUNTRY / related mappings additive under modern/db/**; do not reshape CUS or ORD schema; modern already has shared/fcountry from CUS"
+  notes: "COUNTRY / related mappings additive under modern/db/**; do not reshape CUS or ORD schema; modern already has shared/fcountry from CUS; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
 
 authn_authz:
   mode: pathfinder-open
@@ -92,8 +92,9 @@ forbidden:
   - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
   - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
   - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
-  - "Reshape CUS or ORD schema under modern/db/** — COU tables additive only"
+  - "Reshape CUS or ORD schema under modern/db/** — COU tables additive and pack-scoped only; modern/test/** only for this pack's surface"
   - "Invent COU200 presentation or convert COU200 panel half while deferred"
+  - "Convert consuming FCOUNTRY/COU300/COU301 cards only until COU200 is carded and pack SUPERSEDEd"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
@@ -105,8 +106,8 @@ forbidden:
 edit_surface:
   allow:
     - modern/src/shared/fcountry/**
-    - modern/db/**   # additive only
-    - modern/test/**   # for cou / fcountry
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (cou/fcountry)
     - modern/src/app.ts   # additive
     - modern/src/server.ts   # additive
     - modern/package.json
@@ -124,6 +125,10 @@ edit_surface:
     - overnight/**
     - architecture/atu-merlin/**
     - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-par/**
+    - architecture/atu-merlin-log/**
     - modern/src/features/customer/**
     - modern/src/features/order/**
     - modern/openapi/customer.yaml
@@ -133,6 +138,7 @@ known_risks:
   - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
   - "GetCountryIso3 unused export (c08) — do not invent consumer or dispose COISO without SME"
   - "Do not invent COU200 presentation — panel half stay_legacy / deferred"
+  - "Convert must consume FCOUNTRY/COU300/COU301 cards only until COU200 is carded and pack SUPERSEDEd"
   - "COU301 selector open questions (empty position message, F8 position retention) stay needs-SME"
   - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
   - "CUS modern already has shared/fcountry; accidental rewrite of customer feature or widen of CUS pack is a fail"

@@ -44,7 +44,7 @@ data:
   strategy: postgres-greenfield-from-pf
   schema_changes: additive-only
   migration_tool: null
-  notes: "Map PARM/PATH related PFs additively; PATH may be config vs maintained table (c11) — do not invent disposition"
+  notes: "Map PARM/PATH related PFs additively; PATH may be config vs maintained table (c11) — do not invent disposition; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
 
 authn_authz:
   mode: pathfinder-open
@@ -87,7 +87,7 @@ forbidden:
   - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
   - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
   - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
-  - "Reshape CUS or ORD schema under modern/db/** — PAR tables additive only"
+  - "Reshape CUS or ORD schema under modern/db/** — PAR tables additive and pack-scoped only; modern/test/** only for this pack's surface"
   - "Rewrite ORD500 / order feature to re-home PATH — document config reuse instead"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
@@ -101,8 +101,8 @@ edit_surface:
   allow:
     - modern/src/shared/parm/**
     - modern/src/features/par/**
-    - modern/db/**   # additive only
-    - modern/test/**   # for par
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (par)
     - modern/src/app.ts   # additive
     - modern/src/server.ts   # additive
     - modern/package.json
@@ -120,6 +120,10 @@ edit_surface:
     - overnight/**
     - architecture/atu-merlin/**
     - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-log/**
     - modern/src/features/customer/**
     - modern/src/features/order/**
     - modern/openapi/customer.yaml

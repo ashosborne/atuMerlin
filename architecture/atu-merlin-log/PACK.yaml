@@ -44,7 +44,7 @@ data:
   strategy: postgres-greenfield-from-pf
   schema_changes: additive-only
   migration_tool: null
-  notes: "ORD already has samlog table — prefer align/reuse via shared logging without widening atu-merlin-ts-ord-v1; document residual vs reuse; do not reshape ORD schema non-additively"
+  notes: "ORD already has samlog table — prefer align/reuse via shared logging without widening atu-merlin-ts-ord-v1; document residual vs reuse; do not reshape ORD schema non-additively; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
 
 authn_authz:
   mode: pathfinder-open
@@ -85,7 +85,7 @@ forbidden:
   - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
   - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
   - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
-  - "Reshape CUS or ORD schema under modern/db/** — LOG changes additive only / shared reuse"
+  - "Reshape CUS or ORD schema under modern/db/** — LOG changes additive and pack-scoped only / shared reuse; modern/test/** only for this pack's surface"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
@@ -98,8 +98,8 @@ edit_surface:
   allow:
     - modern/src/shared/samlog/**
     - modern/src/shared/logging/**
-    - modern/db/**   # additive only
-    - modern/test/**   # for log / samlog
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (log/samlog)
     - modern/src/app.ts   # additive
     - modern/src/server.ts   # additive
     - modern/package.json
@@ -117,6 +117,10 @@ edit_surface:
     - overnight/**
     - architecture/atu-merlin/**
     - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-par/**
     - modern/src/features/customer/**
     - modern/src/features/order/**
     - modern/openapi/customer.yaml

@@ -22,6 +22,7 @@ Pathfinder modernisation for ATU Merlin parameter / PATH maintain. Discovery cov
 ## Consequences
 
 - Conversion must refuse while pack status is DRAFT.
+- Sibling residual packs (`architecture/atu-merlin-{vat,dat,cou,log}/**`) are deny-listed; `modern/db/**` and `modern/test/**` are additive and pack-scoped only.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental rewrite of the order feature or widen of ORD/CUS packs is a fail.
 - Expanding scope, editing `ATU_SRC`, or changing bound architecture requires a new pack version, SUPERSEDE, and re-bind — do not overwrite in place.

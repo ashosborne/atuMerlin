@@ -22,6 +22,7 @@ Pathfinder modernisation for ATU Merlin VAT. Discovery covers slice `vat-module`
 ## Consequences
 
 - Conversion must refuse while pack status is DRAFT.
+- Sibling residual packs (`architecture/atu-merlin-{dat,cou,par,log}/**`) are deny-listed; `modern/db/**` and `modern/test/**` are additive and pack-scoped only.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental re-scope of CUS or ORD modern under this VAT pack is a fail.
 - VAT Convert must not rewrite CUS/ORD feature paths or OpenAPI contracts.

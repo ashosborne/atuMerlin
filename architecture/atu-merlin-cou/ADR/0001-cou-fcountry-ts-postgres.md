@@ -22,6 +22,7 @@ Pathfinder modernisation for ATU Merlin country support. Discovery slice `cou-ma
 ## Consequences
 
 - Conversion must refuse while pack status is DRAFT.
+- Sibling residual packs (`architecture/atu-merlin-{vat,dat,par,log}/**`) are deny-listed; `modern/db/**`/`modern/test/**` additive and pack-scoped only; Convert consumes FCOUNTRY/COU300/COU301 cards only until COU200 is carded and pack SUPERSEDEd.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental rewrite of the CUS customer feature or widen of CUS/ORD packs is a fail.
 - Converting COU200 while it remains deferred is a fail.

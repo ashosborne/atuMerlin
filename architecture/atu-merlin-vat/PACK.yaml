@@ -45,7 +45,7 @@ data:
   strategy: postgres-greenfield-from-pf
   schema_changes: additive-only
   migration_tool: null
-  notes: "Map VATDEF (and related) into Postgres tables additively under modern/db/**; do not reshape CUS or ORD schema"
+  notes: "Map VATDEF (and related) into Postgres tables additively under modern/db/**; do not reshape CUS or ORD schema; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
 
 authn_authz:
   mode: pathfinder-open
@@ -88,7 +88,7 @@ forbidden:
   - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
   - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
   - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
-  - "Reshape CUS or ORD schema under modern/db/** — VAT tables additive only"
+  - "Reshape CUS or ORD schema under modern/db/** — VAT tables additive and pack-scoped only; modern/test/** only for this pack's surface"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
@@ -101,8 +101,8 @@ forbidden:
 edit_surface:
   allow:
     - modern/src/shared/fvat/**
-    - modern/db/**   # additive only
-    - modern/test/**   # for vat
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (vat/fvat)
     - modern/src/app.ts   # additive
     - modern/src/server.ts   # additive
     - modern/package.json
@@ -120,6 +120,10 @@ edit_surface:
     - overnight/**
     - architecture/atu-merlin/**
     - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-par/**
+    - architecture/atu-merlin-log/**
     - modern/src/features/customer/**
     - modern/src/features/order/**
     - modern/openapi/customer.yaml

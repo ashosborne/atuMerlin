@@ -44,7 +44,7 @@ data:
   strategy: postgres-greenfield-from-pf
   schema_changes: additive-only
   migration_tool: null
-  notes: "Date lock MUST match ORD: store NULL in Postgres for blank/never; map IBM i 1940-01-01 / zero-date only at the boundary — do NOT invent a different sentinel"
+  notes: "Date lock MUST match ORD: store NULL in Postgres for blank/never; map IBM i 1940-01-01 / zero-date only at the boundary — do NOT invent a different sentinel; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
 
 authn_authz:
   mode: pathfinder-open
@@ -88,7 +88,7 @@ forbidden:
   - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
   - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
   - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
-  - "Reshape CUS or ORD schema under modern/db/** — DAT changes additive only"
+  - "Reshape CUS or ORD schema under modern/db/** — DAT changes additive and pack-scoped only; modern/test/** only for this pack's surface"
   - "Invent a different blank/never date sentinel than ORD (NULL in Postgres; 1940-01-01 / zero-date only at boundary)"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
@@ -102,8 +102,8 @@ edit_surface:
   allow:
     - modern/src/shared/dat/**
     - modern/src/features/dat/**
-    - modern/db/**   # additive only
-    - modern/test/**   # for dat
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (dat)
     - modern/src/app.ts   # additive
     - modern/src/server.ts   # additive
     - modern/package.json
@@ -121,6 +121,10 @@ edit_surface:
     - overnight/**
     - architecture/atu-merlin/**
     - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-par/**
+    - architecture/atu-merlin-log/**
     - modern/src/features/customer/**
     - modern/src/features/order/**
     - modern/openapi/customer.yaml
