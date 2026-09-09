@@ -1,8 +1,8 @@
-# ADR 0001 — VAT module: TypeScript shared FVAT + Postgres (DRAFT)
+# ADR 0001 — VAT module: TypeScript shared FVAT + Postgres (BOUND)
 
 ## Status
 
-Proposed — pack `atu-merlin-ts-vat-v1` @ version 1 is **DRAFT**. Does **not** authorise Convert (separate ROOM_OK required after BOUND).
+Accepted — pack `atu-merlin-ts-vat-v1` @ version 1 is **BOUND**. Does **not** authorise Convert (separate ROOM_OK required).
 
 ## Context
 
@@ -17,11 +17,11 @@ Pathfinder modernisation for ATU Merlin VAT. Discovery covers slice `vat-module`
 5. **COMPARE at TypeScript only** — Verification/COMPARE runs against the new TS API surface, not 5250/DSPF goldens.
 6. **Planted defects residual** — VAT silent zero for unknown rates stays as-is/residual. Soft-deleted VATDEL still applied, session-buffered rates, unknown VATDEF maintenance path, and dead ART200 VATRATE/VATDESC fields stay known_risks. Do not “fix” them in Architecture.
 7. **known_risks not invented** — Do not invent SME answers for maintenance path or ART field disposal. SME must name parity references where marked needs-SME.
-8. **Convert NOT authorised** — This ADR and the DRAFT pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
+8. **Convert NOT authorised** — This ADR and the BOUND pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
 
 ## Consequences
 
-- Conversion must refuse while pack status is DRAFT.
+- Conversion must refuse until separate Convert ROOM_OK after BOUND.
 - Sibling residual packs (`architecture/atu-merlin-{dat,cou,par,log}/**`) are deny-listed; `modern/db/**` and `modern/test/**` are additive and pack-scoped only.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental re-scope of CUS or ORD modern under this VAT pack is a fail.

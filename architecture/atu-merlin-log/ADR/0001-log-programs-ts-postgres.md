@@ -1,8 +1,8 @@
-# ADR 0001 — LOG programs: TypeScript shared logging / samlog align (DRAFT)
+# ADR 0001 — LOG programs: TypeScript shared logging / samlog align (BOUND)
 
 ## Status
 
-Proposed — pack `atu-merlin-ts-log-v1` @ version 1 is **DRAFT**. Does **not** authorise Convert (separate ROOM_OK required after BOUND).
+Accepted — pack `atu-merlin-ts-log-v1` @ version 1 is **BOUND**. Does **not** authorise Convert (separate ROOM_OK required).
 
 ## Context
 
@@ -17,11 +17,11 @@ Pathfinder modernisation for ATU Merlin log programs. Discovery covers slice `lo
 5. **WAIVED_PATHFINDER** — Characterisation gate is `WAIVED_PATHFINDER` (no IBM i goldens). Waiver text: compare behaviour at the TypeScript API only.
 6. **COMPARE at TypeScript only** — Verification/COMPARE runs against the new TS API surface, not 5250/DSPF goldens.
 7. **known_risks not invented** — Whole-slice may be a non-functional side effect; capacity silent fail (c04) stays known_risk. Do not invent SME answers or business-value claims.
-8. **Convert NOT authorised** — This ADR and the DRAFT pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
+8. **Convert NOT authorised** — This ADR and the BOUND pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
 
 ## Consequences
 
-- Conversion must refuse while pack status is DRAFT.
+- Conversion must refuse until separate Convert ROOM_OK after BOUND.
 - Sibling residual packs (`architecture/atu-merlin-{vat,dat,cou,par}/**`) are deny-listed; `modern/db/**` and `modern/test/**` are additive and pack-scoped only.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental widen of ORD/CUS packs or rewrite of the order feature is a fail.

@@ -1,6 +1,6 @@
 pack_id: atu-merlin-ts-dat-v1
 version: 1
-status: DRAFT
+status: BOUND
 migration_id: atu-merlin
 slice_ids:
   - dat-utils
@@ -146,7 +146,7 @@ evidence:
   replay_green_run_ids: []
   waiver_record: architecture/atu-merlin-dat/ADR/0001-dat-utils-ts-postgres.md
 
-bound_by: null
-bound_at: null
-change_policy: "DRAFT does not authorize Convert. Convert requires human-bound pack (status: BOUND) plus separate ROOM_OK. To change architecture after BOUND, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+bound_by: "atuMerlin migration room (Field Engineer 9/10 + CTO skim; soft notes tip 4f42dcf; Agent Smith recorded)"
+bound_at: "2026-09-09T11:12:14Z"
+change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture after BOUND, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
 reference_skeleton: null

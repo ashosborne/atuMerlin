@@ -1,8 +1,8 @@
-# ADR 0001 — COU FCOUNTRY half: TypeScript shared fcountry (DRAFT)
+# ADR 0001 — COU FCOUNTRY half: TypeScript shared fcountry (BOUND)
 
 ## Status
 
-Proposed — pack `atu-merlin-ts-cou-v1` @ version 1 is **DRAFT**. Does **not** authorise Convert (separate ROOM_OK required after BOUND).
+Accepted — pack `atu-merlin-ts-cou-v1` @ version 1 is **BOUND**. Does **not** authorise Convert (separate ROOM_OK required).
 
 ## Context
 
@@ -17,11 +17,11 @@ Pathfinder modernisation for ATU Merlin country support. Discovery slice `cou-ma
 5. **WAIVED_PATHFINDER** — Characterisation gate is `WAIVED_PATHFINDER` (no IBM i goldens). Waiver text: compare behaviour at the TypeScript API only.
 6. **COMPARE at TypeScript only** — Verification/COMPARE runs against the new TS API surface, not 5250/DSPF goldens.
 7. **known_risks not invented** — GetCountryIso3 unused export (c08) and COU301 selector open questions stay known_risks / needs-SME. Do not invent consumers or presentation answers.
-8. **Convert NOT authorised** — This ADR and the DRAFT pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
+8. **Convert NOT authorised** — This ADR and the BOUND pack do not authorise Convert. Convert needs a human-bound pack (`status: BOUND`) plus separate `ROOM_OK`.
 
 ## Consequences
 
-- Conversion must refuse while pack status is DRAFT.
+- Conversion must refuse until separate Convert ROOM_OK after BOUND.
 - Sibling residual packs (`architecture/atu-merlin-{vat,dat,par,log}/**`) are deny-listed; `modern/db/**`/`modern/test/**` additive and pack-scoped only; Convert consumes FCOUNTRY/COU300/COU301 cards only until COU200 is carded and pack SUPERSEDEd.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental rewrite of the CUS customer feature or widen of CUS/ORD packs is a fail.
