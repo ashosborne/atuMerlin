@@ -1,4 +1,16 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 — Convert LOG vertical DONE (atu-merlin-ts-log-v1@1; WAIVED_PATHFINDER, PARITY=UNVERIFIED)
+# Code: modern/src/shared/samlog/index.ts (createSamlog.addLogEntry over the ORD samlog table via ord700_user;
+#   normaliseLogEntry; formatLegacyLine / toRpgTimestamp; decodeSamlogUserSpace) — reuse, ORD pack not widened
+# DB: modern/db/schema.sql LOG section appended — COMMENT ON samlog + 3 columns only; nothing altered, no new object
+# Tests: modern/test/samlog.test.ts 24 tests (c02, c03, c04, c06, c07, c08, c10, schema shape); 306/306 green; typecheck clean
+# Docs: modern/README.md LOG section (card coverage c01-c10, residual vs reuse, CR-L1..CR-L8, known_risks);
+#   architecture/atu-merlin-log/CONVERT_RECORD.md
+# Not touched: app.ts / server.ts (no HTTP needed), shared/logging (one module), features/order|customer, openapi/*, sibling packs
+# Residual: LOG100 (c01/c05/c06), capacity c04, reader c09, shared cursor c10. needs-SME: whole-slice preserve?, c03 line string
+#   vs Msg contract, c03 per-event actor. Never claim Merlin migrated.
+# Next: Verification station for COU / PAR / LOG (all PARITY=UNVERIFIED) — each needs Ash to set line 1 back to RUN. Pack B held.
 
 # CONVERT — LOG programs / samlog align (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
