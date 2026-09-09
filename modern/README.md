@@ -14,8 +14,9 @@ This is a **pathfinder**, not "Merlin migrated": CUS and ORD live in TypeScript 
 waiver; ART, country / VAT / article maintenance, the ORD9xx batches and everything else stay on
 IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`;
 behaviour is compared at the TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the
-waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **PARITY=UNVERIFIED**
-(verification deferred). Neither is parity against IBM i.
+waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity: TS_BOUNDARY_GREEN**
+under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`). Neither is parity
+against IBM i.
 
 ## Stack (from the pack)
 
@@ -171,7 +172,9 @@ the card id; residuals carry a `TODO(<card>)`). Nothing below is a target decisi
 Converted under Architecture pack **`atu-merlin-ts-ord-v1@1`** (`architecture/atu-merlin-ord/PACK.yaml`,
 `status: BOUND`, bound 2026-09-09T00:46:59Z) with a separate convert `ROOM_OK` carried in
 `overnight/AGENT_JOB.md`. Waiver record: `architecture/atu-merlin-ord/ADR/0001-ord-vertical-ts-postgres.md`.
-**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN. PARITY=UNVERIFIED.**
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.**
+Verification `2026-09-09-r1`: **parity: TS_BOUNDARY_GREEN** under the waiver
+(`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`) — not parity against IBM i.
 
 **Talk-track:** ORD lives in TypeScript under the waiver — the repo is not fully migrated, and
 ORD is not "fully migrated" either: the seven bound slices are present at the TS boundary or listed
@@ -372,6 +375,7 @@ the card id). Nothing below is a target decision.
 
 - ART conversion; ORD900 / ORD901 batches; ART801 reconciliation; VAT / article / PARAMETER
   maintenance; any PDF; any interop with IBM i.
-- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim — **PARITY=UNVERIFIED**.
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any IBM i parity claim (the Verification
+  verdict is TS-boundary evidence only).
 - Widening or editing pack `atu-merlin-ts-cus-v1` or its code (the CUS list's `5=Orders` stays unwired).
 - Edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.

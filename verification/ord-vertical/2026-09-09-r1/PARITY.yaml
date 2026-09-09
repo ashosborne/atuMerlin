@@ -1,0 +1,119 @@
+# Verification COMPARE — ORD vertical, pack atu-merlin-ts-ord-v1@1
+# Characterization WAIVED_PATHFINDER: no IBM i / RPG goldens exist and none were invented.
+# The verdict below is evidence at the TypeScript HTTP boundary only. It is NOT parity against IBM i.
+run_id: 2026-09-09-r1
+pack_id: atu-merlin-ts-ord-v1
+pack_version: 1
+characterization: WAIVED_PATHFINDER
+mode: COMPARE
+target: modern
+oracle: discovery-cards-and-openapi   # not legacy goldens
+legacy_replay: SKIPPED                # no IBM i harness; REPLAY_GREEN not claimed
+ibm_i_parity: NOT_CLAIMED
+
+rollup:
+  parity: TS_BOUNDARY_GREEN           # never GREEN against IBM i under this waiver
+  parity_green: false                 # APP_MANIFEST flag stays false (WAIVED max = converted + parity WAIVED)
+  legacy_green: false
+  basis:
+    - "npm run typecheck: clean"
+    - "npm test: 111/111 in 5 files against live PostgreSQL 16.15 — 47 ORD API, 9 ORD web, 55 CUS unchanged (evidence/typecheck-and-vitest.log)"
+    - "live probe of every OpenAPI order operation + web smoke + DB side effects: 48 PASS / 0 FAIL (evidence/results.json, evidence/probe.mjs)"
+    - "card COMPARE: every converted/as-is card has a route, a test and a probe case; every residual / needs-SME card is explained (REPORT.md §4)"
+    - "the three planted defects are present and asserted as-is, not fixed (P03, P14, P39, P45)"
+    - "contract gaps G-O1..G-O4 are documentation-level, not behaviour drift (REPORT.md §4)"
+  contract_risks: "CR-O1..CR-O11 dispositioned in REPORT.md §5 — 8 accept-for-demo, 3 defer (CR-O1, CR-O8, CR-O11)"
+
+# per-feature: status is the TS-boundary outcome. codes: TS_BOUNDARY_GREEN | RESIDUAL_EXPLAINED | NEEDS_SME_OPEN | NOT_IMPLEMENTED | BLOCKED_BY_PACK
+features:
+  ord-entry-ord100:
+    c01: { status: TS_BOUNDARY_GREEN, as_is: true, note: "no ExistCus / IsCusDeleted; orcuid 0 = cancelled prompt -> 400", evidence: [P10, P11, P12, "order.api.test.ts c07 c01/c14"] }
+    c02: { status: RESIDUAL_EXPLAINED, note: "QTEMP staging copy has no HTTP equivalent; draft is client-held and touches no table before confirm (same observable)", evidence: [P06] }
+    c03: { status: TS_BOUNDARY_GREEN, as_is: true, note: "VAT silent zero preserved (planted defect)", evidence: [P01, P03, P04, "order.api.test.ts c03"] }
+    c04: { status: TS_BOUNDARY_GREEN, note: "recompute yes; CHANGE(27) two-Enter mechanic and stale footer are 5250 residuals", evidence: [P02, "order.api.test.ts c03 recompute", "order.web.test.ts create"] }
+    c05: { status: TS_BOUNDARY_GREEN, note: "staged delete yes; TOTVAT drift (program-memory value) not reproducible", evidence: ["order.web.test.ts option 4"] }
+    c06: { status: RESIDUAL_EXPLAINED, note: "one action per request; no pending-option state over HTTP", contract_risk: [CR-O8] }
+    c07: { status: TS_BOUNDARY_GREEN, as_is: true, note: "LASTORDNO+1 (60720 first), renumber 1..n, ODYEAR 0, zero-line order confirmed; header+lines one transaction", evidence: [P07, P09, "order.api.test.ts c07"], contract_risk: [CR-O3, CR-O11] }
+    c08: { status: NEEDS_SME_OPEN, note: "acknowledgement + document link present; whether print is a synchronous side effect of confirm is needs-SME (500-c05)", evidence: [P07, P44] }
+    c10: { status: TS_BOUNDARY_GREEN, evidence: [P44, "order.web.test.ts create"] }
+    c12: { status: TS_BOUNDARY_GREEN, as_is: true, note: "staged gaps (1,3,7) closed to 1..3 at confirm", evidence: [P07, "order.web.test.ts option 4"] }
+    c13: { status: TS_BOUNDARY_GREEN, evidence: [P06, P12, "order.api.test.ts c13"] }
+    c14: { status: TS_BOUNDARY_GREEN, as_is: true, note: "recorded absence of checks; nothing invented", evidence: [P04, P10, P11, P42] }
+  ord-entry-ord101:
+    c01: { status: TS_BOUNDARY_GREEN, evidence: [P18, "order.api.test.ts c03", "order.web.test.ts lines"] }
+    c02: { status: TS_BOUNDARY_GREEN, note: "header via GetCusName; no session-long lock (CR-O8); not-found 404 (CR-O1)", evidence: [P18, P26], contract_risk: [CR-O1, CR-O8] }
+    c03: { status: TS_BOUNDARY_GREEN, as_is: true, note: "silent re-rate on a plain save asserted with a changed VATDEF rate", evidence: [P21, P25, "order.api.test.ts c03"], contract_risk: [CR-O11] }
+    c04: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "typed-vs-STORED rules; inconsistent lowered pair accepted", evidence: [P22, P23, P24, "order.api.test.ts c04"] }
+    c05: { status: TS_BOUNDARY_GREEN, as_is: true, note: "guard reads the table", evidence: [P27, "order.api.test.ts c05/c06"], contract_risk: [CR-O6] }
+    c06: { status: TS_BOUNDARY_GREEN, note: "delete + ORD700 log/subtract yes; blanked-row double subtraction is a subfile residual", evidence: [P28, P30, "order.api.test.ts c05/c06"] }
+    c07: { status: RESIDUAL_EXPLAINED, as_is: true, note: "dead 6=Deliver legend shown, no action (needs-SME)" }
+    c08: { status: RESIDUAL_EXPLAINED, note: "dead declarations; nothing derived" }
+    c09: { status: TS_BOUNDARY_GREEN, as_is: true, note: "ORD200 twin refuses every 2 (see ord-maintain-ord200-c09)", evidence: [P45] }
+    c10: { status: TS_BOUNDARY_GREEN, as_is: true, note: "no add-line route; POST .../lines -> 404", evidence: [P29, "order.api.test.ts c10"] }
+    c12: { status: TS_BOUNDARY_GREEN, as_is: true, note: "no closed-order test in the line surface (API edits lines of a closed order; web list refuses 2 on closed rows)", evidence: ["order.api.test.ts c12", P45] }
+  ord-maintain-ord200:
+    c01: { status: TS_BOUNDARY_GREEN, as_is: true, note: "ORDERCUS inner join hides orphans (planted defect); ORD201 sort + paging serve both twins", evidence: [P14, P15, P17], contract_risk: [CR-O4, CR-O5] }
+    c02: { status: TS_BOUNDARY_GREEN, evidence: [P44, "order.web.test.ts ORD200 twin"] }
+    c03: { status: RESIDUAL_EXPLAINED, as_is: true, note: "dead branch stays dead (planted defect, see c09)", evidence: [P45] }
+    c04: { status: TS_BOUNDARY_GREEN, note: "lines then header in one transaction; CULASTORD not maintained (c12 as-is)", evidence: [P36], contract_risk: [CR-O3] }
+    c05: { status: TS_BOUNDARY_GREEN, note: "display / print at any state", evidence: [P18, P38] }
+    c06: { status: TS_BOUNDARY_GREEN, as_is: true, note: "close stamps delivery when blank, lines untouched, arcusqty not reduced; already closed -> Invalid Option", evidence: [P31, P32, "order.api.test.ts c06"] }
+    c07: { status: TS_BOUNDARY_GREEN, as_is: true, note: "partial lines skipped, not closed, deliver-after-close impossible", evidence: [P33, P34, "order.api.test.ts c07"] }
+    c08: { status: TS_BOUNDARY_GREEN, note: "rules and SFLMSG texts yes (first hit reported); whole-pass cancellation residual", evidence: [P35, "order.api.test.ts c04/c08/c13"], contract_risk: [CR-O8] }
+    c09: { status: TS_BOUNDARY_GREEN, as_is: true, note: "PLANTED DEFECT PRESERVED: every 2=Edit refused in the per-customer list, including open rows", evidence: [P45, "order.web.test.ts ORD200 twin"] }
+    c10: { status: BLOCKED_BY_PACK, code: SCOPE_VIOLATION, note: "CUS200 option 5 -> ORD200 link stays unwired (would edit features/customer/**, CUS pack)", evidence: [P47] }
+    c11: { status: TS_BOUNDARY_GREEN, note: "header name via GetCusName (blank on miss); NULL dates render blank", evidence: [P15, P44] }
+    c13: { status: TS_BOUNDARY_GREEN, changed_by_pack: true, note: "one transactional delete, lines first — no orphan-lines residue", evidence: [P36], contract_risk: [CR-O3] }
+  ord-maintain-ord201:
+    c01: { status: TS_BOUNDARY_GREEN, as_is: true, note: "inner join; ordate desc, orid desc; 14/page + look-ahead", evidence: [P14, P17, "order.api.test.ts c01"] }
+    c02: { status: TS_BOUNDARY_GREEN, evidence: [P44] }
+    c03: { status: TS_BOUNDARY_GREEN, note: "the working path to line maintenance", evidence: [P45, "order.web.test.ts ORD201 twin"] }
+    c04: { status: TS_BOUNDARY_GREEN, evidence: [P36], contract_risk: [CR-O3] }
+    c05: { status: TS_BOUNDARY_GREEN, evidence: [P18, P38] }
+    c06: { status: TS_BOUNDARY_GREEN, as_is: true, evidence: [P31, P32] }
+    c07: { status: RESIDUAL_EXPLAINED, note: "dead sticky 3 not reproducible; option texts asserted", evidence: [P35] }
+    c08: { status: TS_BOUNDARY_GREEN, note: "F5 on /orders only", evidence: ["order.web.test.ts ORD201 twin"] }
+    c09: { status: TS_BOUNDARY_GREEN, evidence: [P44] }
+    c10: { status: RESIDUAL_EXPLAINED, note: "dead files; nothing to carry" }
+    c11: { status: RESIDUAL_EXPLAINED, note: "cursor close; nothing to carry in a pooled server" }
+  ord-maintain-ord202:
+    c01: { status: TS_BOUNDARY_GREEN, needs_sme: "not-found presentation", note: "header, NULL dates -> null/blank; unknown id 404 (legacy crashed)", evidence: [P18, P20, "order.api.test.ts c01/c02"], contract_risk: [CR-O1] }
+    c02: { status: TS_BOUNDARY_GREEN, as_is: true, note: "description hidden until F11 (?detail=1); stored sums; blank on unknown article", evidence: [P19, P46, "order.web.test.ts display"], contract_risk: [CR-O2] }
+    c03: { status: RESIDUAL_EXPLAINED, note: "stateless page; any-key-closes has no HTTP equivalent" }
+    c04: { status: TS_BOUNDARY_GREEN, evidence: [P44] }
+    c05: { status: RESIDUAL_EXPLAINED, note: "dead F5/F6 not rendered" }
+    c06: { status: TS_BOUNDARY_GREEN, changed_by_pack: true, note: "one FARTICLE lookup rule for the vertical", evidence: [P19], contract_risk: [CR-O2] }
+  ord-print-ord500:
+    c01: { status: TS_BOUNDARY_GREEN, note: "90-col text pages, 15 details/page, stored sums, VAT = Total - Net, ISO date", evidence: [P38, P39, P40, "order.api.test.ts c01"], contract_risk: [CR-O7] }
+    c02: { status: NOT_IMPLEMENTED, needs_sme: "PATH lookup / 5-char PDF name", note: "no PARAMETER table; nothing invented" }
+    c03: { status: NOT_IMPLEMENTED, needs_sme: "CVTSPLPDF (c04 blind spot)", note: "spool content only; no PDF" }
+    c05: { status: NEEDS_SME_OPEN, note: "callers reachable (option 6, confirm link); sync-print-on-confirm undecided; document rendered on request", evidence: [P07, P38] }
+    c06: { status: TS_BOUNDARY_GREEN, changed_by_pack: true, note: "blank description / blank customer block on a miss", evidence: [P19], contract_risk: [CR-O2] }
+    c07: { status: RESIDUAL_EXPLAINED, note: "code quirks (load-bearing close) have no equivalent" }
+    c08: { status: TS_BOUNDARY_GREEN, needs_sme: "not-found presentation", note: "unknown id -> 404", evidence: [P41], contract_risk: [CR-O1] }
+  ord-trigger-ord700:
+    c02: { status: TS_BOUNDARY_GREEN, as_is: true, note: "insert adds FULL odqty (ignores odqtyliv)", evidence: [P08, "order.api.test.ts c02/c05"] }
+    c03: { status: TS_BOUNDARY_GREEN, as_is: true, note: "SAMLOG text format, user cut to 10, then subtract outstanding", evidence: [P28, P36, "order.api.test.ts c05/c06"] }
+    c04: { status: TS_BOUNDARY_GREEN, as_is: true, note: "outstanding delta on update; WHEN (OLD.* IS DISTINCT FROM NEW.*) = *CHANGE", evidence: [P21, P33, "order.api.test.ts c03"] }
+    c05: { status: TS_BOUNDARY_GREEN, as_is: true, note: "unknown / blank article silent no-op (armod no-stamp covered by vitest only: fixture seed stamps armod)", evidence: [P08, P19, "order.api.test.ts c02/c05"] }
+    c06: { status: RESIDUAL_EXPLAINED, note: "trigger buffer plumbing replaced by PL/pgSQL (bind note)" }
+    c07: { status: TS_BOUNDARY_GREEN, as_is: true, note: "ORD701 unconditional CULASTORD yyyymmdd, no CUDEL check, cumodid untouched; 0 rows on unknown customer", evidence: [P08, P10, P11, P43, "order.api.test.ts c07"] }
+    c09: { status: TS_BOUNDARY_GREEN, note: "draft never touches detord", evidence: [P06] }
+    c10: { status: BLOCKED_BY_PACK, code: STAY_LEGACY, note: "ART801 reconciliation owned by sql-objects, not in this pack" }
+
+planted_defects_preserved:
+  - { defect: "ORD200 option-2 unreachable", evidence: [P45], fixed: false }
+  - { defect: "ORDERCUS inner join hides orphan orders", evidence: [P14, P19], fixed: false }
+  - { defect: "VAT silent zero on unknown VAT code", evidence: [P03, P39], fixed: false }
+
+evidence:
+  typecheck_and_tests: evidence/typecheck-and-vitest.log
+  probe_script: evidence/probe.mjs
+  probe_results: evidence/results.json
+  report: REPORT.md
+  narrative: narrative/HOW_IT_WORKS.md
+
+verified_by: "atuMerlin factory job runner (Cloud Agent), Verification station"
+verified_at: "2026-09-09T03:37:00Z"
+head_sha: 3c4fb766d5b31f5e12588d9d5541b7b7733d7403
+talk_track: "ORD pathfinder verified at TS API under waiver — not Merlin migrated"
