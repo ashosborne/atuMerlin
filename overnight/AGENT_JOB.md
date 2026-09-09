@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual wave after Ash authorize
 # Prefer: par-maintain (then log-programs → menu-cmd-shell → srvpgm-supporting → sql-objects →
