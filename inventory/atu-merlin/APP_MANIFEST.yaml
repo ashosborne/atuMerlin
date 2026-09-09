@@ -32,7 +32,11 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. | Pack B run 17 (2026-09-09): sql-objects 10/10 accepted
   behaviours documented (cards discovery/sql-objects/features/); c04 inferred carded (bind accepted it); surfaces view:ORDERCUS / view:ARTLSTDAT / table:ARTIINF / seq:CUSSEQ / sqlprc:ART801 candidate ->
   accepted. c07 / c08 are object-surface cards pointing at cus-interactive-c02 / ord-trigger-ord700-c10 (CUS/ORD not widened). CHARACTERIZATION deferred-waived. No conversion, no tests. Night residual queue
-  left: ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.'
+  left: ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. | Pack B run 18 (2026-09-09): ord-batch-ord900 9/9 accepted behaviours documented (cards discovery/ord-batch-ord900/features/;
+  c07 inferred carded, confidence kept); pgm:ORD900 / pgm:ORD901 deferred -> accepted per night residual bind. Sharpened: ORD900 empty file writes LASTORDNO = 0; ORD901 guard works via -305 path; one offset,
+  sign from data, double shift on rerun after partial run; 10-day auto-close rule only here, closed-without-delivery reachable; ORD901 is the only writer of DETORD.ODYEAR; CULASTORD statement verbatim ART801:35-37;
+  ARCUSQTY/CUCREDIT left stale after closes; no SET OPTION COMMIT (build option not in tree); no scheduling/parameters; lastdate reuse trap. Recommendation unchanged: defer from conversion scope if c07
+  confirmed. CHARACTERIZATION: deferred-waived. No conversion, no tests. Night residual queue left: cou-maintain COU200 half; pro-interactive, pro-modules, pro-cobol-pro201 room-held.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -239,7 +243,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
-  status: deferred
+  status: accepted
   slice_id: ord-batch-ord900
   notes: '*PGM RPGLE - Reset LASTORDNO to max ORID (menu opt 80)'
   discovery_evidence:
@@ -249,7 +253,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
-  status: deferred
+  status: accepted
   slice_id: ord-batch-ord900
   notes: '*PGM SQLRPGLE - Shift order dates to today; resync years and CULASTORD (menu opt 81)'
   discovery_evidence:
@@ -1545,10 +1549,10 @@ behaviours:
     ''X'') is listed by name, 14 per page. First SltCustomer call in an activation group (ORD100 without parm) therefore shows the whole customer list.'
 - behaviour_id: ord-batch-ord900-c01
   surface_id: pgm:ORD900
-  name: ORD900 reset LASTORDNO to max order id
-  status: candidate
+  name: ORD900 - set data area LASTORDNO to the highest existing ORID (SETGT *HIVAL / READP on ORDER1, IN *LOCK, Z-ADD, OUT); empty file -> data area written as 0
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1557,13 +1561,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Reads last ORDER1 key, locks data area, writes ORID.'
+  notes: 'confidence: observed-in-code; Eleven fixed-form lines: setgt *hival / readp on ORDER1 (UNIQUE K ORID) gives MAX(ORID); *lock IN, z-add ORID, OUT (unlocks), seton LR. Stores ''last number used''
+    - the contract ORD100 relies on (IN *LOCK, +1, OUT). No %eof test: on an empty ORDER the input field keeps its initial 0 and LASTORDNO is written as 0 (next confirm = order 1). No file lock between
+    READP and IN *LOCK (theoretical race with ORD100 -> duplicate key on ORDER1). Only ORD100 and ORD900 touch the data area. Target replaces it with a sequence and lists ORD900 as not converted.'
 - behaviour_id: ord-batch-ord900-c02
   surface_id: pgm:ORD901
-  name: ORD901 early exit when no orders
-  status: candidate
+  name: ORD901 early exit when no orders - SELECT MAX(ORDATE) INTO :lastdate (no indicator), IF lastdate = 0 -> *INLR, RETURN; guard holds via the NULL/-305 path leaving the host variable at its initial
+    zero
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1572,13 +1579,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; select max(ordate) = 0 -> return.'
+  notes: 'confidence: observed-in-code; select max(ordate) into :LastDate from order (undelimited); no indicator variable and no sqlcod test anywhere in the program. Empty file: MAX is NULL -> SQLCODE -305,
+    host variable unchanged (inference), lastdate is a standalone 8 0 initialised to 0 -> test true -> *inlr on, return. Same exit if every ORDATE = 0 (not producible in-tree) or if the SELECT fails for
+    any other reason (silent). ORDER is already open UF at that point (F-spec).'
 - behaviour_id: ord-batch-ord900-c03
   surface_id: pgm:ORD901
-  name: ORD901 shift order dates so newest = today
-  status: candidate
+  name: ORD901 - shift every ORDATE forward by days = today - MAX(ORDATE) so the newest order is dated today; ORYEAR recomputed from the shifted date; spacing preserved; same-day rerun idempotent; sign
+    follows the data
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1587,13 +1597,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; days = today - max(ORDATE); ORDATE += days; ORYEAR recomputed.'
+  notes: 'confidence: observed-in-code; today = %dec(%date():*iso); days = %diff(%date():%date(lastdate:*iso):*d) (5 0). Arrival-sequence read of ORDER (no key on the PF), every row: ordate = ordate + days,
+    oryear = %subdt(shifted:*Y), update forde. Same-day rerun -> days = 0 -> every row rewritten unchanged (ORDER has no trigger; ORD701 is AFTER INSERT only). Newest order after today -> days < 0 -> whole
+    file moves backwards (no guard). ORDATE = 0 / malformed -> RNQ0112, unhandled, stops mid-file. Rerun after a partial run re-shifts the done rows when the newest order was not among them. ORDER3.LF (K
+    ORDATE) has no reader.'
 - behaviour_id: ord-batch-ord900-c04
   surface_id: pgm:ORD901
-  name: ORD901 derived delivery/close date rules
-  status: candidate
+  name: ORD901 derived delivery/close dates - both shifted by the same offset, any result after today reset to 0; open order delivered strictly more than 10 days ago closed at ORDATDEL + 10 (hidden auto-close
+    rule); only in-tree path to closed-without-delivery
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1602,13 +1616,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Shift ORDATDEL/ORDATCLO; future -> 0; delivered >10 days ago and not closed -> ORDATCLO = ORDATDEL + 10.'
+  notes: 'confidence: observed-in-code; ORDATDEL > 0 -> shift; > today -> 0. ORDATCLO > 0 -> shift; > today -> 0 (reopened). ELSE (open): if ORDATDEL > 0 and ORDATDEL < lastdate (= today - 10, c09) -> ORDATCLO
+    = ORDATDEL + 10 days (always in the past). Uses the already-shifted/zeroed ORDATDEL; the closed branch does not re-check delivery -> ORDATCLO > 0 with ORDATDEL = 0 possible (needs ORDATDEL > ORDATCLO
+    in source data; interactive close always sets both). Boundary strict: exactly 10 days stays open. Closing here changes ART801''s/ORD700''s open set but ARCUSQTY/CUCREDIT are not recomputed (c05); nothing
+    sequences opt 81 -> 82. Interactive writers of the same fields: ORD200/ORD201 opt 7 (close) / 8 (deliver).'
 - behaviour_id: ord-batch-ord900-c05
   surface_id: pgm:ORD901
-  name: ORD901 resync DETORD.ODYEAR and CUSTOMER.CULASTORD
-  status: candidate
+  name: ORD901 tail - UPDATE DETORD.ODYEAR to the header's ORYEAR (the estate's only writer of ODYEAR; fires ORD700U as a zero-delta no-op) and UPDATE CUSTOMER.CULASTORD = MAX(ORDATE) (verbatim ART801 statement
+    3); ARCUSQTY/CUCREDIT not resynced
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1617,13 +1635,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Two SQL UPDATEs after the loop.'
+  notes: 'confidence: observed-in-code; (1) UPDATE detord SET odyear = (SELECT oryear FROM order WHERE d.odorid = orid) WHERE odyear <> (same) - correlated on ORID only, differential; ORD100 writes ODYEAR
+    = 0 and nothing else assigns it (grep) so this is where ODYEAR gets its value; each changed line fires ORD700U (TRGUPDCND(*CHANGE)) -> event ''3'' -> UpdArt(0) -> return (no ARTICLE write). Orphan lines
+    skipped (NULL comparison). (2) UPDATE CUSTOMER SET CULASTORD = MAX(ORDATE) WHERE EXISTS - identical text to ART801:35-37; customers without orders untouched; differs from ORD701 (assigns inserted date).
+    No COMMIT, no handler; a failure in (2) leaves loop + (1) applied. ODYEAR has no reader in the tree and is in DETORD.PF''s key but not DETORD1''s.'
 - behaviour_id: ord-batch-ord900-c06
   surface_id: pgm:ORD901
-  name: ORD901 whole-file rewrite without commitment control
-  status: candidate
+  name: ORD901 whole-file rewrite - UF E DISK (update, arrival sequence, no COMMIT keyword), one native UPDATE per row, then two SQL UPDATEs with no SET OPTION COMMIT / handler / COMMIT; partial-run and
+    double-shift-on-rerun characteristics
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1632,13 +1654,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Arrival-sequence read/update of every ORDER row.'
+  notes: 'confidence: observed-in-code; Native side explicitly without commitment control (no COMMIT keyword); SQL side undetermined from source (no SET OPTION in the member - ART200:332 and ART801''s header
+    are the only ones in the tree; build = elias compile per iproj.json, options not in tree). No MONITOR, (E), WHENEVER, sqlcod test, *PSSR. Failure mid-loop: rows before shifted, rest not, tail never
+    runs. Rerun: newest order among done rows -> days 0, harmless; else same days -> done rows shifted twice, their delivery/close then zeroed by the future guard. Under COMMIT(*CHG) with unjournaled files
+    the tail fails (SQL7008) after the loop already ran. Runs in the interactive job; record lock per row; no ALCOBJ; an ORD100 confirm mid-run is shifted into the future.'
 - behaviour_id: ord-batch-ord900-c07
   surface_id: pgm:ORD900
-  name: Purpose - demo-data refresh utilities
-  status: candidate
+  name: Purpose - ORD900 / ORD901 (with ART801) read as sample-data refresh utilities, not business batch; the facts are source, the conclusion is a reading
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1647,13 +1672,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Menu ''Utilities'' group and ''Reset ...'' texts suggest sample maintenance, not business batch.'
+  notes: 'confidence: inferred; Source: :menugrp.Utilities (SAMMNU:134-163) with texts ''Reset LASTORDNO'' / ''Reset Order dates to current'' / ''Reset Summary Fields''; %TEXT blank on ORD900, ORD901, ART801
+    (and ORD700, PRO203) while all 33 other QRPGLESRC members carry a description; LASTORDNO.DTAARA is ARCAD-generated with a snapshot VALUE(60719); iproj.json description ''AdrianAtArcad''; no parameters,
+    scheduling, logging or business wording. Inferred: the three exist to refresh the demo sample. The ORD pack lists all three as not converted (modern/README.md:405, read-only) - consistent, not proof.
+    Phase A recommendation (defer the slice from conversion scope if confirmed) stands as a recommendation.'
 - behaviour_id: ord-batch-ord900-c08
   surface_id: pgm:ORD900
-  name: No scheduling or parameters (absence)
-  status: candidate
+  name: No scheduling, submission, wrapper or parameters (absence) - two bare interactive cmd call menu options; real scheduling would be runtime-only (WRKJOBSCDE)
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1662,13 +1690,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Menu CALL only; no CL wrappers or job schedule entries in tree.'
+  notes: 'confidence: observed-in-code; Only callers: SAMMNU opts 80/81 ''cmd call ord9xx'' - runs in the interactive job, screen blocked, no confirmation. No CL wrapper (QCLSRC: ORD100C, ORD100C2, ORD500C,
+    PAR201), no command (QCMDSRC: CRTORD, CVTSPLPDF), no SBMJOB / ADDJOBSCDE anywhere (SAMMNU:49 wrksbmjob is a viewer on F14). No *ENTRY PLIST / PI in either program - nothing to pass; ''today'' is the
+    job date (%date()), the operator''s only knob (CHGJOB DATE). No AddLogEntry / LOG300 call. No authority or environment check.'
 - behaviour_id: ord-batch-ord900-c09
   surface_id: pgm:ORD901
-  name: Variable reuse trap in ORD901
-  status: candidate
+  name: Variable reuse trap in ORD901 - lastdate holds MAX(ORDATE) for two statements, then is silently reassigned to today - 10 and used under that meaning in the close rule; today used only by the future
+    guards; the 10-day constant written twice
+  status: documented
   slice_id: ord-batch-ord900
-  discovery_card: null
+  discovery_card: discovery/ord-batch-ord900/features/ord-batch-ord900-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -1677,7 +1708,10 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; lastdate is reassigned to today-10 after computing the shift.'
+  notes: 'confidence: observed-in-code; lastdate: newest order date at :11-17 (guard, offset), then today - 10 at :18, consumed only at :34 (ordatdel < lastdate = ''delivered more than 10 days ago''). Read
+    literally at :34 it says ''delivered before the newest order'' - a different rule. :18 must stay after :17 and before the loop; moving it above :17 gives a constant 10-day shift that still compiles.
+    today (:16) used at :24, :30 only. %days(10) at :18 (threshold) and :35 (close offset) encode one parameter (grep: the only two occurrences in the tree). Arithmetic correct as-is; card exists so a review
+    or conversion does not rename-and-change the rule.'
 - behaviour_id: ord-entry-ord100-c01
   surface_id: pgm:ORD100
   name: Customer selection at entry
@@ -5231,5 +5265,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-09T21:42:45Z'
+last_updated: '2026-09-09T22:20:08Z'
 updated_by: document-slices-conveyor

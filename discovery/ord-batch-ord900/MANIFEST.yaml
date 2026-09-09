@@ -4,111 +4,135 @@ seed_entrypoints:
   - ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE
   - ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE
 out_of_scope_hints:
-  - ART801 (sql-objects seed)
+  - ART801 (sql-objects-c08/c09, ord-trigger-ord700-c10) - cited for its duplicated CULASTORD statement and the open-order summary it resets; not re-derived
+  - ORD700 / ORD700U trigger (ord-trigger-ord700-c04) - cited for the zero-delta path the ODYEAR backfill fires; not re-derived
+  - ORD100 / ORD200 / ORD201 / ORD202 / ORD500 - cited as the other writers/readers of LASTORDNO, ORDATDEL/ORDATCLO, ORDATE/ORYEAR; not re-derived
   - interactive ORD screens
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T13:20:29Z
+phase: B
+updated_at: 2026-09-09T22:40:00Z
 bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
 bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 18, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-17."
+needs_sme:
+  - "c07 (room / product owner - Phase A Q1, inferred, carded): are ORD900 / ORD901 (and ART801) ever run against real data, or only to refresh the Arcad sample between demos? Source facts: menu group 'Utilities', texts 'Reset ...', blank %TEXT on exactly these programs (+ORD700, PRO203), ARCAD-generated DTAARA source with a snapshot VALUE(60719), no parameters, no scheduling, no logging. If sample-only: recommend defer the slice from conversion scope (keep as known surface; cards stand as the record). If real: c03/c04 are business rules the target does not implement."
+  - "c04 (room, ORD pack - Phase A Q2): the 10-day auto-close rule (open order delivered strictly more than 10 days before today -> ORDATCLO = ORDATDEL + 10) exists only in ORD901; ORD200/ORD201 close on demand at today's date. Business rule or sample convenience? Also: ORD901 is the only in-tree writer that can leave ORDATCLO > 0 with ORDATDEL = 0 (delivery shifted past today and zeroed, close kept)."
+  - "c04/c05 (room, ORD pack + ops): ORD901 can close orders (c04) but resyncs only ODYEAR and CULASTORD (c05) - ARCUSQTY / CUCREDIT (ART801 statements 1-2) are left stale until menu option 82 is run; nothing sequences 81 -> 82. Same gap the ord-trigger-ord700 cards record for the interactive close. Confirm the target's stance covers ORD901's closes too, or that the utility is out of scope."
+  - "c05 (room, ORD pack - carried from sql-objects-c08): CULASTORD = MAX(ORDATE) is implemented twice (ORD901:46-50 verbatim = ART801:35-37); ORD701 assigns the inserted date instead. Fold into one rule in the target or keep as-is? And: ORD901 is the estate's ONLY writer of DETORD.ODYEAR (ORD100 writes 0) - is odyear needed at all in the target (derivable from the header)?"
+  - "c06 (source owner): PRTSQLINF ORD901 / DSPPGM - which COMMIT option the object was built with. The member has no SET OPTION COMMIT (ART801 and ART200 set it explicitly); under the precompiler default *CHG the two tail UPDATEs need journaled files and fail with SQL7008 otherwise - after the row loop has already run."
+  - "c06 (room, ORD pack): if a target counterpart exists at all, decide atomic-or-not explicitly. As-is: three independent parts (row loop, ODYEAR update, CULASTORD update), no handler, no COMMIT; a rerun after a mid-loop failure shifts the already-done rows a second time when the newest order was not among them (c03), and their delivery/close dates then hit the future guard and are zeroed (c04)."
+  - "c01 (room, ORD pack): the target replaces LASTORDNO with a sequence (modern/db/schema.sql:59-61, read-only). Is a 'reset the sequence to MAX(id)' operator action wanted, or does ORD900 fall with c07? Note the as-is empty-file behaviour: LASTORDNO is written as 0 (not left alone), so the next confirm allocates order 1."
+  - "c02/c05 (source owner - carried from sql-objects-c10): 'from order' undelimited at ORD901:11,43,45 vs FROM \"ORDER\" at :47,49 - compile-time check; confirm the object compiles / was compiled as-is."
+  - "c08 (ops / source owner): WRKJOBSCDE and any external scheduler on the box - is ORD901 (or ART801) scheduled? Invisible from source; one screen settles it and informs c07."
 
 features:
   - id: ord-batch-ord900-c01
-    name: ORD900 reset LASTORDNO to max order id
-    status: accepted
+    name: ORD900 - set data area LASTORDNO to the highest existing ORID (SETGT *HIVAL / READP on ORDER1, IN *LOCK, Z-ADD, OUT); empty file -> data area written as 0
+    status: documented
     confidence: observed-in-code
-    summary: Reads last ORDER1 key, locks data area, writes ORID.
+    summary: "Eleven fixed-form lines: setgt *hival / readp on ORDER1 (UNIQUE K ORID) gives MAX(ORID); *lock IN, z-add ORID, OUT (unlocks), seton LR. Stores 'last number used' - the contract ORD100 relies on (IN *LOCK, +1, OUT). No %eof test: on an empty ORDER the input field keeps its initial 0 and LASTORDNO is written as 0 (next confirm = order 1). No file lock between READP and IN *LOCK (theoretical race with ORD100 -> duplicate key on ORDER1). Only ORD100 and ORD900 touch the data area. Target replaces it with a sequence and lists ORD900 as not converted."
     entrypoints:
       - kind: job
-        locator: ORD900 (menu opt 80)
-        evidence: ["ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE:4-11", "ATU_SRC/QPNLSRC/SAMMNU.MENU:143-146"]
-    dependencies: [ORDER1.LF, LASTORDNO.DTAARA]
-    open_questions: ["Empty ORDER file -> readp fails/undefined; not guarded."]
+        locator: ORD900 (menu opt 80, cmd call ord900)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE:4-11", "ATU_SRC/QPNLSRC/SAMMNU.MENU:143-146", "ATU_SRC/QDDSSRC/ORDER1.LF:4-6", "ATU_SRC/QDTASRC/LASTORDNO.DTAARA:8", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:56,189-192"]
+    behaviour_doc: features/ord-batch-ord900-c01.md
+    dependencies: [ORDER1.LF, ORDER.PF, LASTORDNO.DTAARA, ord-entry-ord100-c07, menu-cmd-shell-c01]
+    open_questions: ["Empty ORDER -> LASTORDNO written as 0 (sharpened from Phase A 'readp fails/undefined'); target: operator sequence reset wanted at all? (room, ORD pack)"]
   - id: ord-batch-ord900-c02
-    name: ORD901 early exit when no orders
-    status: accepted
+    name: ORD901 early exit when no orders - SELECT MAX(ORDATE) INTO :lastdate (no indicator), IF lastdate = 0 -> *INLR, RETURN; guard holds via the NULL/-305 path leaving the host variable at its initial zero
+    status: documented
     confidence: observed-in-code
-    summary: select max(ordate) = 0 -> return.
+    summary: "select max(ordate) into :LastDate from order (undelimited); no indicator variable and no sqlcod test anywhere in the program. Empty file: MAX is NULL -> SQLCODE -305, host variable unchanged (inference), lastdate is a standalone 8 0 initialised to 0 -> test true -> *inlr on, return. Same exit if every ORDATE = 0 (not producible in-tree) or if the SELECT fails for any other reason (silent). ORDER is already open UF at that point (F-spec)."
     entrypoints:
       - kind: job
-        locator: ORD901 entry
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:11-15"]
-    dependencies: [ORDER.PF]
-    open_questions: []
+        locator: ORD901 entry (menu opt 81)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:4,6,11-15", "ATU_SRC/QPNLSRC/SAMMNU.MENU:147-150"]
+    behaviour_doc: features/ord-batch-ord900-c02.md
+    dependencies: [ORDER.PF, sql-objects-c10]
+    open_questions: ["'from order' undelimited (:11,43,45) - compile-time check (source owner, carried from sql-objects-c10)"]
   - id: ord-batch-ord900-c03
-    name: ORD901 shift order dates so newest = today
-    status: accepted
+    name: ORD901 - shift every ORDATE forward by days = today - MAX(ORDATE) so the newest order is dated today; ORYEAR recomputed from the shifted date; spacing preserved; same-day rerun idempotent; sign follows the data
+    status: documented
     confidence: observed-in-code
-    summary: days = today - max(ORDATE); ORDATE += days; ORYEAR recomputed.
+    summary: "today = %dec(%date():*iso); days = %diff(%date():%date(lastdate:*iso):*d) (5 0). Arrival-sequence read of ORDER (no key on the PF), every row: ordate = ordate + days, oryear = %subdt(shifted:*Y), update forde. Same-day rerun -> days = 0 -> every row rewritten unchanged (ORDER has no trigger; ORD701 is AFTER INSERT only). Newest order after today -> days < 0 -> whole file moves backwards (no guard). ORDATE = 0 / malformed -> RNQ0112, unhandled, stops mid-file. Rerun after a partial run re-shifts the done rows when the newest order was not among them. ORDER3.LF (K ORDATE) has no reader."
     entrypoints:
       - kind: job
         locator: ORD901 main loop
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-21", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:38-39"]
-    dependencies: [ORDER.PF]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-21", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:38-41", "ATU_SRC/QDDSSRC/ORDER.PF:5-14", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:193-194"]
+    behaviour_doc: features/ord-batch-ord900-c03.md
+    dependencies: [ORDER.PF, ORDER1.LF, ORDER2.LF, ORDER3.LF, ord-maintain-ord200-c01, ord-maintain-ord201-c01, ord-print-ord500]
+    open_questions: ["Is date-shifting ever run against real data? (room, ORD pack - Phase A Q1; see c07)"]
   - id: ord-batch-ord900-c04
-    name: ORD901 derived delivery/close date rules
-    status: accepted
+    name: ORD901 derived delivery/close dates - both shifted by the same offset, any result after today reset to 0; open order delivered strictly more than 10 days ago closed at ORDATDEL + 10 (hidden auto-close rule); only in-tree path to closed-without-delivery
+    status: documented
     confidence: observed-in-code
-    summary: Shift ORDATDEL/ORDATCLO; future -> 0; delivered >10 days ago and not closed -> ORDATCLO = ORDATDEL + 10.
+    summary: "ORDATDEL > 0 -> shift; > today -> 0. ORDATCLO > 0 -> shift; > today -> 0 (reopened). ELSE (open): if ORDATDEL > 0 and ORDATDEL < lastdate (= today - 10, c09) -> ORDATCLO = ORDATDEL + 10 days (always in the past). Uses the already-shifted/zeroed ORDATDEL; the closed branch does not re-check delivery -> ORDATCLO > 0 with ORDATDEL = 0 possible (needs ORDATDEL > ORDATCLO in source data; interactive close always sets both). Boundary strict: exactly 10 days stays open. Closing here changes ART801's/ORD700's open set but ARCUSQTY/CUCREDIT are not recomputed (c05); nothing sequences opt 81 -> 82. Interactive writers of the same fields: ORD200/ORD201 opt 7 (close) / 8 (deliver)."
     entrypoints:
       - kind: job
         locator: ORD901 main loop
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:22-37"]
-    dependencies: [ORDER.PF]
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-18", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:22-37", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:244-259", "ATU_SRC/QSQLSRC/ART801.SQLPRC:23-33"]
+    behaviour_doc: features/ord-batch-ord900-c04.md
+    dependencies: [ORDER.PF, ord-maintain-ord200, ord-maintain-ord201, ord-trigger-ord700-c10, sql-objects-c01]
+    open_questions: ["10-day auto-close: business rule or sample convenience? (room, ORD pack - Phase A Q2)", "ORD901 closes leave ARCUSQTY/CUCREDIT stale until ART801 - covered by the target's as-is stance? (room / ops)"]
   - id: ord-batch-ord900-c05
-    name: ORD901 resync DETORD.ODYEAR and CUSTOMER.CULASTORD
-    status: accepted
+    name: ORD901 tail - UPDATE DETORD.ODYEAR to the header's ORYEAR (the estate's only writer of ODYEAR; fires ORD700U as a zero-delta no-op) and UPDATE CUSTOMER.CULASTORD = MAX(ORDATE) (verbatim ART801 statement 3); ARCUSQTY/CUCREDIT not resynced
+    status: documented
     confidence: observed-in-code
-    summary: Two SQL UPDATEs after the loop.
+    summary: "(1) UPDATE detord SET odyear = (SELECT oryear FROM order WHERE d.odorid = orid) WHERE odyear <> (same) - correlated on ORID only, differential; ORD100 writes ODYEAR = 0 and nothing else assigns it (grep) so this is where ODYEAR gets its value; each changed line fires ORD700U (TRGUPDCND(*CHANGE)) -> event '3' -> UpdArt(0) -> return (no ARTICLE write). Orphan lines skipped (NULL comparison). (2) UPDATE CUSTOMER SET CULASTORD = MAX(ORDATE) WHERE EXISTS - identical text to ART801:35-37; customers without orders untouched; differs from ORD701 (assigns inserted date). No COMMIT, no handler; a failure in (2) leaves loop + (1) applied. ODYEAR has no reader in the tree and is in DETORD.PF's key but not DETORD1's."
     entrypoints:
       - kind: job
         locator: ORD901 tail
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:42-50"]
-    dependencies: [DETORD.PF, CUSTOMER.PF]
-    open_questions: ["Same CULASTORD rule as ART801 - one card, two implementations?"]
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:42-51", "ATU_SRC/QSQLSRC/ART801.SQLPRC:35-37", "ATU_SRC/QTRGSRC/ORD700U.SYSTRG:4-8", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:83-88,101-103", "ATU_SRC/QDDSSRC/DETORD.PF:6-7,21-23"]
+    behaviour_doc: features/ord-batch-ord900-c05.md
+    dependencies: [DETORD.PF, DETORD1.LF, CUSTOMER.PF, ORDER.PF, ORD700U.SYSTRG, ord-trigger-ord700-c04, ord-trigger-ord700-c07, ord-trigger-ord700-c10, ord-entry-ord100-c07, sql-objects-c08]
+    open_questions: ["Same CULASTORD rule as ART801 - fold or keep two implementations? (room, ORD pack)", "Is DETORD.ODYEAR needed in the target at all? (room / ME)", "Does anyone run opt 81 then opt 82? (ops)"]
   - id: ord-batch-ord900-c06
-    name: ORD901 whole-file rewrite without commitment control
-    status: accepted
+    name: ORD901 whole-file rewrite - UF E DISK (update, arrival sequence, no COMMIT keyword), one native UPDATE per row, then two SQL UPDATEs with no SET OPTION COMMIT / handler / COMMIT; partial-run and double-shift-on-rerun characteristics
+    status: documented
     confidence: observed-in-code
-    summary: Arrival-sequence read/update of every ORDER row.
+    summary: "Native side explicitly without commitment control (no COMMIT keyword); SQL side undetermined from source (no SET OPTION in the member - ART200:332 and ART801's header are the only ones in the tree; build = elias compile per iproj.json, options not in tree). No MONITOR, (E), WHENEVER, sqlcod test, *PSSR. Failure mid-loop: rows before shifted, rest not, tail never runs. Rerun: newest order among done rows -> days 0, harmless; else same days -> done rows shifted twice, their delivery/close then zeroed by the future guard. Under COMMIT(*CHG) with unjournaled files the tail fails (SQL7008) after the loop already ran. Runs in the interactive job; record lock per row; no ALCOBJ; an ORD100 confirm mid-run is shifted into the future."
     entrypoints:
       - kind: job
-        locator: ORD901 F-spec / loop
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:4", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:19-41"]
-    dependencies: []
-    open_questions: []
+        locator: ORD901 F-spec / loop / tail
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:4", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:19-50", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:332", "ATU_SRC/QSQLSRC/ART801.SQLPRC:9-20", "iproj.json:14-15"]
+    behaviour_doc: features/ord-batch-ord900-c06.md
+    dependencies: [ORDER.PF, DETORD.PF, CUSTOMER.PF, ORD700U.SYSTRG, sql-objects-c09]
+    open_questions: ["PRTSQLINF ORD901 - COMMIT option at build (source owner)", "Target: atomic or as-is three-part? (room, ORD pack - if a counterpart exists at all)"]
   - id: ord-batch-ord900-c07
-    name: Purpose - demo-data refresh utilities
-    status: accepted
+    name: Purpose - ORD900 / ORD901 (with ART801) read as sample-data refresh utilities, not business batch; the facts are source, the conclusion is a reading
+    status: documented
     confidence: inferred
-    summary: Menu 'Utilities' group and 'Reset ...' texts suggest sample maintenance, not business batch.
+    summary: "Source: :menugrp.Utilities (SAMMNU:134-163) with texts 'Reset LASTORDNO' / 'Reset Order dates to current' / 'Reset Summary Fields'; %TEXT blank on ORD900, ORD901, ART801 (and ORD700, PRO203) while all 33 other QRPGLESRC members carry a description; LASTORDNO.DTAARA is ARCAD-generated with a snapshot VALUE(60719); iproj.json description 'AdrianAtArcad'; no parameters, scheduling, logging or business wording. Inferred: the three exist to refresh the demo sample. The ORD pack lists all three as not converted (modern/README.md:405, read-only) - consistent, not proof. Phase A recommendation (defer the slice from conversion scope if confirmed) stands as a recommendation."
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opts 80/81/82 (Utilities group)
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:134-163", "ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE:1-3", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:1-3", "ATU_SRC/QSQLSRC/ART801.SQLPRC:2", "ATU_SRC/QDTASRC/LASTORDNO.DTAARA:4-8"]
+    behaviour_doc: features/ord-batch-ord900-c07.md
+    dependencies: [menu-cmd-shell-c01, sql-objects-c08]
+    open_questions: ["If confirmed sample-only, recommend defer the slice from conversion scope (room / product owner - Phase A Q1). Discovery does not set that status."]
+  - id: ord-batch-ord900-c08
+    name: No scheduling, submission, wrapper or parameters (absence) - two bare interactive cmd call menu options; real scheduling would be runtime-only (WRKJOBSCDE)
+    status: documented
+    confidence: observed-in-code
+    summary: "Only callers: SAMMNU opts 80/81 'cmd call ord9xx' - runs in the interactive job, screen blocked, no confirmation. No CL wrapper (QCLSRC: ORD100C, ORD100C2, ORD500C, PAR201), no command (QCMDSRC: CRTORD, CVTSPLPDF), no SBMJOB / ADDJOBSCDE anywhere (SAMMNU:49 wrksbmjob is a viewer on F14). No *ENTRY PLIST / PI in either program - nothing to pass; 'today' is the job date (%date()), the operator's only knob (CHGJOB DATE). No AddLogEntry / LOG300 call. No authority or environment check."
     entrypoints:
       - kind: other
         locator: SAMMNU opts 80/81
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:143-150"]
-    dependencies: []
-    open_questions: ["If confirmed, recommend defer from conversion scope."]
-  - id: ord-batch-ord900-c08
-    name: No scheduling or parameters (absence)
-    status: accepted
-    confidence: observed-in-code
-    summary: Menu CALL only; no CL wrappers or job schedule entries in tree.
-    entrypoints:
-      - kind: other
-        locator: SAMMNU
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:143-150"]
-    dependencies: []
-    open_questions: ["Runtime JOBSCDE cannot be seen from source."]
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:45-49,143-150", "ATU_SRC/QRPGLESRC/ORD900.PGM.RPGLE:4-11", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:4-17"]
+    behaviour_doc: features/ord-batch-ord900-c08.md
+    dependencies: [menu-cmd-shell-c01]
+    open_questions: ["WRKJOBSCDE / external scheduler on the box - is ORD901 or ART801 scheduled? Cannot be seen from source (ops / source owner)."]
   - id: ord-batch-ord900-c09
-    name: Variable reuse trap in ORD901
-    status: accepted
+    name: Variable reuse trap in ORD901 - lastdate holds MAX(ORDATE) for two statements, then is silently reassigned to today - 10 and used under that meaning in the close rule; today used only by the future guards; the 10-day constant written twice
+    status: documented
     confidence: observed-in-code
-    summary: lastdate is reassigned to today-10 after computing the shift.
+    summary: "lastdate: newest order date at :11-17 (guard, offset), then today - 10 at :18, consumed only at :34 (ordatdel < lastdate = 'delivered more than 10 days ago'). Read literally at :34 it says 'delivered before the newest order' - a different rule. :18 must stay after :17 and before the loop; moving it above :17 gives a constant 10-day shift that still compiles. today (:16) used at :24, :30 only. %days(10) at :18 (threshold) and :35 (close offset) encode one parameter (grep: the only two occurrences in the tree). Arithmetic correct as-is; card exists so a review or conversion does not rename-and-change the rule."
     entrypoints:
       - kind: other
-        locator: ORD901 lines 16-18, 34
-        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:16-18", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:34"]
-    dependencies: []
+        locator: ORD901 lines 11-18, 24, 30, 34-35
+        evidence: ["ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:6-8", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:11-18", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:24,30,34-35"]
+    behaviour_doc: features/ord-batch-ord900-c09.md
+    dependencies: [ord-batch-ord900-c03, ord-batch-ord900-c04]
     open_questions: []

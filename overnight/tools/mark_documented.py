@@ -70,14 +70,18 @@ def main() -> int:
             if b is not None and b.get("surface_id"):
                 feat_status_by_surface.setdefault(b["surface_id"], []).append(f.get("status"))
         for s in manifest["surfaces"]:
-            if s.get("slice_id") != slice_id or s.get("status") != "candidate":
+            # a later bind may re-accept a slice an earlier bind deferred (ord-batch-ord900, 2026-09-09):
+            # deferred surfaces are re-evaluated on an accepted bind; anything past accepted is never touched
+            if s.get("slice_id") != slice_id or s.get("status") not in ("candidate", "deferred"):
                 continue
             if bind == "accepted":
                 on_surface = feat_status_by_surface.get(s["surface_id"], [])
                 all_deferred = bool(on_surface) and all(st in ("deferred", "rejected") for st in on_surface)
-                s["status"] = "deferred" if all_deferred else "accepted"
-                bumped_s += 1
-            elif bind == "deferred":
+                new_status = "deferred" if all_deferred else "accepted"
+                if s["status"] != new_status:
+                    s["status"] = new_status
+                    bumped_s += 1
+            elif bind == "deferred" and s.get("status") == "candidate":
                 s["status"] = "deferred"
                 bumped_s += 1
 
