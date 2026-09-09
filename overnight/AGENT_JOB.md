@@ -1,4 +1,16 @@
-RUN
+DONE
+
+# RESULT (run 19, 2026-09-09 22:36–23:2x UTC): cou-maintain COU200 half DONE — 7/7 accepted Phase B cards
+# (c01–c06, c13; all observed-in-code); c07–c12 not re-carded. Slice now 13/13 documented. MANIFEST phase B;
+# SME_BRIEF + CHARACTERIZATION cover both halves; APP_MANIFEST documented 173->180, deferred 7->0, surface
+# pgm:COU200 deferred -> accepted; COVERAGE 0 problems; INDEX row 17 done. Cards commit e412b8a.
+# Sharpened: PAGEDOWN(25) keyword dead; S02CHK empty (every Enter writes, no validation); COU200.RPG:7 the only
+# UF declaration of COUNTRY (no create/delete anywhere); chain 98 untested (no in-tree trigger); list F3 = F12;
+# edit F12 -> next selected row, row still locked; edited subfile row never rewritten.
+# Runnable Pack B queue EMPTY. Remaining accepted: pro-interactive, pro-modules, pro-cobol-pro201 (room-held).
+# Room: c13 retire-vs-convert COU200 (+ c04 create/delete, c02 ISO-3 validation). ME: COU pack supersede clause
+# half met (carded) — propose or record read-only; any Architecture-bind/Convert needs ROOM_OK in this body.
+# No tool changes. Single run fired. Every push re-fires the automation; expect one no-op run after this DONE.
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual run 19
 # Prefer: cou-maintain COU200 half ONLY (c01–c06 + c13)
