@@ -1,14 +1,14 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — night residual run 17
-# Prefer: sql-objects, then ord-batch-ord900, then cou-maintain COU200 half
+# PACK B — Document-slices conveyor (atuMerlin) — night residual run 18
+# Prefer: ord-batch-ord900, then cou-maintain COU200 half
 # Hold: art-* / fam-* (ART302). Hold: pro-interactive, pro-modules, pro-cobol-pro201 (room-held)
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
 # Bind tip: overnight/BIND_RECORD_NIGHT_RESIDUAL_2026-09-09.md
-# Cap 1 slice. srvpgm-supporting DONE (run 16). CHARACTERIZATION deferred-waived.
-# Never widen CUS/ORD. Room 2026-09-09: Field+CTO+ME clear Pack B resume after residual Verify wave DONE.
+# Cap 1 slice. sql-objects DONE (run 17 tip 72340fd). CHARACTERIZATION deferred-waived.
+# Never widen CUS/ORD. Room 2026-09-09: Field+CTO+ME clear Pack B resume.
+# Prior: Pack B run 17 DONE. Field landing AGENT_JOB after Smith Auto-review block.
 # House style: never use pin / pinned / landed.
-# RESULT run 17 (2026-09-09 ~22:1xZ): sql-objects DONE — 10/10 cards, MANIFEST documented, CHARACTERIZATION deferred-waived, SME_BRIEF checklist; APP_MANIFEST documented 154->164; INDEX row 27 done. Next: prefer ord-batch-ord900, then cou-maintain COU200 half (pro-* stay room-held). Single run fired this time.
 
 # PASTE THIS as the entire Cloud Agent prompt
 # PACK B — Document-slices conveyor (atuMerlin)
@@ -25,7 +25,7 @@ You are running a **re-runnable document-slices conveyor** on **atuMerlin**.
 
 **Law:** Field Guide + `discovery-agent-v0.2` + deepen-phase-b skill win. Never invent factory rules.
 
-**Branch:** `cursor/atu-merlin-estate-discovery` (from `master` or latest radar/bind branch as appropriate). Never commit to `master`. Never edit `ATU_SRC/**`.
+**Branch:** `factory/atu-merlin-document-slices` (from `master` or latest radar/bind branch as appropriate). Never commit to `master`. Never edit `ATU_SRC/**`.
 
 **House style:** never use pin / pinned / landed.
 
@@ -44,7 +44,7 @@ OPERATOR: Ash Osborne
 APP_ID: atu-merlin
 REPO_ROOT: .
 FACTORY_ROOT: migration-factory
-WORK_BRANCH: cursor/atu-merlin-estate-discovery
+WORK_BRANCH: factory/atu-merlin-document-slices
 NO_COMMITS_TO_DEFAULT_BRANCH: true
 PHASE_A: false
 PHASE_B: true
@@ -133,7 +133,7 @@ Upsert `inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + pointers only; d
 Update `docs/estate/INDEX.md` row for this slice: status mirror (`doing`→`done` when documented), members summary, deps. INDEX is for Ash readability; slice MANIFEST remains deep SoT.
 
 ### 6) Commit
-On `cursor/atu-merlin-estate-discovery` only. Message prefix: `document-slices: <SLICE_ID>`.
+On `factory/atu-merlin-document-slices` only. Message prefix: `document-slices: <SLICE_ID>`.
 
 ### 7) Stop
 Always stop after one slice. If more accepted undocumenteds remain, MORNING_BRIEF says "re-run conveyor". If none remain, MORNING_BRIEF says document pass idle / waiting on more binds or residual human gate.
