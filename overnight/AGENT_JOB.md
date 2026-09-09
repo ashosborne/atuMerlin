@@ -1,18 +1,11 @@
-DONE
+RUN
 
-# PACK B — Document-slices conveyor (atuMerlin) — night residual run 15
-# RESULT run 15 (2026-09-09 10:30–11:25Z): menu-cmd-shell DONE — 9/9 accepted Phase B cards
-#   (c02 inferred carded; bind accepted it); MANIFEST documented; CHARACTERIZATION deferred-waived;
-#   SME_BRIEF checklist; APP_MANIFEST 136→145 documented, surfaces accepted 32→36; COVERAGE regenerated;
-#   INDEX row 26 done. Phase A corrected: ERR0001 live (ART200D:98) — dead = ERR0003/0004/0005.
-#   Two runs fired on this job (fdde069 RUN tip at 10:30Z; 7e5a8dd DRAFT-packs push at 10:54Z);
-#   the first ended uncommitted, the second recovered + re-verified its work and committed.
-#   Any push while line 1 reads RUN re-fires the runner on the same slice — push ME artefacts on DONE.
-# Prefer: menu-cmd-shell, then srvpgm-supporting, sql-objects, ord-batch-ord900,
+# PACK B — Document-slices conveyor (atuMerlin) — night residual run 16
+# Prefer: srvpgm-supporting, then sql-objects, ord-batch-ord900,
 #   cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
 # Bind tip: overnight/BIND_RECORD_NIGHT_RESIDUAL_2026-09-09.md
-# Cap 1 slice. par-maintain + log-programs + menu-cmd-shell DONE. CHARACTERIZATION deferred-waived.
+# Cap 1 slice. menu-cmd-shell DONE (run 15). CHARACTERIZATION deferred-waived.
 # Skip art-* / fam-maintain (ART302). Never widen CUS/ORD. PRO: document as-is, do not fix XSS.
 
 # PASTE THIS as the entire Cloud Agent prompt
