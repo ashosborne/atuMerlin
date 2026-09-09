@@ -9,121 +9,148 @@ seed_entrypoints:
 out_of_scope_hints:
   - ORD701.SQLTRG (ord-trigger-ord700)
   - ISOTODATE UDFs (dat-utils)
-  - re-documenting ART801 / CUSSEQ behaviour already carded
+  - re-documenting ART801 / CUSSEQ behaviour already carded (c07 / c08 are object-surface cards that point at cus-interactive-c02 / ord-trigger-ord700-c10)
+  - ART200 / ART302 / ART250 behaviour (art-* held) - cited for their ARTIINF statements and the option-4 soft delete only; "Never invent ART302"
+  - ORD901 behaviour (ord-batch-ord900, queue) - cited for its duplicated CULASTORD statement and its undelimited `order` spelling only
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T19:10:00Z
+phase: B
+updated_at: 2026-09-09T21:50:00Z
 bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
 bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 17, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-16."
+needs_sme:
+  - "c01 (room, ORD pack - Phase A Q1): ORDERCUS is an inner join, so an order whose customer row is missing is listed nowhere in the estate. The only in-tree way to reach that state is ORD100 accepting an unchecked ORCUID (no in-tree path deletes a CUSTOMER row or sets CUDEL). The ORD conversion kept the join as-is and records it as a preserved planted defect; confirm that stays the intended definition of the order lists."
+  - "c02 (room, ORD pack): TOTVAL sums ODTOTVAT (VAT-inclusive) - the list total is gross, the same field ART801 sums into CUCREDIT. Confirm the target list total stays gross; nothing on the legacy screens labels it either way."
+  - "c04 (source owner - Phase A Q2, inferred, carded): retrieve ARTQRY (RTVQMQRY) and, if any, its form; also CUSQRY / CUSQRYFMT. Settles whether ARTLSTDAT is read at all (and by what SQL) and closes the report-side blind spot registered by menu-cmd-shell-c02. Until then ARTLSTDAT stays a defer for any target decision."
+  - "c03 (room, when ARTQRY is seen): ARTLSTDAT's QUANTITY is total ORDERED quantity over all orders (open + closed, delivered or not) - a different number from ARTICLE.ARCUSQTY (open, outstanding). Soft-deleted articles keep appearing; never-ordered ones do not. Confirm that is the report the business wants before reproducing the view."
+  - "c05 (art-* owner, when ART is bound): ART200 treats any sqlcod <> 0 on the ARTIINF read as 'no row' and then INSERTs; if the row exists the INSERT fails on the primary key and the failure is unchecked - the edit is silently lost. Record as-is defect or accept? Not fixed here (ART held)."
+  - "c05 (room, data migration): ARTIINF's two columns are CCSID 297 (EBCDIC France) - the only explicit data-column CCSID in the estate (SAMMSGF is 297 too). Confirm the character-set mapping for the free text; the DDS files carry no CCSID."
+  - "c06 (room, art-* owner): ARTIINF rows are never deleted and a soft-deleted article's text stays editable via option 3. Keep as-is or hide/delete with the article in the target? Decide in the ART Architecture pack when it exists."
+  - "c07 (room, CUS pack): CUID is 5P 0 but CUSSEQ has NO MAXVALUE - the 98 450th value (100 000) overflows the host variable and CUS200 does not test sqlcod after the SET. Theoretical at the estate's size; decide MAXVALUE 99999 vs a wider column for the target. The CUS conversion draws nextval at save rather than on F6 - its own documented decision, not touched."
+  - "c08 (room / ops, ORD pack): who runs menu option 82 (ART801) and when? No schedule or guard in the tree. Decides whether the target needs an operator-facing 'reset summary fields' action. ORD901 duplicates ART801's CULASTORD statement inline (ord-batch-ord900, queue)."
+  - "c09 (room, ORD pack): ART801 runs with COMMIT = *NONE and no handler - a failure in statement 2 or 3 leaves statement 1 applied. Recommendation: make the target reset atomic (no reader depends on the half-applied state); room decides."
+  - "c10 (ME / room): naming contract - keep the LABEL ON texts as COMMENT ON (only column documentation the estate has), drop the positional 20-char headings, canonicalise ARTIINF on its long names when the ART pack is drafted; ORD901 writes `from order` undelimited three times (lines 11, 43, 45) and `FROM \"ORDER\"` twice - flag as a compile-time check for ord-batch-ord900."
 
 features:
   - id: sql-objects-c01
-    name: ORDERCUS view - inner join to CUSTOMER with TOTVAL
-    status: accepted
+    name: ORDERCUS view - "ORDER" inner-joined to CUSTOMER on ORCUID = CUID, one row per order, TOTVAL correlated over DETORD; orders without a customer row are invisible
+    status: documented
     confidence: observed-in-code
-    summary: ORDER joined to CUSTOMER on ORCUID = CUID; TOTVAL = COALESCE(SUM(ODTOTVAT), 0); orders with a missing customer row disappear from the lists.
+    summary: "Comma join => inner; CUSTOME1 UNIQUE on CUID so no duplication; CUSTNM the only CUSTOMER column; TOTVAL = COALESCE((SELECT SUM(ODTOTVAT) FROM DETORD WHERE H.ORID = ODORID), 0) - join on ORID only, 0 for a line-less order; no CUDEL or ORDATCLO filter; dates pass through as 8 0 numerics (readers apply ISOTODATE40). Sole read path of ORD200 (one customer) and ORD201 (all). Orphan orders arise in-tree only from ORD100's unchecked ORCUID (no in-tree customer delete, no CUDEL writer). Readers fetch TOTVAL into SUMORD 11Y 2 - an oversized total would end the load loop silently."
     entrypoints:
       - kind: other
         locator: ORDERCUS (read by ORD200 / ORD201)
-        evidence: ["ATU_SRC/QSQLSRC/ORDERCUS.VIEW:5-21", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:104-113", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:97-106"]
-    dependencies: [ORDER.PF, CUSTOMER.PF, DETORD.PF]
-    open_questions: ["Should orders for missing customers vanish in the target?"]
+        evidence: ["ATU_SRC/QSQLSRC/ORDERCUS.VIEW:5-34", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:105-128", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:98-120", "ATU_SRC/QDDSSRC/CUSTOME1.LF:4-6"]
+    behaviour_doc: features/sql-objects-c01.md
+    dependencies: [ORDER.PF, ORDER1.LF, CUSTOMER.PF, CUSTOME1.LF, DETORD.PF, DETORD1.LF, ord-maintain-ord200-c01, ord-maintain-ord201-c01]
+    open_questions: ["Should orders for missing customers vanish in the target? (room, ORD pack - as-is kept by the ORD conversion)"]
   - id: sql-objects-c02
-    name: TOTVAL is VAT-inclusive
-    status: accepted
+    name: TOTVAL sums ODTOTVAT (line total with VAT), not ODTOT - both order lists show gross totals
+    status: documented
     confidence: observed-in-code
-    summary: Sums ODTOTVAT, not ODTOT; order lists show gross totals.
+    summary: "DETORD carries ODTOT (net) and ODTOTVAT (TEXT 'TOTAL LINE WITH VAT', 9P 2); the view sums the latter over all lines regardless of delivery or order status, no rounding. Writers set odtotvat = odtot + vat (ORD100/ORD101). Same field ART801 sums into CUCREDIT, so list total and credit share one gross definition. Displayed as SUMORD 11Y 2 EDTCDE(2) with no heading that says VAT-inclusive."
     entrypoints:
       - kind: other
         locator: ORDERCUS TOTVAL
-        evidence: ["ATU_SRC/QSQLSRC/ORDERCUS.VIEW:16-19"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ORDERCUS.VIEW:17-19", "ATU_SRC/QDDSSRC/DETORD.PF:16-20", "ATU_SRC/QDDSSRC/ORD200D.DSPF:28", "ATU_SRC/QSQLSRC/ART801.SQLPRC:29-33"]
+    behaviour_doc: features/sql-objects-c02.md
+    dependencies: [DETORD.PF, SAMREF.PF, sql-objects-c01, ord-trigger-ord700-c10]
+    open_questions: ["Target list total stays gross? (room, ORD pack)"]
   - id: sql-objects-c03
-    name: ARTLSTDAT view - last order date and total quantity per article
-    status: accepted
+    name: ARTLSTDAT view - per article MAX(ORDATE) as LASTORDER and SUM(ODQTY) as QUANTITY over all orders, three-way inner join; never-ordered articles absent, soft-deleted present
+    status: documented
     confidence: observed-in-code
-    summary: MAX(ORDATE), SUM(ODQTY) over all orders (open and closed); never-ordered articles absent.
+    summary: "SELECT ARID, ARDESC, MAX(ORDATE), SUM(ODQTY) FROM ARTICLE, \"ORDER\", DETORD WHERE ARID = ODARID AND ODORID = ORID GROUP BY ARID, ARDESC. Inner joins: an article needs >= 1 line whose header exists; orphan lines excluded (they still count in ORDERCUS.TOTVAL). Join on ORID only (ODYEAR unused, like ART801). No ARDEL / ORDATCLO filter. QUANTITY is ordered qty over open + closed orders - not ARCUSQTY. GROUP BY ARDESC shows the current description (one per ARID via ARTICLE1 UNIQUE). Labels for ARID / ARDESC only (SAMREF COLHDG copies incl. 'DESCRPTION'). No reader in ATU_SRC (c04)."
     entrypoints:
       - kind: other
         locator: ARTLSTDAT
-        evidence: ["ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW:5-14"]
-    dependencies: [ARTICLE.PF, ORDER.PF, DETORD.PF]
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW:5-22", "ATU_SRC/QDDSSRC/ARTICLE1.LF", "ATU_SRC/QDDSSRC/ORDER1.LF", "ATU_SRC/QDDSSRC/DETORD1.LF"]
+    behaviour_doc: features/sql-objects-c03.md
+    dependencies: [ARTICLE.PF, ARTICLE1.LF, ORDER.PF, ORDER1.LF, DETORD.PF, DETORD1.LF, sql-objects-c04]
+    open_questions: ["Is this the report the business wants (ordered qty, all orders, deleted articles included)? Decide once ARTQRY is seen."]
   - id: sql-objects-c04
-    name: ARTLSTDAT has no consumer in ATU_SRC (QM query ARTQRY probable)
-    status: accepted
+    name: ARTLSTDAT has no reader in ATU_SRC; probable reader is QM query ARTQRY behind menu option 13 "Article by Last Order Date" (object not in tree)
+    status: documented
     confidence: inferred
-    summary: DDL only; menu opt 13 STRQMQRY ARTQRY "Article by Last Order Date" is the likely reader (not in tree).
+    summary: "Exact: ARTLSTDAT appears only in its own DDL; no QM source directory or member exists; SAMMNU option 13 = STRQMQRY QMQRY(ARTQRY) with no QMFORM (option 12 has one). Inferred: ARTQRY reads the view - the menu text is LASTORDER in words and the view's column headings are what a report tool would print. Carded because the bind accepted it; confidence kept inferred; nothing about ARTQRY's SQL asserted. menu-cmd-shell-c01/-c02 register the same out-of-tree target."
     entrypoints:
       - kind: other
         locator: SAMMNU opt 13
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:129-132"]
-    dependencies: []
-    open_questions: ["Obtain ARTQRY source?"]
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:125-132", "ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW:5-22"]
+    behaviour_doc: features/sql-objects-c04.md
+    dependencies: [sql-objects-c03, menu-cmd-shell-c01, menu-cmd-shell-c02]
+    open_questions: ["Obtain ARTQRY source (RTVQMQRY) and any form; also CUSQRY / CUSQRYFMT."]
   - id: sql-objects-c05
-    name: ARTIINF table contract (ARID PK + VARCHAR(1520) text)
-    status: accepted
+    name: ARTIINF (article_full_description) table contract - ARID CHAR(6) PK + ARTINF VARCHAR(1520), both CCSID 297 NOT NULL DEFAULT ''; written by ART200 opt 3 (insert-or-update of TRIM(:text)), read by ART302.GetArtInfo
+    status: documented
     confidence: observed-in-code
-    summary: article_full_description; CCSID 297; NOT NULL DEFAULT ''; written by ART200 opt 3, read by ART302.GetArtInfo.
+    summary: "Only SQL-defined table in the estate. Long names + FOR SYSTEM NAME / FOR COLUMN; PK added by ALTER TABLE (PRIM_ARTIINF); no FK to ARTICLE. ART200 panel 3: SELECT ARTICLE_INFORMATION INTO :text (1520A CHECK(LC) screen field, 19 x 80); sqlcod <> 0 => crt else upd; Enter always writes (UPDATE or INSERT of TRIM(:text)); F3/F12 no write; no sqlcod test after the write; set option commit = *none (the only SET OPTION in QRPGLESRC). ART302 reads artinf by arid (short names) into a fixed 1520. Traps: any read error => create => duplicate-key INSERT unchecked (edit lost); TRIM strips leading blanks; empty text stores ''; CCSID 297 is the only explicit data-column CCSID (SAMMSGF also 297). ART cited for the ARTIINF statements only - nothing invented about GetArtInfo."
     entrypoints:
       - kind: other
         locator: ARTIINF
-        evidence: ["ATU_SRC/QSQLSRC/ARTIINF.TABLE:5-20", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:371-375", "ATU_SRC/QRPGLESRC/ART302.SQLRPGLE:18"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ARTIINF.TABLE:5-20", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:203-207,331-378", "ATU_SRC/QDDSSRC/ART200D.DSPF:116-134", "ATU_SRC/QRPGLESRC/ART302.SQLRPGLE:8-24"]
+    behaviour_doc: features/sql-objects-c05.md
+    dependencies: [SAMREF.PF (ARID 6A), ART200 (art-interactive, held), ART302 (art-modules, held)]
+    open_questions: ["ART200 'any error => create' path: as-is defect to record? (art-* owner)", "Character-set mapping for CCSID 297 text (room, data migration)"]
   - id: sql-objects-c06
-    name: ARTIINF rows never deleted (orphans after article soft delete)
-    status: accepted
+    name: ARTIINF rows are never deleted - no DELETE in the tree, no cascade in the DDL; ART200 opt 4 soft-deletes the article (ARDEL = 'X') and leaves its text in place and still editable
+    status: documented
     confidence: observed-in-code
-    summary: No DELETE FROM artiinf anywhere; soft-deleted articles keep their free text.
+    summary: "Statements against ARTIINF: SELECT / UPDATE / INSERT (ART200), SELECT (ART302) - no DELETE anywhere, not an F-spec file in any program, no FK so nothing cascades. ART200 option 4: chain arid article1; ardel = 'X'; armod; armodid; update farti - ARTIINF untouched. No physical delete of ARTICLE in the tree (record deletes are on DETORD1 / ORDER1 / TMPDETORD / PARAMETER only). The ART200 list (ARTICLE2, no S/O) still shows deleted rows and accepts option 3 on them, so the text stays editable. Table only grows."
     entrypoints:
       - kind: other
         locator: grep artiinf
-        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:334", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:371-375"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:208-216,333-335,371-377", "ATU_SRC/QSQLSRC/ARTIINF.TABLE:19-20", "ATU_SRC/QDDSSRC/ARTICLE2.LF"]
+    behaviour_doc: features/sql-objects-c06.md
+    dependencies: [sql-objects-c05, ARTICLE.PF, ARTICLE1.LF, ARTICLE2.LF]
+    open_questions: ["Target: delete/hide text with the article, or keep as-is? (ART pack)"]
   - id: sql-objects-c07
-    name: CUSSEQ sequence (pointer to cus-interactive-c02)
-    status: accepted
+    name: CUSSEQ sequence - START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; one consumer (CUS200 F6); unbounded sequence into a 5P 0 CUID - surface card, behaviour under cus-interactive-c02
+    status: documented
     confidence: observed-in-code
-    summary: START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; consumed by CUS200 F6; behaviour documented under cus-interactive.
+    summary: "Four clauses; defaults (AS INTEGER, MINVALUE 1, CACHE 20, NO ORDER) are platform inference. Member text 'Next customer Number'. Sole reference: CUS200:185 exec sql set :Cuid = NEXT VALUE FOR CusSeq (unqualified => *LIBL), on F6 before FMT02, no sqlcod check. Draw-before-save / gaps documented at cus-interactive-c02 (pointer). New fact: CUID is 5P 0 (max 99 999) while the sequence is unbounded - value 100 000 (the 98 450th) overflows the host variable; CUS200 proceeds with the stale id and the write hits the UNIQUE key. Cache gaps under abnormal end (inference). Target counterpart cited read-only (schema.sql cusseq; draw moved to save - CUS pack's own decision)."
     entrypoints:
       - kind: other
         locator: CUSSEQ
-        evidence: ["ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ:5-9", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:185"]
-    dependencies: [cus-interactive-c02]
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ:2,5-9", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:179-186", "ATU_SRC/QDDSSRC/SAMREF.PF:15-17"]
+    behaviour_doc: features/sql-objects-c07.md
+    dependencies: [cus-interactive-c02, CUSTOMER.PF, SAMREF.PF, CUSTOME1.LF]
+    open_questions: ["Target: MAXVALUE 99999 or wider CUID? (room, CUS pack)"]
   - id: sql-objects-c08
-    name: ART801 stored procedure surface (pointer to ord-trigger-ord700-c10)
-    status: accepted
+    name: ART801 / UPDATE_ON_CUS_ORD_QTY stored-procedure surface - SPECIFIC ART801 makes it callable as program ART801 from menu option 82 (cmd call art801); three WHERE EXISTS-guarded UPDATEs - behaviour under ord-trigger-ord700-c10
+    status: documented
     confidence: observed-in-code
-    summary: UPDATE_ON_CUS_ORD_QTY, menu opt 82; three WHERE EXISTS-guarded UPDATEs; COMMIT *NONE; behaviour documented under ord-trigger-ord700.
+    summary: "SQL name UPDATE_ON_CUS_ORD_QTY, specific name ART801 = generated *PGM name (platform), hence CL CALL from SAMMNU option 82 'Reset Summary Fields' (SQLPRC:ART801). SET PATH *LIBL precedes the CREATE (no UDF used). No parameters, no result; only caller is the menu; ORD900/ORD901 do not call it - ORD901 re-implements statement 3 inline. Only data-modifying SQL routine in the estate (QSQLSRC: 1 SQLPRC, 2 SQLUDF, 1 SQLTRG, 2 VIEW, 1 TABLE, 1 SQLSEQ). Arithmetic and asymmetries with ORD700/ORD701 stay on ord-trigger-ord700-c10 (pointer). \"ORDER\" delimited six times in this member."
     entrypoints:
       - kind: job
         locator: ART801 (menu opt 82)
-        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:4-38", "ATU_SRC/QPNLSRC/SAMMNU.MENU:151-154"]
-    dependencies: [ord-trigger-ord700-c10]
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:4-38", "ATU_SRC/QPNLSRC/SAMMNU.MENU:151-154", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:46-50"]
+    behaviour_doc: features/sql-objects-c08.md
+    dependencies: [ord-trigger-ord700-c10, ORDER.PF, DETORD.PF, ARTICLE.PF, CUSTOMER.PF, menu-cmd-shell-c01, ord-batch-ord900 (ORD901 duplicate)]
+    open_questions: ["Who runs option 82 and when? (room / ops)"]
   - id: sql-objects-c09
-    name: ART801 interface facts
-    status: accepted
+    name: ART801 interface facts - LANGUAGE SQL, NOT DETERMINISTIC, MODIFIES SQL DATA, CALLED ON NULL INPUT; COMMIT *NONE, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES, ALWBLK *ALLREAD, DECRESULT (31,31,00), DLYPRP *NO, DYNDFTCOL *NO; no parameters, no result set, no handler
+    status: documented
     confidence: observed-in-code
-    summary: LANGUAGE SQL, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES; no parameters, no result set.
+    summary: "Thirteen header clauses tabulated with their effect on the body. Consequential: COMMIT = *NONE (three independent, immediately visible UPDATEs; partial reset on failure), no DECLARE HANDLER (first SQL error ends the procedure, SQLSTATE surfaces to the CALL), DECRESULT (31,31,00) (SUMs computed wide then assigned to ARCUSQTY 5 0 / CUCREDIT 9P 2 - overflow is an error, not truncation), DYNUSRPRF *USER (no dynamic SQL in the body - default spelled out). SRTSEQ *HEX irrelevant (numeric comparisons). Statement 3 has no DETORD join (line-less orders still set CULASTORD) while 1-2 skip them. Caller learns nothing on success."
     entrypoints:
       - kind: other
         locator: ART801 SET OPTION
-        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:6-20"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ART801.SQLPRC:6-20", "ATU_SRC/QDDSSRC/SAMREF.PF:47-52", "ATU_SRC/QDDSSRC/CUSTOMER.PF:19-22"]
+    behaviour_doc: features/sql-objects-c09.md
+    dependencies: [sql-objects-c08, ord-trigger-ord700-c10]
+    open_questions: ["Target reset atomic or as-is partial? (room, ORD pack - recommendation: atomic)"]
   - id: sql-objects-c10
-    name: Naming / reserved-word port traps
-    status: accepted
+    name: Naming / reserved-word port traps - "ORDER" delimited at eight places in QSQLSRC (ORD901 mixes spellings); ARTIINF long vs system names used inconsistently by its two readers; LABEL ON headings/texts copied from SAMREF; *LIBL resolution; CCSID 297
+    status: documented
     confidence: observed-in-code
-    summary: SQL long names and labels on ARTIINF / ARTLSTDAT; "ORDER" must be delimited everywhere.
+    summary: "\"ORDER\" delimited at ORDERCUS:20, ARTLSTDAT:12, ART801:23,26,29,32,35,37 (+ ORD901:47,49); ORD901:11,43,45 write `from order` undelimited - the one inconsistent spelling (compile-time fact for ord-batch-ord900). ARTIINF is the only object with long names (article_full_description, ARTICLE_INFO_ID, ARTICLE_INFORMATION) + FOR SYSTEM NAME / FOR COLUMN; ART200 uses long, ART302 short. LABEL ON COLUMN IS = 20-char-segment headings mirroring SAMREF COLHDG ('ORD' 'NUM' etc.), TEXT IS = column text incl. the SAMREF 'DESCRPTION' typo; coverage partial (ORDERCUS 4 of 8 columns, ARTLSTDAT 2 of 4, ARTIINF all). SET PATH *LIBL; every reference unqualified, *SYS naming, mixed case (Ordercus, CusSeq, artiinf). ARCAD %METADATA headers in -- and /* */ syntaxes hold the object texts. PRIM_ARTIINF is the only named constraint. CCSID 297 on ARTIINF only. Target already names the header table orders (cited read-only)."
     entrypoints:
       - kind: other
         locator: DDL members
-        evidence: ["ATU_SRC/QSQLSRC/ARTIINF.TABLE:5-17", "ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW:16-22", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW:20"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QSQLSRC/ARTIINF.TABLE:5-17", "ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW:12,16-22", "ATU_SRC/QSQLSRC/ORDERCUS.VIEW:20,24-34", "ATU_SRC/QSQLSRC/ART801.SQLPRC:4,23-37", "ATU_SRC/QRPGLESRC/ORD901.PGM.SQLRPGLE:11,42-50", "ATU_SRC/QDDSSRC/SAMREF.PF:11-16,24-25,34-35,68-69"]
+    behaviour_doc: features/sql-objects-c10.md
+    dependencies: [sql-objects-c01, sql-objects-c03, sql-objects-c05, sql-objects-c08, SAMREF.PF, ord-batch-ord900 (ORD901 spelling)]
+    open_questions: ["Which naming facts to carry (COMMENT ON texts? long names canonical?) - ME / room"]

@@ -29,7 +29,10 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 16 (2026-09-09): srvpgm-supporting 9/9 accepted behaviours documented (cards
   discovery/srvpgm-supporting/features/); c05 inferred carded (bind accepted it); surface bnddir:SAMPLE candidate -> accepted; srvpgm:XML / XSS / ORDER / TXT stay unknown (absence recorded in c02). Phase
   A c07 corrected: default activation group is QILE (job-wide caches), not new-per-program - runtime-confirm. par-maintain-c10 corrected via srvpgm-supporting-c06: EXPORT(*ALL) exports 5 (not 7). CHARACTERIZATION
-  deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.'
+  deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. | Pack B run 17 (2026-09-09): sql-objects 10/10 accepted
+  behaviours documented (cards discovery/sql-objects/features/); c04 inferred carded (bind accepted it); surfaces view:ORDERCUS / view:ARTLSTDAT / table:ARTIINF / seq:CUSSEQ / sqlprc:ART801 candidate ->
+  accepted. c07 / c08 are object-surface cards pointing at cus-interactive-c02 / ord-trigger-ord700-c10 (CUS/ORD not widened). CHARACTERIZATION deferred-waived. No conversion, no tests. Night residual queue
+  left: ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -659,7 +662,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ORDERCUS.VIEW
   repo_path: ATU_SRC/QSQLSRC/ORDERCUS.VIEW
-  status: candidate
+  status: accepted
   slice_id: sql-objects
   notes: SQL VIEW - ORDER inner-joined to CUSTOMER with TOTVAL (sum ODTOTVAT); read by ORD200/ORD201
   discovery_evidence:
@@ -668,7 +671,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
   repo_path: ATU_SRC/QSQLSRC/ARTLSTDAT.VIEW
-  status: candidate
+  status: accepted
   slice_id: sql-objects
   notes: SQL VIEW - per-article MAX(ORDATE) / SUM(ODQTY); no consumer in ATU_SRC (QM query ARTQRY probable)
   discovery_evidence:
@@ -677,7 +680,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ARTIINF.TABLE
   repo_path: ATU_SRC/QSQLSRC/ARTIINF.TABLE
-  status: candidate
+  status: accepted
   slice_id: sql-objects
   notes: SQL TABLE article_full_description - ARID PK + VARCHAR(1520); written by ART200, read by ART302
   discovery_evidence:
@@ -686,7 +689,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
   repo_path: ATU_SRC/QSQLSRC/CUSSEQ.SQLSEQ
-  status: candidate
+  status: accepted
   slice_id: sql-objects
   notes: SQL SEQUENCE START WITH 1551 - customer ids (CUS200 F6; documented cus-interactive-c02)
   discovery_evidence:
@@ -695,7 +698,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QSQLSRC/ART801.SQLPRC
   repo_path: ATU_SRC/QSQLSRC/ART801.SQLPRC
-  status: candidate
+  status: accepted
   slice_id: sql-objects
   notes: SQL PROCEDURE UPDATE_ON_CUS_ORD_QTY (menu opt 82) - behaviour documented as ord-trigger-ord700-c10
   discovery_evidence:
@@ -4712,10 +4715,10 @@ behaviours:
   notes: 'confidence: observed-in-code; UPPER(column) compared to raw %trim(input); relies on the 5250 session uppercasing (no CHECK(LC) on the fields).'
 - behaviour_id: sql-objects-c01
   surface_id: view:ORDERCUS
-  name: ORDERCUS view - inner join to CUSTOMER with TOTVAL
-  status: candidate
+  name: ORDERCUS view - "ORDER" inner-joined to CUSTOMER on ORCUID = CUID, one row per order, TOTVAL correlated over DETORD; orders without a customer row are invisible
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4724,13 +4727,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ORDER joined to CUSTOMER on ORCUID = CUID; TOTVAL = COALESCE(SUM(ODTOTVAT), 0); orders with a missing customer row disappear from the lists.'
+  notes: 'confidence: observed-in-code; Comma join => inner; CUSTOME1 UNIQUE on CUID so no duplication; CUSTNM the only CUSTOMER column; TOTVAL = COALESCE((SELECT SUM(ODTOTVAT) FROM DETORD WHERE H.ORID
+    = ODORID), 0) - join on ORID only, 0 for a line-less order; no CUDEL or ORDATCLO filter; dates pass through as 8 0 numerics (readers apply ISOTODATE40). Sole read path of ORD200 (one customer) and ORD201
+    (all). Orphan orders arise in-tree only from ORD100''s unchecked ORCUID (no in-tree customer delete, no CUDEL writer). Readers fetch TOTVAL into SUMORD 11Y 2 - an oversized total would end the load
+    loop silently.'
 - behaviour_id: sql-objects-c02
   surface_id: view:ORDERCUS
-  name: TOTVAL is VAT-inclusive
-  status: candidate
+  name: TOTVAL sums ODTOTVAT (line total with VAT), not ODTOT - both order lists show gross totals
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4739,13 +4745,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Sums ODTOTVAT, not ODTOT; order lists show gross totals.'
+  notes: 'confidence: observed-in-code; DETORD carries ODTOT (net) and ODTOTVAT (TEXT ''TOTAL LINE WITH VAT'', 9P 2); the view sums the latter over all lines regardless of delivery or order status, no rounding.
+    Writers set odtotvat = odtot + vat (ORD100/ORD101). Same field ART801 sums into CUCREDIT, so list total and credit share one gross definition. Displayed as SUMORD 11Y 2 EDTCDE(2) with no heading that
+    says VAT-inclusive.'
 - behaviour_id: sql-objects-c03
   surface_id: view:ARTLSTDAT
-  name: ARTLSTDAT view - last order date and total quantity per article
-  status: candidate
+  name: ARTLSTDAT view - per article MAX(ORDATE) as LASTORDER and SUM(ODQTY) as QUANTITY over all orders, three-way inner join; never-ordered articles absent, soft-deleted present
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4754,13 +4762,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; MAX(ORDATE), SUM(ODQTY) over all orders (open and closed); never-ordered articles absent.'
+  notes: 'confidence: observed-in-code; SELECT ARID, ARDESC, MAX(ORDATE), SUM(ODQTY) FROM ARTICLE, "ORDER", DETORD WHERE ARID = ODARID AND ODORID = ORID GROUP BY ARID, ARDESC. Inner joins: an article needs
+    >= 1 line whose header exists; orphan lines excluded (they still count in ORDERCUS.TOTVAL). Join on ORID only (ODYEAR unused, like ART801). No ARDEL / ORDATCLO filter. QUANTITY is ordered qty over open
+    + closed orders - not ARCUSQTY. GROUP BY ARDESC shows the current description (one per ARID via ARTICLE1 UNIQUE). Labels for ARID / ARDESC only (SAMREF COLHDG copies incl. ''DESCRPTION''). No reader
+    in ATU_SRC (c04).'
 - behaviour_id: sql-objects-c04
   surface_id: view:ORDERCUS
-  name: ARTLSTDAT has no consumer in ATU_SRC (QM query ARTQRY probable)
-  status: candidate
+  name: ARTLSTDAT has no reader in ATU_SRC; probable reader is QM query ARTQRY behind menu option 13 "Article by Last Order Date" (object not in tree)
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4769,13 +4780,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; DDL only; menu opt 13 STRQMQRY ARTQRY "Article by Last Order Date" is the likely reader (not in tree).'
+  notes: 'confidence: inferred; Exact: ARTLSTDAT appears only in its own DDL; no QM source directory or member exists; SAMMNU option 13 = STRQMQRY QMQRY(ARTQRY) with no QMFORM (option 12 has one). Inferred:
+    ARTQRY reads the view - the menu text is LASTORDER in words and the view''s column headings are what a report tool would print. Carded because the bind accepted it; confidence kept inferred; nothing
+    about ARTQRY''s SQL asserted. menu-cmd-shell-c01/-c02 register the same out-of-tree target.'
 - behaviour_id: sql-objects-c05
   surface_id: table:ARTIINF
-  name: ARTIINF table contract (ARID PK + VARCHAR(1520) text)
-  status: candidate
+  name: ARTIINF (article_full_description) table contract - ARID CHAR(6) PK + ARTINF VARCHAR(1520), both CCSID 297 NOT NULL DEFAULT ''; written by ART200 opt 3 (insert-or-update of TRIM(:text)), read by
+    ART302.GetArtInfo
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4784,13 +4798,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; article_full_description; CCSID 297; NOT NULL DEFAULT ''''; written by ART200 opt 3, read by ART302.GetArtInfo.'
+  notes: 'confidence: observed-in-code; Only SQL-defined table in the estate. Long names + FOR SYSTEM NAME / FOR COLUMN; PK added by ALTER TABLE (PRIM_ARTIINF); no FK to ARTICLE. ART200 panel 3: SELECT
+    ARTICLE_INFORMATION INTO :text (1520A CHECK(LC) screen field, 19 x 80); sqlcod <> 0 => crt else upd; Enter always writes (UPDATE or INSERT of TRIM(:text)); F3/F12 no write; no sqlcod test after the
+    write; set option commit = *none (the only SET OPTION in QRPGLESRC). ART302 reads artinf by arid (short names) into a fixed 1520. Traps: any read error => create => duplicate-key INSERT unchecked (edit
+    lost); TRIM strips leading blanks; empty text stores ''''; CCSID 297 is the only explicit data-column CCSID (SAMMSGF also 297). ART cited for the ARTIINF statements only - nothing invented about GetArtInfo.'
 - behaviour_id: sql-objects-c06
   surface_id: view:ORDERCUS
-  name: ARTIINF rows never deleted (orphans after article soft delete)
-  status: candidate
+  name: ARTIINF rows are never deleted - no DELETE in the tree, no cascade in the DDL; ART200 opt 4 soft-deletes the article (ARDEL = 'X') and leaves its text in place and still editable
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4799,13 +4816,15 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No DELETE FROM artiinf anywhere; soft-deleted articles keep their free text.'
+  notes: 'confidence: observed-in-code; Statements against ARTIINF: SELECT / UPDATE / INSERT (ART200), SELECT (ART302) - no DELETE anywhere, not an F-spec file in any program, no FK so nothing cascades.
+    ART200 option 4: chain arid article1; ardel = ''X''; armod; armodid; update farti - ARTIINF untouched. No physical delete of ARTICLE in the tree (record deletes are on DETORD1 / ORDER1 / TMPDETORD /
+    PARAMETER only). The ART200 list (ARTICLE2, no S/O) still shows deleted rows and accepts option 3 on them, so the text stays editable. Table only grows.'
 - behaviour_id: sql-objects-c07
   surface_id: seq:CUSSEQ
-  name: CUSSEQ sequence (pointer to cus-interactive-c02)
-  status: candidate
+  name: CUSSEQ sequence - START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; one consumer (CUS200 F6); unbounded sequence into a 5P 0 CUID - surface card, behaviour under cus-interactive-c02
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4814,13 +4833,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; consumed by CUS200 F6; behaviour documented under cus-interactive.'
+  notes: 'confidence: observed-in-code; Four clauses; defaults (AS INTEGER, MINVALUE 1, CACHE 20, NO ORDER) are platform inference. Member text ''Next customer Number''. Sole reference: CUS200:185 exec
+    sql set :Cuid = NEXT VALUE FOR CusSeq (unqualified => *LIBL), on F6 before FMT02, no sqlcod check. Draw-before-save / gaps documented at cus-interactive-c02 (pointer). New fact: CUID is 5P 0 (max 99
+    999) while the sequence is unbounded - value 100 000 (the 98 450th) overflows the host variable; CUS200 proceeds with the stale id and the write hits the UNIQUE key. Cache gaps under abnormal end (inference).
+    Target counterpart cited read-only (schema.sql cusseq; draw moved to save - CUS pack''s own decision).'
 - behaviour_id: sql-objects-c08
   surface_id: sqlprc:ART801
-  name: ART801 stored procedure surface (pointer to ord-trigger-ord700-c10)
-  status: candidate
+  name: ART801 / UPDATE_ON_CUS_ORD_QTY stored-procedure surface - SPECIFIC ART801 makes it callable as program ART801 from menu option 82 (cmd call art801); three WHERE EXISTS-guarded UPDATEs - behaviour
+    under ord-trigger-ord700-c10
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4829,13 +4852,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; UPDATE_ON_CUS_ORD_QTY, menu opt 82; three WHERE EXISTS-guarded UPDATEs; COMMIT *NONE; behaviour documented under ord-trigger-ord700.'
+  notes: 'confidence: observed-in-code; SQL name UPDATE_ON_CUS_ORD_QTY, specific name ART801 = generated *PGM name (platform), hence CL CALL from SAMMNU option 82 ''Reset Summary Fields'' (SQLPRC:ART801).
+    SET PATH *LIBL precedes the CREATE (no UDF used). No parameters, no result; only caller is the menu; ORD900/ORD901 do not call it - ORD901 re-implements statement 3 inline. Only data-modifying SQL routine
+    in the estate (QSQLSRC: 1 SQLPRC, 2 SQLUDF, 1 SQLTRG, 2 VIEW, 1 TABLE, 1 SQLSEQ). Arithmetic and asymmetries with ORD700/ORD701 stay on ord-trigger-ord700-c10 (pointer). "ORDER" delimited six times
+    in this member.'
 - behaviour_id: sql-objects-c09
   surface_id: sqlprc:ART801
-  name: ART801 interface facts
-  status: candidate
+  name: ART801 interface facts - LANGUAGE SQL, NOT DETERMINISTIC, MODIFIES SQL DATA, CALLED ON NULL INPUT; COMMIT *NONE, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES, ALWBLK *ALLREAD, DECRESULT (31,31,00),
+    DLYPRP *NO, DYNDFTCOL *NO; no parameters, no result set, no handler
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4844,13 +4871,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; LANGUAGE SQL, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES; no parameters, no result set.'
+  notes: 'confidence: observed-in-code; Thirteen header clauses tabulated with their effect on the body. Consequential: COMMIT = *NONE (three independent, immediately visible UPDATEs; partial reset on failure),
+    no DECLARE HANDLER (first SQL error ends the procedure, SQLSTATE surfaces to the CALL), DECRESULT (31,31,00) (SUMs computed wide then assigned to ARCUSQTY 5 0 / CUCREDIT 9P 2 - overflow is an error,
+    not truncation), DYNUSRPRF *USER (no dynamic SQL in the body - default spelled out). SRTSEQ *HEX irrelevant (numeric comparisons). Statement 3 has no DETORD join (line-less orders still set CULASTORD)
+    while 1-2 skip them. Caller learns nothing on success.'
 - behaviour_id: sql-objects-c10
   surface_id: table:ARTIINF
-  name: Naming / reserved-word port traps
-  status: candidate
+  name: Naming / reserved-word port traps - "ORDER" delimited at eight places in QSQLSRC (ORD901 mixes spellings); ARTIINF long vs system names used inconsistently by its two readers; LABEL ON headings/texts
+    copied from SAMREF; *LIBL resolution; CCSID 297
+  status: documented
   slice_id: sql-objects
-  discovery_card: null
+  discovery_card: discovery/sql-objects/features/sql-objects-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -4859,7 +4890,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; SQL long names and labels on ARTIINF / ARTLSTDAT; "ORDER" must be delimited everywhere.'
+  notes: 'confidence: observed-in-code; "ORDER" delimited at ORDERCUS:20, ARTLSTDAT:12, ART801:23,26,29,32,35,37 (+ ORD901:47,49); ORD901:11,43,45 write `from order` undelimited - the one inconsistent spelling
+    (compile-time fact for ord-batch-ord900). ARTIINF is the only object with long names (article_full_description, ARTICLE_INFO_ID, ARTICLE_INFORMATION) + FOR SYSTEM NAME / FOR COLUMN; ART200 uses long,
+    ART302 short. LABEL ON COLUMN IS = 20-char-segment headings mirroring SAMREF COLHDG (''ORD'' ''NUM'' etc.), TEXT IS = column text incl. the SAMREF ''DESCRPTION'' typo; coverage partial (ORDERCUS 4 of
+    8 columns, ARTLSTDAT 2 of 4, ARTIINF all). SET PATH *LIBL; every reference unqualified, *SYS naming, mixed case (Ordercus, CusSeq, artiinf). ARCAD %METADATA headers in -- and /* */ syntaxes hold the
+    object texts. PRIM_ARTIINF is the only named constraint. CCSID 297 on ARTIINF only. Target already names the header table orders (cited read-only).'
 - behaviour_id: srvpgm-supporting-c01
   surface_id: bnddir:SAMPLE
   name: SAMPLE.BNDDIR - eleven *LIBL service-program entries in a fixed order; LOG absent; six entries actually consumed by the bnddir('SAMPLE') programs
@@ -5196,5 +5231,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-09T11:47:58Z'
+last_updated: '2026-09-09T21:42:45Z'
 updated_by: document-slices-conveyor
