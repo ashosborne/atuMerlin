@@ -9,6 +9,7 @@ RUN
 # PRO planted-bug / XML-XSS: document as-is residual — do not invent fixes.
 # Bind record: overnight/BIND_RECORD_NIGHT_RESIDUAL_2026-09-09.md
 # House style: never use pin / pinned / landed.
+# Nudge 2026-09-09T09:09Z — still RUN prefer log-programs; no cards ~14m after 828230b. Re-touch to re-fire.
 # ROOM_OK: residual night bind from Ash + Field 2026-09-09.
 
 You are running a re-runnable document-slices conveyor on atuMerlin.
