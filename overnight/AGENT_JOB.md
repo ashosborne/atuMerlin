@@ -1,4 +1,18 @@
-RUN
+DONE
+
+# RESULT — Convert COU vertical FCOUNTRY half: DONE 2026-09-09 (atu-merlin-ts-cou-v1@1, WAIVED_PATHFINDER, PARITY=UNVERIFIED)
+# Code: e90dfb2 (first runner; turn ended after push). Docs + DONE: 0a6aa22 + this commit (second runner, fired by the e90dfb2 push).
+# Artefacts: modern/src/shared/fcountry/index.ts (existCountry, getCountryName, getCountryIso3, sltCountry + COU301 reducer;
+#   listCountries unchanged for CUS) · modern/db/schema.sql COU section appended (countr1 index + COMMENT ON, nothing altered) ·
+#   modern/test/fcountry.test.ts (41 tests, c07..c12) · modern/README.md COU section (CR-C1..CR-C5) · modern/package.json ·
+#   architecture/atu-merlin-cou/CONVERT_RECORD.md
+# Gates: npm run typecheck clean; npm test 242/242 (8 files) green on PostgreSQL 16; CUS/ORD/VAT/DAT suites unchanged.
+# As-is kept / needs-SME: c08 GetCountryIso3 unused (no consumer invented), c09 empty window no message, c10 F8 position lost,
+#   c07 no hit cache (CR-C1). No COU200 presentation, no HTTP surface, no features/cou, no CUS/ORD rewrite.
+# Open: Verification station for COU (COMPARE at TS API; decide CR-C1..CR-C5); SME sign-off on discovery/cou-maintain/SME_BRIEF.md.
+# Next per header: Convert par -> log (each needs its own ROOM_OK in this body). Then Verify per pack.
+# Runner note: the RUN tip 6246243 fired one run; it pushed the code commit and stopped without stamping DONE. The push of
+#   e90dfb2 fired a second run which finished the job (list-cloud-agents showed the first IDLE and no other run active).
 
 # CONVERT — COU vertical FCOUNTRY half (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
