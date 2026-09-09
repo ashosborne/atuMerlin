@@ -90,8 +90,8 @@ edit_surface:
   allow:
     - modern/src/features/order-batch/**
     - modern/openapi/order-batch.yaml
-    - modern/db/**
-    - modern/test/**
+    - modern/db/**  # additive / pack-scoped only; do not reshape CUS or ORD schema
+    - modern/test/**  # additive / pack-scoped only; do not rewrite CUS or ORD tests
     - modern/src/app.ts
     - modern/src/server.ts
     - architecture/atu-merlin-ord-batch/**
