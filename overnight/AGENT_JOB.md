@@ -1,110 +1,65 @@
-DONE
+RUN
 
-# RESULT 2026-09-09 — Convert LOG vertical DONE (atu-merlin-ts-log-v1@1; WAIVED_PATHFINDER, PARITY=UNVERIFIED)
-# Code: modern/src/shared/samlog/index.ts (createSamlog.addLogEntry over the ORD samlog table via ord700_user;
-#   normaliseLogEntry; formatLegacyLine / toRpgTimestamp; decodeSamlogUserSpace) — reuse, ORD pack not widened
-# DB: modern/db/schema.sql LOG section appended — COMMENT ON samlog + 3 columns only; nothing altered, no new object
-# Tests: modern/test/samlog.test.ts 24 tests (c02, c03, c04, c06, c07, c08, c10, schema shape); 306/306 green; typecheck clean
-# Docs: modern/README.md LOG section (card coverage c01-c10, residual vs reuse, CR-L1..CR-L8, known_risks);
-#   architecture/atu-merlin-log/CONVERT_RECORD.md
-# Not touched: app.ts / server.ts (no HTTP needed), shared/logging (one module), features/order|customer, openapi/*, sibling packs
-# Residual: LOG100 (c01/c05/c06), capacity c04, reader c09, shared cursor c10. needs-SME: whole-slice preserve?, c03 line string
-#   vs Msg contract, c03 per-event actor. Never claim Merlin migrated.
-# Next: Verification station for COU / PAR / LOG (all PARITY=UNVERIFIED) — each needs Ash to set line 1 back to RUN. Pack B held.
-
-# CONVERT — LOG programs / samlog align (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
+# VERIFY — COU vertical (atuMerlin) — FIRE after Convert COU DONE + residual Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# ROOM_OK: convert LOG only (atu-merlin-ts-log-v1@1 BOUND tip ad697f3 / pack at architecture/atu-merlin-log/)
-# Field + CTO Convert ROOM_OK batch of five 2026-09-09. Paste: PASTE-convert-log-vertical-atu-merlin.md @ f2f7e6c
-# WAIVED_PATHFINDER — COMPARE at TypeScript API only. Prefer ORD samlog align; never widen ORD pack.
-# edit_surface STRICT: never rewrite CUS/ORD; sibling architecture deny; additive db/test only
-# known_risks as-is. Never claim Merlin migrated.
-# After DONE: Verify residual packs still open (COU/PAR/LOG as needed). Pack B held.
+# Convert COU DONE tip 418d5cf (atu-merlin-ts-cou-v1@1). Convert PAR/LOG also DONE; Verify COU first in residual verify wave.
+# ROOM_OK: Ash standing clearance 2026-09-08 + proceed last-10 2026-09-09; Field+CTO Convert ROOM_OK residual batch 2026-09-09.
+# Paste: PASTE-verify-cou-vertical-atu-merlin.md
+# WAIVED_PATHFINDER — COMPARE at TypeScript API only. PARITY=UNVERIFIED expected until goldens.
+# edit_surface STRICT: verification artefacts only under verification/cou-vertical/; never rewrite modern/ convert code.
+# After DONE: Verify PAR then Verify LOG (each own AGENT_JOB RUN). Pack B held.
 # House style: never use pin / pinned / landed.
 
-# PASTE — Convert LOG vertical (atuMerlin)
+# PASTE — Verify COU vertical (atuMerlin)
 
-Use only after Architecture pack `atu-merlin-ts-log-v1` is **BOUND** and the job body contains convert **ROOM_OK**.
+Use only after COU convert is DONE under `modern/src/shared/fcountry/` (FCOUNTRY / COU300 / COU301 only) and the room posts Verification ROOM_OK in `overnight/AGENT_JOB.md`.
 
 ## Hard gate
 
-1. Read `architecture/atu-merlin-log/PACK.yaml`. Refuse if status is not BOUND.
-2. Refuse if job body does not contain ROOM_OK for convert.
-3. Cite pack_id@version `atu-merlin-ts-log-v1@1` in every commit and PR description.
-4. Never edit ATU_SRC/**. Never push master directly. Open or update PR to master.
-5. Honour edit_surface STRICTLY from BOUND pack:
-
-   ALLOW only:
-
-   - modern/src/shared/samlog/**
-   - modern/src/shared/logging/**
-   - modern/db/** (additive / shared reuse only — do not reshape CUS or ORD schema non-additively)
-   - modern/test/** for log/samlog only (pack-scoped)
-   - modern/src/app.ts, modern/src/server.ts (additive wiring only)
-   - modern/package.json, package-lock.json, tsconfig.json, vitest.config.ts, README.md, .gitignore, scripts/**
-   - architecture/atu-merlin-log/**
-
-   DENY:
-
-   - ATU_SRC/**, discovery/**, inventory/**, overnight/** (except stamp AGENT_JOB.md DONE)
-   - modern/src/features/customer/**
-   - modern/src/features/order/**
-   - modern/openapi/customer.yaml
-   - modern/openapi/order.yaml
-   - architecture/atu-merlin/** (CUS pack)
-   - architecture/atu-merlin-ord/**
-   - architecture/atu-merlin-vat/**
-   - architecture/atu-merlin-dat/**
-   - architecture/atu-merlin-cou/**
-   - architecture/atu-merlin-par/**
-
-6. Characterization WAIVED_PATHFINDER. No invent IBM i goldens. No claim REPLAY_GREEN against legacy.
-7. Scope: log-programs only. Prefer align with existing samlog. Never widen ORD pack. Never rewrite order or customer features. No ART.
-
-## Target (from BOUND pack)
-
-- TypeScript modular monolith Node 20 + Fastify
-- Shared logging under modern/src/shared/samlog/** and/or modern/src/shared/logging/**
-- ORD already has samlog table — prefer align/reuse via shared logging without widening atu-merlin-ts-ord-v1
-- Document residual vs reuse
-- Prefer shared logging module; HTTP only if Convert needs it
+1. Read `architecture/atu-merlin-cou/PACK.yaml`. Refuse if status is not BOUND.
+2. Refuse if the job body does not contain ROOM_OK for verification.
+3. Cite pack_id@version `atu-merlin-ts-cou-v1@1` in every commit and PR description.
+4. Never edit `ATU_SRC/**`. Never push master directly. Open or update PR to master.
+5. Mode is COMPARE at the TypeScript API only. Characterization is WAIVED_PATHFINDER.
+6. Do not invent IBM i goldens. Do not claim REPLAY_GREEN against legacy.
+7. Do not claim PARITY=GREEN against IBM i. At most claim TS-boundary evidence under the waiver.
+8. Scope FCOUNTRY / COU300 / COU301 ONLY. COU200 panel half stays deferred / stay_legacy — do not invent presentation. CUS and ORD stay under their own packs — do not rewrite them. ART out of scope.
+9. Honour Smith gate: if another Cloud Agent job is still RUN, stop and do not stamp a new job.
+10. Never rewrite CUS under `modern/src/features/customer/**` or `modern/openapi/customer.yaml`. Never rewrite ORD under `modern/src/features/order/**` or `modern/openapi/order.yaml`. Do not reshape CUS or ORD schema.
+11. Sibling architecture deny: do not edit `architecture/atu-merlin/**`, `architecture/atu-merlin-ord/**`, `architecture/atu-merlin-vat/**`, `architecture/atu-merlin-dat/**`, `architecture/atu-merlin-par/**`, or `architecture/atu-merlin-log/**`.
+12. `modern/db/**` and `modern/test/**` are additive and pack-scoped only — do not reshape CUS or ORD schema; tests only for this pack's surface.
 
 ## Inputs (read-only)
 
-- architecture/atu-merlin-log/PACK.yaml (BOUND)
-- architecture/atu-merlin-log/ADR/0001-log-programs-ts-postgres.md
-- discovery/log-programs/features/*.md
-- discovery/log-programs/SME_BRIEF.md — open SME questions stay as-is; do not invent answers
+- `architecture/atu-merlin-cou/PACK.yaml` (BOUND)
+- `architecture/atu-merlin-cou/CONVERT_RECORD.md` if present (else `modern/README.md` COU / fcountry section)
+- `modern/README.md` (COU/FCOUNTRY card coverage + CONTRACT_RISK / known_risks)
+- `modern/src/shared/fcountry/**`
+- `modern/test/**` (cou/fcountry-related)
+- `discovery/cou-maintain/features/` (FCOUNTRY / COU300 / COU301 cards only)
 
 ## Work
 
-1. Extend modern/src/shared/samlog and/or modern/src/shared/logging. Do not rewrite order or customer features.
-2. Implement documented LOG behaviours from accepted cards only. Leave inferred/needs-SME stubbed with TODO citing card id.
-3. Prefer align with existing ORD samlog table. Extend shared helpers or document residual vs reuse. Do not widen atu-merlin-ts-ord-v1.
-4. Capacity silent fail (c04) stays residual. Do not invent.
-5. Whole-slice may be non-functional side effect — do not invent business value claims.
-6. modern/db and modern/test are additive and pack-scoped only.
-7. Add API tests at TypeScript boundary only.
-8. Keep known_risks visible in modern/README.md (LOG section).
+1. Run typecheck and tests in modern. Record the summary.
+2. COMPARE converted FCOUNTRY cards in README against shared fcountry exports/tests (and any OpenAPI if Convert added it). List gaps. Do not COMPARE or invent COU200 panel behaviour.
+3. For each COU CONTRACT_RISK / pack known_risks (GetCountryIso3 unused c08, COU301 selector needs-SME, COU200 deferred): mark accept-for-demo or defer in one sentence. Do not invent SME answers. Do not claim IBM i match.
+4. Preserve deferred COU200 as residual; do not invent presentation or consumers.
+5. Write `verification/cou-vertical/<RUN_ID>/PARITY.yaml` and `REPORT.md` with WAIVED_PATHFINDER. Parity UNVERIFIED or TS_BOUNDARY_GREEN only if checks pass and gaps are explained. Never IBM i GREEN.
+6. Do not rewrite Discovery cards except a clear harness bug that blocks COMPARE.
 
 ## Done
 
-- Documented LOG behaviours present in TypeScript, or listed as residual.
-- Talk-track: residual lives in TypeScript under waiver — not Merlin migrated.
-- Tests pass for what you claimed.
-- PR to master updated; description cites pack + WAIVED_PATHFINDER.
-- Rewrite overnight/AGENT_JOB.md so line 1 is exactly DONE, with result paths.
+- PARITY.yaml and REPORT.md under `verification/cou-vertical/`
+- Explicit accept/defer table for COU/FCOUNTRY risks
+- PR updated; talk-track COU FCOUNTRY residual under waiver — not Merlin migrated
+- AGENT_JOB line 1 DONE
 
 ## Refuse
 
-- Convert while pack DRAFT
-- Whole-estate convert / ART work
-- Widen atu-merlin-ts-ord-v1 or atu-merlin-ts-cus-v1
-- Rewrite order feature to re-own samlog
-- Rewrite CUS under modern/src/features/customer/** or modern/openapi/customer.yaml
-- Rewrite ORD under modern/src/features/order/** or modern/openapi/order.yaml
-- Reshape CUS or ORD schema under modern/db/** non-additively
-- Edit sibling architecture packs (CUS/ORD/VAT/DAT/COU/PAR)
-- Silent overwrite of Discovery cards
-- Claiming Merlin is fully migrated / claiming LOG is fully migrated
-- Inventing SME answers or “fixing” planted defects
+- Verification while convert incomplete
+- IBM i parity claims
+- Whole-estate verification, ART, or inventing COU200
+- Editing ATU_SRC
+- Starting while AGENT_JOB is still RUN
+- Rewriting CUS/ORD features or OpenAPI
+- Claiming the repo is fully migrated
