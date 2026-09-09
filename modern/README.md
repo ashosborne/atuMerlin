@@ -1,6 +1,6 @@
-# atuMerlin — modern CUS + ORD + VAT + DAT verticals (pathfinder)
+# atuMerlin — modern CUS + ORD + VAT + DAT + COU verticals (pathfinder)
 
-TypeScript modular monolith holding four converted verticals, each under its own BOUND
+TypeScript modular monolith holding five converted verticals, each under its own BOUND
 Architecture pack with a separate convert `ROOM_OK`:
 
 - **CUS** (`cus-interactive` + `cus-modules`) — pack **`atu-merlin-ts-cus-v1@1`**
@@ -12,17 +12,21 @@ Architecture pack with a separate convert `ROOM_OK`:
 - **VAT** (`vat-module`) — pack **`atu-merlin-ts-vat-v1@1`** (`architecture/atu-merlin-vat/PACK.yaml`).
   See [VAT vertical](#vat-vertical-pack-atu-merlin-ts-vat-v11).
 - **DAT** (`dat-utils`) — pack **`atu-merlin-ts-dat-v1@1`** (`architecture/atu-merlin-dat/PACK.yaml`).
-  See [DAT utilities](#dat-utilities-pack-atu-merlin-ts-dat-v11) at the end of this file.
+  See [DAT utilities](#dat-utilities-pack-atu-merlin-ts-dat-v11).
+- **COU** (`cou-maintain`, FCOUNTRY half only) — pack **`atu-merlin-ts-cou-v1@1`**
+  (`architecture/atu-merlin-cou/PACK.yaml`). See
+  [COU vertical](#cou-vertical-fcountry-half-pack-atu-merlin-ts-cou-v11) at the end of this file.
 
-This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule and the DAT date rule live
-in TypeScript under the waiver; ART, country / VAT / article maintenance, the ORD9xx batches and
-everything else stay on IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens
-and no `REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **parity:
-TS_BOUNDARY_GREEN** under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD:
-**parity: TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
-DAT: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`);
-VAT: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`).
-None is parity against IBM i.
+This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule, the DAT date rule and the
+FCOUNTRY half of COU live in TypeScript under the waiver; ART, country (COU200) / VAT / article
+maintenance, the ORD9xx batches and everything else stay on IBM i. Characterization is
+`WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`; behaviour is compared at the
+TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the waiver
+(`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity: TS_BOUNDARY_GREEN** under
+the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`); DAT: **parity:
+TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`); VAT:
+**parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`);
+COU: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -42,13 +46,15 @@ modern/
                                    ORD section appended (orders, detord, article, vatdef, samlog, lastordno,
                                    ordercus view, ORD700 / ORD701 triggers); VAT section appended (vatdef
                                    mapping note + comments, nothing altered); DAT section appended (date-lock
-                                   functions dat_iso_num_to_date / dat_date_to_iso_num, no table)
+                                   functions dat_iso_num_to_date / dat_date_to_iso_num, no table); COU section
+                                   appended (COUNTR1 LF -> countr1 index + comments on country, nothing altered)
   openapi/customer.yaml            HTTP contract (CUS)
   openapi/order.yaml               HTTP contract (ORD)
   src/app.ts, src/server.ts        Fastify app / entry
   src/db/                          pool, migrate, seed (CUS fixtures), cli
   src/shared/fcustomer/            FCUSTOMER (CUS300 getters, ExistCus, IsCusDeleted, CUS301 SltCustomer)
-  src/shared/fcountry/             FCOUNTRY dependency surface (ExistCountry, GetCountryName, list) — read-only
+  src/shared/fcountry/             FCOUNTRY (COU300 ExistCountry, GetCountryName, GetCountryIso3; COU301 SltCountry
+                                   page reader + selector reducer) — COU vertical; listCountries kept for CUS
   src/shared/farticle/             FARTICLE dependency surface (GetArtDesc, GetArtRefSalPrice, GetArtVatCode, list) — read-only
   src/shared/fvat/                 FVAT (VAT300 GetVATRate, GetVATDesc, ClcVAT, ExistVATRate) — VAT vertical, shared by ORD
   src/shared/dat/                  DAT (ISO_Num_To_Date / DAT001, ISOTODATE40 / DAT002, the date lock) — DAT utilities
@@ -616,3 +622,124 @@ card id). Nothing below is a target decision.
 - IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
 - Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`
   or the residual DRAFT packs; edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.
+
+---
+
+# COU vertical, FCOUNTRY half (pack `atu-merlin-ts-cou-v1@1`)
+
+Converted under Architecture pack **`atu-merlin-ts-cou-v1@1`** (`architecture/atu-merlin-cou/PACK.yaml`,
+`status: BOUND`, bound 2026-09-09T11:12:14Z) with a separate convert `ROOM_OK` carried in
+`overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
+`architecture/atu-merlin-cou/ADR/0001-cou-fcountry-ts-postgres.md`.
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
+PARITY=UNVERIFIED** — Verification is deferred (`verification: DEFERRED` in the pack); nothing here
+is parity against IBM i.
+
+**Talk-track:** the FCOUNTRY service program lives in TypeScript under the waiver — the repo is not
+fully migrated, and COU is not "fully migrated" either: the six accepted `cou-maintain` cards
+(`c07`–`c12`, the FCOUNTRY half) are present at the TS boundary or listed as residual below; the
+COU200 "Work with Countries" panel half (`c01`–`c06`, `c13`) — the only writer of `COUNTRY` — stays
+deferred / stay_legacy, and every needs-SME item stays open.
+
+## Edit surface honoured
+
+Written: `src/shared/fcountry/index.ts` (extended in place — `listCountries` and the `Country` shape
+the CUS vertical consumes are unchanged; `existCountry`, `getCountryName`, `getCountryIso3`,
+`sltCountry` and the COU301 selector reducer added), `db/schema.sql` (COU section **appended** — the
+CUS, ORD, VAT and DAT objects above it are byte-identical; `country` is not altered, one index plus
+comments), `test/fcountry.test.ts` (new, pack-scoped), `package.json` (description), this README,
+`architecture/atu-merlin-cou/CONVERT_RECORD.md`. Untouched: `ATU_SRC/**`, `discovery/**`,
+`inventory/**`, `src/features/customer/**`, `src/features/order/**`, `openapi/customer.yaml`,
+`openapi/order.yaml`, `src/db/**`, `src/app.ts`, `src/server.ts`, `architecture/atu-merlin/**`,
+`architecture/atu-merlin-ord/**`, the sibling packs (`vat`, `dat`, `par`, `log`). No `features/cou/`
+surface and no HTTP route: the pack's `contract_paths` is empty and the legacy exposes FCOUNTRY only
+through its four RPG callers, so the shared module is the whole surface (same stance as
+`cus-modules`, `vat-module`, `dat-utils`). The CUS web keeps its own `GET /api/countries` datalist
+over `listCountries`; it is not rewired to `sltCountry` (deny).
+
+## Mapping rules applied
+
+| Rule | Where |
+| --- | --- |
+| RPGLE service program FCOUNTRY (COU300 / COU301) -> TS shared module | `src/shared/fcountry/index.ts`: `createFCountry(db)` returns the four binder exports `existCountry`, `getCountryName`, `getCountryIso3`, `sltCountry` plus the CUS `listCountries`; `normaliseCountryCode` is the `2A` by-value parameter, `normaliseCountryName` the `30A` by-name key; the COU301 state machine is the pure reducer `sltCountryOpen` / `sltCountryCheck` / `sltCountryAct` / `sltCountryRequest` |
+| PF COUNTRY / LF COUNTR1 -> postgres table / index (additive) | `country` already existed as the CUS read-only dependency, column-for-column from `COUNTRY.PF` (`coid` PK = `UNIQUE K COID`); the COU pack takes over its semantics without altering it (`COMMENT ON` only). `COUNTR1.LF` (`K COUNTR`, not unique) -> `CREATE INDEX countr1 ON country (countr COLLATE "C", coid COLLATE "C")` |
+| DSPF COU301D -> web selector (if Convert includes SltCountry UI) | Not exercised: no UI is added. `sltCountry` is the positioned page reader (`s01prp` + `S01lod`, 20 rows per load, one-row look-ahead for More / Bottom) and the reducer carries the option / F8 / position-to rules with the DDS indicator numbers and message texts (35 / 36 / 41 / 42) as data, so a future web selector or the CUS form can consume them without re-deriving the rules |
+| DSPF COU200D / program COU200 -> deferred | Not mapped. No maintenance path over `country`; nothing of the panel half is invented |
+
+## Card coverage
+
+`converted` = behaviour present at the TS boundary with a test; `as-is` = converted with a known
+legacy quirk deliberately preserved; `residual` = not carried, with the reason; `needs-SME` = left
+open on purpose (no answer invented).
+
+### cou-maintain (FCOUNTRY half)
+
+| Card | Behaviour | Status | Notes |
+| --- | --- | --- | --- |
+| c07 | GetCountryName / GetCountryIso3 / ExistCountry over one keyed chain; unknown code -> cleared buffer (blanks, `*off`); blank code never reads; no delete flag so exists = row present | converted (**as-is**) | one keyed read per call, blank code short-circuits without I/O; exact 2-char match, no case folding, no leading-blank trim; the hit cache and its activation-group lifetime are not reproduced (CR-C1) |
+| c08 | GetCountryIso3 has no caller; closeCOUNTRY not exported | converted (**needs-SME**) | `getCountryIso3` exported with the same chain semantics; no consumer invented, `coiso` not disposed (`TODO(cou-maintain-c08)`); no close on the module (nothing to close — CR-C1) |
+| c09 | SltCountry: keyed read positioned at `pcod` (SETLL), by code or by name over COUNTR1, 20 rows per load into 10-row pages, More / Bottom by look-ahead, option 1 returns the row's COID, F3 / F12 return `pcod`; beyond the last key -> empty window, no message | converted (**as-is**) | `sltCountry(request)` + `sltCountryOpen` / `sltCountryAct`; `dft` is the caller's value as passed and never written; empty window kept as-is (`TODO(cou-maintain-c09)`, needs-SME); the window frame / subfile itself is not reproduced (CR-C5); byte order stands in for the keyed order (CR-C4) |
+| c10 | F8 toggles by-code / by-name and clears the key of the order being **entered**; caller's position lost after toggle away and back; F8 ignored while any row option is typed; F8 + position-to on one Enter toggles and discards the position | converted (**as-is**) | reducer reproduces the COU301 clearing order and the card's trace (codes from the top, `pcod` lost) is a test; retaining the position is a target decision (`TODO(cou-maintain-c10)`, needs-SME) |
+| c11 | S01chk: row option 0 / 1 only (35), at most one `1` (36), control option 0 / 8 only (41), 8 refused while a selection is pending (42); errors cumulative, page shown holds the first offending row; option 8 repositions at POSCOD / POSDES, text not validated | converted | `sltCountryCheck` returns the indicator set, `firstErrorRrn` (RRB01), `selected` (SLT01), `optionsTyped` (STS01); message texts are the DDS literals; RI / cursor attributes are presentation (CR-C5) |
+| c12 | Export surface: four symbols under literal `SIGNATURE('V1')`, `ACTGRP(*CALLER)`, two binding routes, four callers | converted | four methods on `FCountry` + `listCountries` (CUS surface, unchanged); a test asserts the `countr1` index exists; signature / BNDDIR / activation group have no TS equivalent (CR-C2); the four RPG callers are CUS (already on `listCountries` + `getCountryName`-equivalent) and PRO (unbound, not converted) |
+
+## SME open questions — kept visible, not answered here
+
+From `discovery/cou-maintain/SME_BRIEF.md` (unsigned); preserved as-is in the code (comments cite the
+card id). Nothing below is a target decision.
+
+- **c08** — `GetCountryIso3` / `COISO`: carry into the target unused, or reject until a consumer
+  exists? Carried unused here; `coiso` stays a column and the getter stays exported. Nothing outside
+  the tree is known to read it.
+- **c10** — `SltCountry` and `SltArtFam` behave identically: card the keyed selector once? The
+  reducer here is COU-scoped and cites only COU301; whether `fam-maintain` reuses it is that bind's
+  decision.
+- **c09** — show a message when the position is beyond the last key (as-is: empty window)? Keep the
+  caller's current code as the position across the F8 toggle (neither legacy window does)? Both
+  as-is; `TODO(cou-maintain-c09)` / `TODO(cou-maintain-c10)` mark the two spots.
+- **c07** — hit cache with no invalidation, acceptable as-is for reference data? The module reads
+  per call (the same stance the CUS surface took before this pack); if the SME wants the stale-read
+  behaviour reproduced it is a pack version bump (CR-C1).
+- **c07 / c12** — activation group of `CUS200` / `CUS250` / `PRO250`, whether `'V1'` was ever
+  bumped, target library of `FCOUNTRY`: build questions with no TS counterpart (CR-C2).
+- **c12** — is `PRO200`'s explicit `BNDSRVPGM(FCOUNTRY)` (no `H` spec) intentional? PRO is
+  unbound; recorded only.
+- **Deferred half** — `c01`–`c06`, `c13` (COU200): ISO-3 validation, how countries are created,
+  retire-vs-convert stay open for that bind. No maintenance path exists in modern.
+
+## Deliberate deltas (CONTRACT_RISK — left open for Verification)
+
+| Id | Delta | Why |
+| --- | --- | --- |
+| CR-C1 | No last-key cache and no activation-group state: every getter call reads `country`; a row changed between two calls is seen at once; there is nothing to close | The legacy cache key is the record buffer's own `COID` with the lifetime of the caller's activation group (c07, c12) — a process-wide singleton would be wrong in a request-serving Node process and a per-request cache would be an invention. Reference data; the number of reads differs, no answer differs (c07). Tested |
+| CR-C2 | No binder signature, no `BNDDIR`, no `ACTGRP(*CALLER)`: the export surface is a TypeScript interface | Build metadata with no TS equivalent (c12); compatibility is by the type system rather than by `'V1'` convention |
+| CR-C3 | `2A` by-value contract: a longer code is cut to two characters and trailing blanks are ignored; case is kept as typed | The RPG `value` parameter truncates and pads to 2A (c07); the 5250 session uppercased `POSCOD` (no `CHECK(LC)`), which is presentation, so the module does not fold case. Tested |
+| CR-C4 | Ordering is byte order (`COLLATE "C"`), not the EBCDIC keyed order; equal names are tie-broken by code | The keyed LF order over `COUNTR1` (not `UNIQUE`) listed equal names in arrival order; Postgres has no arrival order, so the code decides (c09). Digits before letters and upper before lower hold in both; accented / lower-case names may order differently from the box. Tested |
+| CR-C5 | The COU301D window (subfile, 10-row display pages, `SFLRCDNBR`, RI / cursor attributes, F8 legend) is not reproduced; no HTTP or web surface | The pack's `contract_paths` is empty and no caller in modern needs a selector yet (CUS uses the datalist); `sltCountry` + the reducer carry the rules and indicator numbers as data for a future presentation. `SltCountry` returns one page per call, not a blocking window |
+
+## known_risks (from the BOUND pack) — where each lives
+
+| Risk | Status here |
+| --- | --- |
+| Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API | `test/fcountry.test.ts` expected values derived from the cards (c07 chain semantics, c09 load / look-ahead, c10 trace, c11 indicator table), not recorded on the box |
+| GetCountryIso3 unused export (c08) — do not invent consumer or dispose COISO without SME | exported, unused; `coiso` kept; `TODO(cou-maintain-c08)`; a test asserts the selector rows never carry `coiso` (the window shows code and name only, c09) |
+| Do not invent COU200 presentation — panel half stay_legacy / deferred | nothing under `features/`, no maintenance route, no writer of `country`; `schema.sql` comment records COU200 as the only writer |
+| Convert must consume FCOUNTRY/COU300/COU301 cards only until COU200 is carded and pack SUPERSEDEd | cards c07–c12 only; c01–c06 / c13 not read into code |
+| COU301 selector open questions (empty position message, F8 position retention) stay needs-SME | as-is in `sltCountry` / `sltCountryAct`; `TODO(cou-maintain-c09)`, `TODO(cou-maintain-c10)` |
+| Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required | ROOM_OK carried in `overnight/AGENT_JOB.md` body (line 4) |
+| CUS modern already has shared/fcountry; accidental rewrite of customer feature or widen of CUS pack is a fail | `listCountries` and `Country` unchanged (test c12); `features/customer/**`, `openapi/customer.yaml`, `architecture/atu-merlin/**` untouched; CUS suite unchanged and green |
+| modern/db/** additive only — do not reshape CUS or ORD schema | COU section appended: one `CREATE INDEX IF NOT EXISTS` + `COMMENT ON`; `country` DDL not altered; everything above the section byte-identical |
+
+## Not done in this pack
+
+- COU200 "Work with Countries" panel (c01–c06, c13): no maintenance path, no writer of `country`,
+  no presentation — deferred until Pack B cards it and the pack is SUPERSEDEd.
+- Any HTTP / OpenAPI surface for COU (`contract_paths: []`); any `features/cou/`; any web selector
+  over `sltCountry` (the CUS form keeps its datalist).
+- Rewiring the CUS pack's `fcountry` calls (`listCountries`, the name lookup) to the new methods —
+  deny-listed; a CUS version bump if wanted.
+- PRO200 / PRO250 callers (`pro-interactive`, unbound) and the `fam-maintain` twin selector.
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
+- Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`,
+  `atu-merlin-ts-dat-v1` or the residual DRAFT packs (`par`, `log`); edits under `ATU_SRC/**`,
+  `discovery/**`, `inventory/**`, `src/db/**`.
