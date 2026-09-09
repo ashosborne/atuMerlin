@@ -1,0 +1,765 @@
+{
+  "pack": "atu-merlin-ts-cou-v1@1",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "discovery/cou-maintain/features c07..c12 (COU301 keyed read replayed in JS over byte order; S01chk / S01act state machine written from the cards; c07 buffer rules observed through a query-counting proxy) + modern/README.md COU section; NOT IBM i goldens",
+  "ran_at": "2026-09-09T19:03:49.511Z",
+  "summary": {
+    "pass": 27,
+    "fail": 0,
+    "total": 27
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "card": "c07",
+      "name": "GetCountryName / GetCountryIso3 / ExistCountry return COUNTR / COISO / *on for every fixture row (8 codes)",
+      "pass": true,
+      "detail": {
+        "rows": 8,
+        "bad": []
+      }
+    },
+    {
+      "id": "P02",
+      "card": "c07",
+      "name": "unknown code -> name blank, ISO-3 blank, exists false, no exception: 668 codes (AA..ZZ not in the table)",
+      "pass": true,
+      "detail": {
+        "codes": 668,
+        "bad": [],
+        "threw": []
+      }
+    },
+    {
+      "id": "P03",
+      "card": "c07",
+      "name": "blank code never reads: 0 SQL statements for '', ' ', '  ' across the three getters while a blank-keyed row (Nowhere) is present; all return blanks / false",
+      "pass": true,
+      "detail": {
+        "statements": 0,
+        "got": [
+          [
+            "",
+            "",
+            false
+          ],
+          [
+            "",
+            "",
+            false
+          ],
+          [
+            "",
+            "",
+            false
+          ]
+        ],
+        "rowThere": "Nowhere"
+      }
+    },
+    {
+      "id": "P04",
+      "card": "c07",
+      "name": "exact match: lower-case, mixed-case, leading-blank and swapped variants of every fixture code miss unless byte-equal (32 variants)",
+      "pass": true,
+      "detail": {
+        "variants": 32,
+        "bad": []
+      }
+    },
+    {
+      "id": "P05",
+      "card": "c07 CR-C3",
+      "name": "2A by-value: normaliseCountryCode == fixed-length-alpha(2) oracle on 2000 random strings; through the table 'FRA' -> FR found, 'FR ' -> France, 'F' -> miss, 'FRANCE' -> FRA",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "through": {
+          "FRA": true,
+          "FR ": "France",
+          "F": "",
+          "FRANCE": "FRA",
+          "undefined": ""
+        }
+      }
+    },
+    {
+      "id": "P06",
+      "card": "c07 CR-C1",
+      "name": "no last-key cache (delta observed as documented): 5 calls for one code = 5 reads (legacy: 1); a changed row is seen on the very next call; a code added after a miss is found; every read is parameterised",
+      "pass": true,
+      "detail": {
+        "repeatReads": 5,
+        "before": "Belgique",
+        "after": "Belgium",
+        "missBefore": false,
+        "missAfter": true,
+        "statements": [
+          "SELECT coid, countr, coiso FROM country WHERE coid = $1",
+          "SELECT coid, countr, coiso FROM country WHERE coid = $1",
+          "SELECT coid, countr, coiso FROM country WHERE coid = $1",
+          "SELECT coid, countr, coiso FROM country WHERE coid = $1",
+          "SELECT coid, countr, coiso FROM country WHERE coid = $1"
+        ]
+      }
+    },
+    {
+      "id": "P07",
+      "card": "c07 CR-C1",
+      "name": "GetCountryName(x) then ExistCountry(x) (the CUS200 prompt-then-check path): 2 reads here where the legacy performed 1 — same answers, different read count",
+      "pass": true,
+      "detail": {
+        "reads": 2,
+        "n": "Italy",
+        "e": true
+      }
+    },
+    {
+      "id": "P08",
+      "card": "c07 schema",
+      "name": "country: COID varchar(2) PK, COUNTR varchar(30), COISO varchar(3), NOT NULL, no delete flag (exists = row present); 3-char code, 31-char name, 4-char ISO rejected by the column types (22001)",
+      "pass": true,
+      "detail": {
+        "cols": [
+          [
+            "coid",
+            "character varying",
+            2,
+            "NO"
+          ],
+          [
+            "countr",
+            "character varying",
+            30,
+            "NO"
+          ],
+          [
+            "coiso",
+            "character varying",
+            3,
+            "NO"
+          ]
+        ],
+        "pk": "CREATE UNIQUE INDEX country_pkey ON t_48ceba7885d9.country USING btree (coid)",
+        "rejected": {
+          "coid3": "22001",
+          "countr31": "22001",
+          "coiso4": "22001"
+        }
+      }
+    },
+    {
+      "id": "P09",
+      "card": "c08",
+      "name": "getCountryIso3 is a method (typeof function) with no consumer in modern/src outside shared/fcountry (32 .ts files scanned); nothing named close* on the instance or the module (closeCOUNTRY was never exported)",
+      "pass": true,
+      "detail": {
+        "scanned": 32,
+        "consumers": [],
+        "closeNames": []
+      }
+    },
+    {
+      "id": "P10",
+      "card": "c08 c09",
+      "name": "SltCountry rows are { coid, countr } only across by-code, by-name and positioned loads — COISO never reaches the window",
+      "pass": true,
+      "detail": {
+        "keys": [
+          "coid",
+          "countr"
+        ],
+        "rowCounts": [
+          8,
+          8,
+          4
+        ]
+      }
+    },
+    {
+      "id": "P11",
+      "card": "c09",
+      "name": "by-code SltCountry == COU301 keyed-read oracle (SETLL >= key, 20 rows, look-ahead More / Bottom) on 546 (position, offset) pairs over 53 rows incl. digit / lower-case codes",
+      "pass": true,
+      "detail": {
+        "rows": 53,
+        "checked": 546,
+        "bad": []
+      }
+    },
+    {
+      "id": "P12",
+      "card": "c09 CR-C4",
+      "name": "by-name SltCountry (COUNTR1) == oracle (byte order on COUNTR, code decides equal names) on 474 (position, offset) pairs incl. three literal 'Korea' rows, exact-case pairs and non-ASCII names",
+      "pass": true,
+      "detail": {
+        "rows": 53,
+        "checked": 474,
+        "bad": []
+      }
+    },
+    {
+      "id": "P13",
+      "card": "c09",
+      "name": "20 rows per load, More / Bottom by one-row look-ahead: 19 -> [19 Bottom]; 20 -> [20 Bottom] (exactly 20 left shows Bottom at once); 21 -> [20 More, 1 Bottom]; 40 -> [20, 20 Bottom]; 41 -> [20, 20, 1]",
+      "pass": true,
+      "detail": [
+        {
+          "total": 19,
+          "pages": [
+            19,
+            null,
+            null
+          ],
+          "more": [
+            false,
+            null,
+            null
+          ],
+          "pass": true
+        },
+        {
+          "total": 20,
+          "pages": [
+            20,
+            null,
+            null
+          ],
+          "more": [
+            false,
+            null,
+            null
+          ],
+          "pass": true
+        },
+        {
+          "total": 21,
+          "pages": [
+            20,
+            1,
+            null
+          ],
+          "more": [
+            true,
+            false,
+            null
+          ],
+          "pass": true
+        },
+        {
+          "total": 40,
+          "pages": [
+            20,
+            20,
+            null
+          ],
+          "more": [
+            true,
+            false,
+            null
+          ],
+          "pass": true
+        },
+        {
+          "total": 41,
+          "pages": [
+            20,
+            20,
+            1
+          ],
+          "more": [
+            true,
+            true,
+            false
+          ],
+          "pass": true
+        }
+      ]
+    },
+    {
+      "id": "P14",
+      "card": "c09",
+      "name": "position beyond the last key (by code 'ZZ' / '~', by name 'zzzz'): { rows: [], more: false, nextOffset: null } — empty window, nothing thrown, no message invented (needs-SME kept as-is)",
+      "pass": true,
+      "detail": {
+        "code": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        },
+        "name": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        },
+        "tilde": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        }
+      }
+    },
+    {
+      "id": "P15",
+      "card": "c09 CR-C4",
+      "name": "three rows named 'Korea' list adjacent at the position, each with its own code, in code order (K0, K1, K2 — the CR-C4 tie-break; the box listed arrival order)",
+      "pass": true,
+      "detail": {
+        "korea": [
+          "K0",
+          "K1",
+          "K2"
+        ],
+        "first": [
+          {
+            "coid": "K0",
+            "countr": "Korea"
+          },
+          {
+            "coid": "K1",
+            "countr": "Korea"
+          },
+          {
+            "coid": "K2",
+            "countr": "Korea"
+          },
+          {
+            "coid": "NL",
+            "countr": "Netherlands"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P16",
+      "card": "c09",
+      "name": "entry: { order code, keycod = pcod, keydes '', dft = pcod }; F3 / F12 return dft even with options typed; option 1 on one row returns that COID; plain Enter -> none. Observation (G-C2): dft is pcod verbatim while keycod is its 2A view ('FRA' -> keycod FR, dft FRA)",
+      "pass": true,
+      "detail": {
+        "s": {
+          "order": "code",
+          "keycod": "IT",
+          "keydes": "",
+          "dft": "IT"
+        },
+        "cancel": {
+          "kind": "return",
+          "coid": "IT"
+        },
+        "cancelWins": {
+          "kind": "return",
+          "coid": "IT"
+        },
+        "select": {
+          "kind": "select",
+          "coid": "NL"
+        },
+        "none": {
+          "kind": "none"
+        },
+        "gC2": {
+          "wide": {
+            "order": "code",
+            "keycod": "FR",
+            "keydes": "",
+            "dft": "FRA"
+          },
+          "trailing": {
+            "order": "code",
+            "keycod": "FR",
+            "keydes": "",
+            "dft": "FR "
+          }
+        }
+      }
+    },
+    {
+      "id": "P17",
+      "card": "c10",
+      "name": "card trace: F8 -> names from top (K kept = IT); option 8 'Ne' -> names from Ne; F8 -> codes from top (pcod lost, D = Ne kept); F8 -> names from top (retained key never read); dft stays IT",
+      "pass": true,
+      "detail": {
+        "shown": [
+          "name:\"\"",
+          "name:\"Ne\"",
+          "code:\"\"",
+          "name:\"\""
+        ],
+        "trace": [
+          {
+            "entry": {
+              "f8": true
+            },
+            "request": {
+              "order": "name",
+              "position": "",
+              "offset": 0
+            },
+            "state": {
+              "order": "name",
+              "keycod": "IT",
+              "keydes": "",
+              "dft": "IT"
+            }
+          },
+          {
+            "entry": {
+              "controlOption": 8,
+              "positionTo": "Ne"
+            },
+            "request": {
+              "order": "name",
+              "position": "Ne",
+              "offset": 0
+            },
+            "state": {
+              "order": "name",
+              "keycod": "IT",
+              "keydes": "Ne",
+              "dft": "IT"
+            }
+          },
+          {
+            "entry": {
+              "f8": true
+            },
+            "request": {
+              "order": "code",
+              "position": "",
+              "offset": 0
+            },
+            "state": {
+              "order": "code",
+              "keycod": "",
+              "keydes": "Ne",
+              "dft": "IT"
+            }
+          },
+          {
+            "entry": {
+              "f8": true
+            },
+            "request": {
+              "order": "name",
+              "position": "",
+              "offset": 0
+            },
+            "state": {
+              "order": "name",
+              "keycod": "",
+              "keydes": "",
+              "dft": "IT"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "P18",
+      "card": "c10",
+      "name": "F8 x 192 entry combinations == oracle: ignored while any row option is typed (redisplay, no toggle, no selection), 41 before the toggle, toggle wins over option 8 and discards the position, clears the key of the order entered",
+      "pass": true,
+      "detail": {
+        "checked": 192,
+        "bad": []
+      }
+    },
+    {
+      "id": "P19",
+      "card": "c11",
+      "name": "S01chk / S01act truth table: 512 combinations (3 rows x {0,1,2,9} x control {0,1,8,9} x F8) == oracle — 35 per invalid row, 36 per second '1', 41 for control not 0/8, 42 for 8 with a '1' pending; cumulative; first offending RRN latched; 26 distinct indicator sets seen",
+      "pass": true,
+      "detail": {
+        "checked": 512,
+        "indicatorSets": [
+          "",
+          "35",
+          "35,35",
+          "35,35,35",
+          "35,35,35,41",
+          "35,35,41",
+          "35,35,41,42",
+          "35,35,42",
+          "35,36",
+          "35,36,41,42",
+          "35,36,42",
+          "35,41",
+          "35,41,42",
+          "35,42",
+          "36",
+          "36,35",
+          "36,35,41,42",
+          "36,35,42",
+          "36,36",
+          "36,36,41,42",
+          "36,36,42",
+          "36,41,42",
+          "36,42",
+          "41",
+          "41,42",
+          "42"
+        ],
+        "bad": []
+      }
+    },
+    {
+      "id": "P20",
+      "card": "c10 c11",
+      "name": "1500 random selector sessions (8634 Enter / F-key steps) through sltCountryAct == oracle state machine on outcome, state and the s01prp request after every step",
+      "pass": true,
+      "detail": {
+        "sessions": 1500,
+        "steps": 8634,
+        "bad": []
+      }
+    },
+    {
+      "id": "P21",
+      "card": "c11",
+      "name": "option 8: reposition at POSCOD / POSDES then reload == oracle page; blank position returns to the top (recovery from an empty window); text not validated ('zz' / 40 x's -> empty window)",
+      "pass": true,
+      "detail": {
+        "shown": [
+          {
+            "order": "code",
+            "position": "N",
+            "first": "NL",
+            "count": 2,
+            "more": false
+          },
+          {
+            "order": "code",
+            "position": "",
+            "first": "BE",
+            "count": 8,
+            "more": false
+          },
+          {
+            "order": "code",
+            "position": "zz",
+            "first": null,
+            "count": 0,
+            "more": false
+          },
+          {
+            "order": "name",
+            "position": "Sp",
+            "first": "ES",
+            "count": 3,
+            "more": false
+          },
+          {
+            "order": "name",
+            "position": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "first": null,
+            "count": 0,
+            "more": false
+          },
+          {
+            "order": "code",
+            "position": "",
+            "first": "BE",
+            "count": 8,
+            "more": false
+          }
+        ],
+        "bad": []
+      }
+    },
+    {
+      "id": "P22",
+      "card": "c12",
+      "name": "instance keys are exactly existCountry, getCountryIso3, getCountryName, sltCountry (the four FCOUNTRY.BND symbols) + listCountries (CUS surface); module exports are createFCountry, the two normalisers, the four reducer functions and four constants; nothing named close*",
+      "pass": true,
+      "detail": {
+        "instance": [
+          "existCountry",
+          "getCountryIso3",
+          "getCountryName",
+          "listCountries",
+          "sltCountry"
+        ],
+        "moduleExports": [
+          "COID_LENGTH",
+          "COUNTR_LENGTH",
+          "SLT_DISPLAY_PAGE",
+          "SLT_LOAD_SIZE",
+          "createFCountry",
+          "normaliseCountryCode",
+          "normaliseCountryName",
+          "sltCountryAct",
+          "sltCountryCheck",
+          "sltCountryOpen",
+          "sltCountryRequest"
+        ]
+      }
+    },
+    {
+      "id": "P23",
+      "card": "c12 schema",
+      "name": "countr1 index exists on country (countr COLLATE \"C\", coid COLLATE \"C\") next to the PK only; table comment names COU200 (c13) as the only writer, coiso comment cites c08, index comment cites c09",
+      "pass": true,
+      "detail": {
+        "idx": [
+          {
+            "indexname": "countr1",
+            "indexdef": "CREATE INDEX countr1 ON t_48ceba7885d9.country USING btree (countr COLLATE \"C\", coid COLLATE \"C\")"
+          },
+          {
+            "indexname": "country_pkey",
+            "indexdef": "CREATE UNIQUE INDEX country_pkey ON t_48ceba7885d9.country USING btree (coid)"
+          }
+        ],
+        "comments": {
+          "tbl": "COUNTRY.PF — country code, name, ISO-3. Read by shared FCOUNTRY (ExistCountry, GetCountryName, GetCountryIso3, SltCountry); written only by the deferred COU200 panel (cou-maintain-c13), no maintenance path here.",
+          "coiso": "COISO 3A literal (not SAMREF); read by GetCountryIso3, which has no caller in the estate (cou-maintain-c08, needs-SME).",
+          "idx": "COUNTR1.LF — by-name order of COU301 SltCountry (cou-maintain-c09); not unique, code tie-breaks equal names."
+        }
+      }
+    },
+    {
+      "id": "P24",
+      "card": "c12 CUS",
+      "name": "CUS-reachable inputs (136 values, <= 2 chars right-trimmed): existCountry / getCountryName == pre-convert raw-equality semantics; listCountries returns every row ordered by code with COISO. Observation (G-C3): 'FRA' / 'FR ' now hit FR where the pre-convert surface missed — unreachable through CUS parseInput",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "listCount": 8,
+        "gC3": {
+          "FRA": true,
+          "FR ": true
+        }
+      }
+    },
+    {
+      "id": "P25",
+      "card": "c09 CR-C4",
+      "name": "module order == byte order (COLLATE \"C\") on 11 loaded codes (digit / upper / lower / 1-char); upper-case-only codes and a shorter (blank-padded) key order the same as EBCDIC; blank first in both. Observation (G-C1): digits-before-letters and upper-before-lower are ASCII-only — EBCDIC CP037 puts lower < upper < digits, contrary to the README CR-C4 rationale",
+      "pass": true,
+      "detail": {
+        "moduleOrder": [
+          "1A",
+          "9Z",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "ZZ",
+          "a",
+          "aa",
+          "az",
+          "zz"
+        ],
+        "byteOrder": [
+          "1A",
+          "9Z",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "ZZ",
+          "a",
+          "aa",
+          "az",
+          "zz"
+        ],
+        "ebcdicOrder": [
+          "a",
+          "aa",
+          "az",
+          "zz",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "ZZ",
+          "1A",
+          "9Z"
+        ],
+        "agree": {
+          "upperOnly": true,
+          "digitsBeforeLetters_ascii": true,
+          "digitsBeforeLetters_ebcdic": false,
+          "upperBeforeLower_ascii": true,
+          "upperBeforeLower_ebcdic": false,
+          "blankFirst_ascii": true,
+          "blankFirst_ebcdic": true,
+          "shortKeyFirst_ascii": true,
+          "shortKeyFirst_ebcdic": true
+        }
+      }
+    },
+    {
+      "id": "P26",
+      "card": "c09 G-C4",
+      "name": "resume after a load: the module resumes by OFFSET from the position, the legacy from the saved look-ahead key — with a row inserted before the resume point between two loads the module repeats the last row of page 1 (observation, reference data with no modern writer; not fixed here)",
+      "pass": true,
+      "detail": {
+        "lookAhead": "R2",
+        "modernSecond": [
+          "R2",
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "R7",
+          "R8",
+          "R9",
+          "S0",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "US"
+        ],
+        "legacySecond": [
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "R7",
+          "R8",
+          "R9",
+          "S0",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "US"
+        ],
+        "repeated": [
+          "R2"
+        ]
+      }
+    },
+    {
+      "id": "P27",
+      "card": "COU200 deferred",
+      "name": "no maintenance path: the only route naming countries is the CUS GET /api/countries datalist; no src/features/cou; the only writer of `country` in src is the CUS seed (src/db/seed.ts); no COU OpenAPI file",
+      "pass": true,
+      "detail": {
+        "routeLines": [
+          "    ├── api/countries (GET, HEAD)"
+        ],
+        "featuresCou": false,
+        "writers": [
+          "src/db/seed.ts"
+        ],
+        "openapi": [
+          "customer.yaml",
+          "order.yaml"
+        ]
+      }
+    }
+  ]
+}

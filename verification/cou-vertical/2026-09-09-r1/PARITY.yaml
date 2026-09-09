@@ -1,0 +1,71 @@
+# Verification COMPARE — COU vertical, FCOUNTRY half (shared fcountry), pack atu-merlin-ts-cou-v1@1
+# Characterization WAIVED_PATHFINDER: no IBM i / RPG goldens exist and none were invented.
+# The verdict below is evidence at the TypeScript boundary (plus the additive country / countr1 mapping) only. It is NOT parity against IBM i.
+# Scope: cou-maintain cards c07..c12 (FCOUNTRY / COU300 / COU301). The COU200 panel half (c01..c06, c13) is deferred and not compared or modelled.
+run_id: 2026-09-09-r1
+pack_id: atu-merlin-ts-cou-v1
+pack_version: 1
+characterization: WAIVED_PATHFINDER
+mode: COMPARE
+target: modern
+oracle: discovery-cards-and-readme    # cou-maintain c07..c12 (COU301 keyed read replayed in JS; S01chk / S01act state machine written from the cards; c07 buffer rules observed) + README COU section; not legacy goldens
+legacy_replay: SKIPPED                # no IBM i harness; REPLAY_GREEN not claimed
+ibm_i_parity: NOT_CLAIMED
+
+rollup:
+  parity: TS_BOUNDARY_GREEN           # never GREEN against IBM i under this waiver
+  parity_green: false                 # APP_MANIFEST flag stays false (WAIVED max = converted + parity WAIVED)
+  legacy_green: false
+  basis:
+    - "npm run typecheck: clean"
+    - "npm test: 306/306 in 11 files against live PostgreSQL 16.15 — 41 COU (test/fcountry.test.ts), 55 CUS / 56 ORD / 27 VAT / 63 DAT / 40 PAR / 24 LOG unchanged (evidence/typecheck-and-vitest.log)"
+    - "independent probe with oracles written from the cards (COU301 s01prp / S01lod keyed read replayed in JavaScript over a byte-order sort of a plain SELECT; the S01chk row loop, control-line checks and S01act branch order as an explicit state machine; a query-counting proxy for the c07 buffer rules): 1 020 (position, offset) page compares, 512-row S01chk truth table, 192 F8 combinations, 1 500 random selector sessions / 8 634 steps: 27 PASS / 0 FAIL (evidence/results.json, evidence/probe.mjs)"
+    - "card COMPARE: every converted / as-is card has a module export, a test and a probe case; the two residual pieces (c07 hit cache, c12 binder metadata) carry a reason that traces to the pack (REPORT.md §4)"
+    - "planted / known-risk behaviours preserved, not fixed: blank code never reads (P03), unknown code -> blanks / false silently (P02), GetCountryIso3 exported with no consumer (P09), empty window beyond the last key with no message (P14), F8 clears the key of the order entered / pcod lost (P17), no COU200 maintenance path (P27)"
+    - "CR-C1 (no last-key cache) observed as the delta it is documented to be: 5 reads for 5 calls on one code, 2 reads on the CUS200 prompt-then-check path, a changed row seen at once (P06, P07)"
+    - "four observations recorded (G-C1 README CR-C4 rationale wrong about where byte order agrees with EBCDIC; G-C2 dft returned verbatim while keycod is the 2A view; G-C3 CUS-consumed getters now normalise inputs CUS cannot pass; G-C4 OFFSET resume vs saved-key resume) — none is behaviour drift on a card for any reachable input (REPORT.md §4)"
+  contract_risks: "CR-C1..CR-C5 dispositioned in REPORT.md §5 — 4 accept-for-demo, 1 defer (CR-C5: whether a web selector consumes sltCountry + reducer is a room decision at the next pack version)"
+
+# per-feature: status is the TS-boundary outcome. codes: TS_BOUNDARY_GREEN | RESIDUAL_EXPLAINED | NEEDS_SME_OPEN | NOT_IMPLEMENTED | BLOCKED_BY_PACK
+features:
+  cou-maintain:
+    c07: { status: TS_BOUNDARY_GREEN, as_is: true, note: "GetCountryName / GetCountryIso3 / ExistCountry over one keyed read: fixture rows return COUNTR / COISO / true; 668 unknown AA..ZZ codes give blanks / false with no exception; blank code issues 0 SQL statements with a blank-keyed row present; exact 2-char byte match (no case fold, no leading-blank trim); 2A by-value contract == fixed-length-alpha oracle on 2 000 strings. Hit cache not reproduced — CR-C1 observed as 5 reads / 5 calls and a changed row seen at once", evidence: [P01, P02, P03, P04, P05, P06, P07, P08, "fcountry.test.ts c07"], contract_risk: [CR-C1, CR-C3] }
+    c08: { status: TS_BOUNDARY_GREEN, needs_sme: "carry GetCountryIso3 unused or reject it (and COISO)", note: "getCountryIso3 is a method with no consumer in modern/src outside shared/fcountry (32 .ts files scanned); nothing named close* on the instance or the module (closeCOUNTRY was never exported); the window rows never carry coiso. No consumer invented, coiso kept", evidence: [P09, P10, P22, "fcountry.test.ts c08"] }
+    c09: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "message on an empty window; keep pcod across the toggle", note: "sltCountry == the COU301 keyed-read oracle (SETLL >= key, 20 rows per load, one-row look-ahead More / Bottom) on 546 by-code and 474 by-name (position, offset) pairs over 53 rows incl. digit / lower-case codes and non-ASCII names; 19 / 20 / 21 / 40 / 41-row tables page as the card says (exactly 20 left shows Bottom at once); beyond the last key -> empty page, nothing thrown; entry state and return contract (dft on F3 / F12, the row's COID on option 1). Duplicate names adjacent, code tie-break (CR-C4). Window itself not reproduced (CR-C5). G-C4: OFFSET resume repeats one row if a row is inserted before the resume point between loads", evidence: [P10, P11, P12, P13, P14, P15, P16, P26, "fcountry.test.ts c09"], contract_risk: [CR-C4, CR-C5] }
+    c10: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "one selector rule with fam-maintain; retain pcod across toggles", note: "the card's four-step trace reproduced (names from top, names from Ne, codes from top with pcod lost, names from top; dft stays IT); 192 F8 x entry combinations == oracle (ignored while any row option is typed, 41 raised before the toggle, toggle wins over option 8 and discards the position, key of the order entered cleared); 1 500 random sessions match state, outcome and s01prp request at every step", evidence: [P17, P18, P20, "fcountry.test.ts c10"] }
+    c11: { status: TS_BOUNDARY_GREEN, note: "S01chk truth table: 512 combinations (3 rows x {0,1,2,9} x control {0,1,8,9} x F8) == oracle — 35 per invalid row, 36 per second 1, 41 for control not 0 / 8, 42 for 8 with a 1 pending, cumulative, first offending RRN latched (26 distinct indicator sets seen); option 8 repositions and the reload == oracle page; blank position back to the top; text not validated. RI / cursor attributes are presentation (CR-C5)", evidence: [P18, P19, P20, P21, "fcountry.test.ts c11"], contract_risk: [CR-C5] }
+    c12: { status: TS_BOUNDARY_GREEN, note: "instance keys are exactly the four FCOUNTRY.BND symbols + the CUS listCountries; module exports are createFCountry, two normalisers, four reducer functions, four constants; countr1 index on (countr COLLATE \"C\", coid COLLATE \"C\") next to the PK only, comments cite c13 / c08 / c09. Signature 'V1', BNDDIR, ACTGRP(*CALLER) have no TS equivalent (CR-C2, explained). CUS-reachable inputs answer as the pre-convert surface did (P24); the RPG callers CUS200 / CUS250 map to the CUS pack, PRO200 / PRO250 are unbound", evidence: [P22, P23, P24, "fcountry.test.ts c12"], contract_risk: [CR-C2] }
+    c01_c06_c13: { status: BLOCKED_BY_PACK, note: "COU200 panel half — deferred / stay_legacy in the BOUND pack; not compared, not modelled, not invented. Absence verified: the only route naming countries is the CUS GET /api/countries datalist, no src/features/cou, the only writer of country in src is the CUS seed, no COU OpenAPI file", evidence: [P27] }
+
+schema:
+  country_mapping: "COID varchar(2) PK, COUNTR varchar(30), COISO varchar(3), all NOT NULL, no delete flag (exists = row present); 3-char code / 31-char name / 4-char ISO rejected by the column types (22001); table not altered by the COU pack — COMMENT ON only (P08)"
+  countr1_mapping: "COUNTR1.LF (K COUNTR, not UNIQUE) -> CREATE INDEX countr1 ON country (countr COLLATE \"C\", coid COLLATE \"C\"); PK + countr1 are the only indexes (P23)"
+  additive: "first 308 lines of modern/db/schema.sql (CUS + ORD + VAT + DAT objects, incl. the country CREATE TABLE) byte-identical to the pre-convert tip 6246243; the COU section is one CREATE INDEX IF NOT EXISTS + three COMMENT ON"
+
+planted_or_known_risk_behaviours_preserved:
+  - { behaviour: "blank code never reads COUNTRY; a blank-keyed row is invisible to the getters (c07)", evidence: [P03], fixed: false }
+  - { behaviour: "unknown code -> cleared buffer: blanks and false, no message (c07)", evidence: [P02], fixed: false }
+  - { behaviour: "GetCountryIso3 exported with no caller; closeCOUNTRY not exported / nothing to close (c08)", evidence: [P09, P22], fixed: false }
+  - { behaviour: "position beyond the last key -> empty window, no message (c09)", evidence: [P14, P21], fixed: false }
+  - { behaviour: "F8 clears the key of the order being entered; caller's pcod position lost after toggle away and back (c10)", evidence: [P17], fixed: false }
+  - { behaviour: "position-to text not validated; option 8 with a '1' pending refused (42) and the position not applied (c11)", evidence: [P19, P21], fixed: false }
+  - { behaviour: "no COU200 maintenance path; no writer of country in modern except the CUS seed (deferred half)", evidence: [P27], fixed: false }
+  - { behaviour: "last-key hit cache with activation-group lifetime (c07) — NOT reproduced; recorded and observed as CR-C1, not 'fixed' in the sense of a target decision", evidence: [P06, P07], fixed: false }
+
+contract_gaps:
+  - { id: G-C1, severity: low, kind: contract-documentation, where: "modern/README.md COU section, CR-C4 'Why' column", gap: "the rationale states that 'digits before letters and upper before lower hold in both' byte order and the EBCDIC keyed order; in EBCDIC (CP037) lower-case letters sort before upper-case and digits sort after all letters, so neither holds — only 'blank first' and the order of upper-case-only codes agree. The delta itself (byte order, not EBCDIC) is correctly declared and tested; the sentence describing where it is invisible is wrong. Fixture codes are upper-case and names are capitalised, so the demo never shows the difference", evidence: [P25] }
+  - { id: G-C2, severity: low, kind: contract-observation, where: "modern/src/shared/fcountry/index.ts sltCountryOpen", gap: "keycod is the 2A view of pcod (normaliseCountryCode) but dft is pcod verbatim: sltCountryOpen('FRA') positions at FR and returns 'FRA' on F3 / F12. On the box pcod is a 2A field passed by reference so the two cannot differ. No modern caller passes anything to sltCountryOpen yet (CUS keeps its datalist)", evidence: [P16] }
+  - { id: G-C3, severity: low, kind: contract-documentation, where: "architecture/atu-merlin-cou/CONVERT_RECORD.md and modern/README.md COU 'Edit surface honoured' (both say the CUS surface is unchanged)", gap: "existCountry / getCountryName are consumed by the CUS pack and now normalise their argument (cut to 2, trailing blanks ignored, blank short-circuits with no read) where the pre-convert surface compared the raw value: 'FRA' / 'FR ' now hit FR. Every input CUS parseInput can pass (<= 2 chars, right-trimmed) answers identically (136 values, P24), so nothing CUS-reachable changed; the record should say the CUS-facing semantics were widened rather than 'unchanged'", evidence: [P24] }
+  - { id: G-C4, severity: low, kind: behaviour-observation, where: "modern/src/shared/fcountry/index.ts sltCountry (OFFSET $3)", gap: "the next load resumes by OFFSET from the position, the legacy resumed from the saved look-ahead row's key (SAVCOD / SAVDES). If a row that sorts before the resume point is inserted between two loads, the module repeats the last row of the previous page (and would skip one after a delete); the legacy would not. COUNTRY has no writer in modern (COU200 deferred) and is reference data, so it is not reachable in the demo; a key-based cursor is a one-line change at the next pack version, not this station's edit", evidence: [P26] }
+
+evidence:
+  typecheck_and_tests: evidence/typecheck-and-vitest.log
+  probe_script: evidence/probe.mjs
+  probe_results: evidence/results.json
+  report: REPORT.md
+  narrative: narrative/HOW_IT_WORKS.md
+
+verified_by: "atuMerlin factory job runner (Cloud Agent), Verification station"
+verified_at: "2026-09-09T18:58:00Z"
+head_sha: 66c1801914aa66d59850d1c60aaedc738c17c680
+talk_track: "COU FCOUNTRY residual verified at TS API under waiver — not Merlin migrated; COU200 panel half still on IBM i"

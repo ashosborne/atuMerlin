@@ -1,0 +1,34 @@
+$ npm run typecheck
+
+> atu-merlin-modern@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+$ npm test
+
+> atu-merlin-modern@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/modern
+
+ ✓ test/dat.test.ts (63 tests) 231ms
+ ✓ test/order.web.test.ts (9 tests) 2048ms
+ ✓ test/parm.test.ts (13 tests) 2578ms
+ ✓ test/samlog.test.ts (24 tests) 4228ms
+ ✓ test/par.api.test.ts (27 tests) 4963ms
+ ✓ test/fcustomer.test.ts (16 tests) 2784ms
+ ✓ test/customer.api.test.ts (29 tests) 5132ms
+   ✓ cus-interactive-c01 — list by name with position-to and paging > orders by (name, id), loads 14 rows per page and resumes from the first unseen row  325ms
+ ✓ test/customer.web.test.ts (10 tests) 2040ms
+ ✓ test/fcountry.test.ts (41 tests) 6929ms
+ ✓ test/fvat.test.ts (27 tests) 4120ms
+ ✓ test/order.api.test.ts (47 tests) 7593ms
+
+ Test Files  11 passed (11)
+      Tests  306 passed (306)
+   Start at  18:47:42
+   Duration  8.04s (transform 697ms, setup 0ms, collect 1.85s, tests 42.65s, environment 1ms, prepare 609ms)
+
+exit=0

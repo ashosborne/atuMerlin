@@ -1,0 +1,59 @@
+run_id: 2026-09-09-r1
+slice_id: cou-maintain             # the pack's single slice — FCOUNTRY half only (c07..c12)
+station: Verification
+mode: COMPARE
+target: modern
+characterization: WAIVED_PATHFINDER
+authorisation: "Verification ROOM_OK carried in overnight/AGENT_JOB.md line 5 (Ash standing clearance 2026-09-08 + proceed last-10 2026-09-09; Field + CTO residual batch 2026-09-09), separate from BIND and from the convert ROOM_OK"
+
+pack_id: atu-merlin-ts-cou-v1
+pack_version: 1
+pack_status_at_run: BOUND
+pack_path: architecture/atu-merlin-cou/PACK.yaml
+waiver_record: architecture/atu-merlin-cou/ADR/0001-cou-fcountry-ts-postgres.md
+
+conversion_handoff:
+  record: architecture/atu-merlin-cou/CONVERT_RECORD.md
+  parity_at_handoff: UNVERIFIED
+  branch: cursor/atu-merlin-estate-discovery
+  pr: https://github.com/ashosborne/atuMerlin/pull/1
+  commits:
+    - e90dfb2   # convert COU FCOUNTRY half: shared FCOUNTRY in TypeScript (first runner)
+    - 0a6aa22   # README COU section + CONVERT_RECORD (second runner)
+    - 418d5cf   # AGENT_JOB convert DONE
+  head_at_verification: 66c1801914aa66d59850d1c60aaedc738c17c680
+
+feature_ids:
+  cou-maintain: [c07, c08, c09, c10, c11, c12]
+  deferred_not_compared: [c01, c02, c03, c04, c05, c06, c13]   # COU200 panel half — stay_legacy in the pack
+
+oracle:
+  kind: discovery-cards-and-readme    # NOT IBM i goldens
+  paths:
+    - discovery/cou-maintain/features/   # c07..c12 only
+    - modern/README.md                   # COU card coverage + CONTRACT_RISK CR-C1..CR-C5
+    - architecture/atu-merlin-cou/CONVERT_RECORD.md
+  legacy_goldens: none                # tests/characterization/** does not exist for this pathfinder
+  replay_green_run_ids: []
+  probe_oracle: "c09 COU301 keyed read replayed in JavaScript (plain SELECT, Buffer.compare sort with code tie-break, SETLL as first key >= position, 20 rows, one look-ahead read); c10 / c11 S01chk row loop + control-line checks + S01act branch order as an explicit state machine; c07 buffer rules observed through a query-counting proxy on the pool; 2A / 30A fixed-length parameter as truncate-right / ignore-trailing-blanks. Independent of the module's SQL and of test/fcountry.test.ts"
+
+modern_boot:
+  runtime: "Node v22.14.0 (pack min node 20)"
+  database: "PostgreSQL 16.15 via modern/scripts/local-pg.sh; the probe builds a throw-away schema through modern/test/helpers/db.ts (schema + CUS seed + ORD seed) and drops it"
+  server: "buildApp() booted once (P27) only to list routes; COU has no HTTP surface (contract_paths: [])"
+
+scope_guards:
+  sibling_packs_untouched: "git diff 6246243..HEAD -- modern/src/features modern/openapi modern/src/db modern/src/app.ts modern/src/server.ts architecture/atu-merlin architecture/atu-merlin-ord architecture/atu-merlin-vat architecture/atu-merlin-dat shows only modern/src/features/par/** and the additive app.ts registration (the PAR pack's own convert)"
+  schema_additive: "first 308 lines of modern/db/schema.sql (CUS + ORD + VAT + DAT incl. the country CREATE TABLE) byte-identical to 6246243; COU section is one CREATE INDEX IF NOT EXISTS + three COMMENT ON"
+  atu_src_untouched: "git diff origin/master..HEAD -- ATU_SRC is empty"
+  cus_consumer_shape: "existCountry / getCountryName / listCountries signatures unchanged from 6246243; customer.api 29 + customer.web 10 + fcustomer 16 green without edit; P24: 136 CUS-reachable inputs answer as before (G-C3 records the widening outside that domain)"
+  edit_surface_this_run: "verification/cou-vertical/2026-09-09-r1/** and overnight/AGENT_JOB.md line 1 only (job edit_surface STRICT); modern/README.md deliberately not touched — its COU status sentences still say 'Verification deferred' (REPORT.md §8)"
+
+open_after_this_run:
+  contract_gaps: [G-C1, G-C2, G-C3, G-C4]
+  deferred_risks: [CR-C5]
+  needs_sme: "discovery/cou-maintain/SME_BRIEF.md — unsigned: c07 cache staleness, c08 carry-or-reject GetCountryIso3 / COISO, c09 empty-window message, c09/c10 position retention across the toggle, c10 one selector rule with fam-maintain, c07/c12 build-owner questions"
+  deferred_half: "COU200 panel (c01..c06, c13) — Pack B cards, then SUPERSEDE + re-bind before any maintenance path"
+
+forbid_record: true
+goldens: n/a-read-only
