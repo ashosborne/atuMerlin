@@ -11,12 +11,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
 
 features:
   - id: log-programs-c01
     name: LOG100 creates SAMLOG user space (5000 bytes) in PARAMETER's library
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: QUSCRTUS attribute LOG, 5000 bytes, X'00', *ALL, replace *YES; library from the INFDS of the opened PARAMETER file.
     entrypoints:
@@ -27,7 +28,7 @@ features:
     open_questions: []
   - id: log-programs-c02
     name: SAMLOG header layout (pos at offset 0 = 7, '***' at offset 4)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: LOG100 writes the header; LOG300 reads pos from offset 0 and appends at p1 + pos.
     entrypoints:
@@ -38,7 +39,7 @@ features:
     open_questions: []
   - id: log-programs-c03
     name: AddLogEntry line format and append
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: "Resolves SAMLOG *LIBL once per activation group; writes 'User: <*USER> * Date: <timestamp> * Msg: <entry> ***' at pos and advances pos; User captured at module load."
     entrypoints:
@@ -49,7 +50,7 @@ features:
     open_questions: []
   - id: log-programs-c04
     name: No capacity check - logging stops silently after ~4400 bytes
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: 5000-byte space without auto-extend; 600-byte fixed write per entry; overflow raises an exception that ORD700's callp(e) swallows.
     entrypoints:
@@ -60,7 +61,7 @@ features:
     open_questions: ["Confirm the failure mode on the box."]
   - id: log-programs-c05
     name: LOG100 API errors swallowed
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: errcod DS passed with bytes-provided set, never inspected.
     entrypoints:
@@ -71,7 +72,7 @@ features:
     open_questions: []
   - id: log-programs-c06
     name: LOG100 has no caller and no menu entry (install step)
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: Run manually once; if never run, AddLogEntry fails on QUSPTRUS (swallowed by callers).
     entrypoints:
@@ -82,7 +83,7 @@ features:
     open_questions: ["Who runs LOG100 and when?"]
   - id: log-programs-c07
     name: Only log event is ORD700 line delete (pointer)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Documented as ord-trigger-ord700-c03; no other caller of AddLogEntry.
     entrypoints:
@@ -93,7 +94,7 @@ features:
     open_questions: []
   - id: log-programs-c08
     name: LOG srvpgm binding not in source
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: EXPORT(*ALL), absent from SAMPLE.BNDDIR, ORD700 has no bnddir / ILEPGM.
     entrypoints:
@@ -104,7 +105,7 @@ features:
     open_questions: ["Build owner: how is LOG bound into ORD700?"]
   - id: log-programs-c09
     name: Log reader ADSPUSRSPC not in tree
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: Menu opt 84 runs a command that is not in ATU_SRC; no in-tree reader of SAMLOG.
     entrypoints:
@@ -115,7 +116,7 @@ features:
     open_questions: []
   - id: log-programs-c10
     name: Unsynchronised shared append (concurrent writers overwrite)
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: Two jobs read the same pos and write to the same offset; no lock or atomic update.
     entrypoints:
