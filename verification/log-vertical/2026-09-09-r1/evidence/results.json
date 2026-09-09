@@ -1,0 +1,378 @@
+{
+  "pack": "atu-merlin-ts-log-v1@1",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "discovery/log-programs/features c01..c10 (LOG100 + LOG300 replayed as a byte machine over a user space — header, 500A + %trim, 500 varying line, 600-byte write, pos + 600 > size silent stop, unlocked cursor race; the ORD700 message rebuilt from ORD700.PGM.RPGLE:78-81; %char(%timestamp()) from components) + modern/README.md LOG section; NOT IBM i goldens",
+  "ran_at": "2026-09-09T20:04:36.707Z",
+  "summary": {
+    "pass": 18,
+    "fail": 0,
+    "total": 18
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "card": "c03",
+      "name": "formatLegacyLine == LOG300 line machine ('User: ' + User(10, padded) + ' * Date: ' + 26-char timestamp + ' * Msg: ' + msg + ' ***' in a 500 varying) on 3 000 triples; 419 lines over 437 characters lose the terminator in both; 437 keeps ' ***' at exactly 500, 438 does not",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "cut": 419
+      }
+    },
+    {
+      "id": "P02",
+      "card": "c03",
+      "name": "normaliseLogEntry == fixed-length 500A + %trim oracle on 3 000 entries: cut at 500 BEFORE trimming (499 blanks + 'ZQ' -> 'Z'; 500 blanks + 'Z' -> ''), leading and trailing blanks removed, tabs / NBSP / newlines kept (no character list)",
+      "pass": true,
+      "detail": {
+        "bad": []
+      }
+    },
+    {
+      "id": "P03",
+      "card": "c03",
+      "name": "toRpgTimestamp == %char(%timestamp()) (YYYY-MM-DD-HH.MM.SS.UUUUUU) on 1500 timestamps written to samlog.logged_at and read back through the pool (fraction 0 / ms / tenths / random micro all padded to 6); raw Postgres text and Date forms agree; 5 malformed inputs throw",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "raw": true,
+        "noFrac": true,
+        "asDate": true,
+        "rejects": 5
+      }
+    },
+    {
+      "id": "P04",
+      "card": "c03",
+      "name": "addLogEntry x 500: every stored msg == the 500A + %trim oracle, user_id == the named user cut to 10 (case kept), logged_at inside the call window, return value undefined; 10 blank / empty entries (10 deliberate) wrote an empty-msg row each (no validation, as LOG300)",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "count": 500,
+        "blanks": 10,
+        "deliberateBlanks": 10
+      }
+    },
+    {
+      "id": "P05",
+      "card": "c03 CR-L4",
+      "name": "actor per event: through the pool the default is ord700_user() = the database role ('ubuntu'); inside a transaction that set atu.user, createSamlog(<that client>) and the ORD700 trigger both write 'OPERATOR12' (the alignment the module documents); the next pool call is back to the role (transaction-local setting); a named '' user is stored '' (not defaulted); a 16-character user is cut to 10 with case kept",
+      "pass": true,
+      "detail": {
+        "inTx": "committed",
+        "actors": [
+          "ubuntu",
+          "OPERATOR12",
+          "OPERATOR12",
+          "ubuntu",
+          "",
+          "abcdefghij"
+        ],
+        "dbRole": "ubuntu"
+      }
+    },
+    {
+      "id": "P06",
+      "card": "c07",
+      "name": "300 DETORD deletes (orid / line incl. 0, article ids 0..6 chars incl. 'X9' and blank, quantities negative / zero / positive): the ORD700 trigger row == the message oracle ('ORD700:Order Line deleted <orid> <line> article : <arid padded to 6> quantity : <qty>', %char = no leading zeros, '-' only when negative) and the LOG module's row for the same event is indistinguishable on msg, user_id and the rebuilt legacy line (Date aside) — 600 rows",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "n": 600
+      }
+    },
+    {
+      "id": "P07",
+      "card": "c07",
+      "name": "20 addLogEntry calls change nothing but samlog (+20): article quantities, detord and orders untouched; a DETORD insert and update (ORD700 events '1' / '3') log nothing, the delete (event '2') logs one row; nothing under modern/src imports shared/samlog — the ORD trigger keeps its own INSERT (reuse, not rewiring)",
+      "pass": true,
+      "detail": {
+        "s0": {
+          "qty": 0,
+          "lines": 0,
+          "heads": 1,
+          "logs": 0
+        },
+        "s1": {
+          "qty": 0,
+          "lines": 0,
+          "heads": 1,
+          "logs": 20
+        },
+        "s2": {
+          "qty": 5,
+          "lines": 1,
+          "heads": 1,
+          "logs": 20
+        },
+        "s3": {
+          "qty": 0,
+          "lines": 0,
+          "heads": 1,
+          "logs": 21
+        },
+        "importers": []
+      }
+    },
+    {
+      "id": "P08",
+      "card": "c08",
+      "name": "createSamlog(db) exposes exactly ['addLogEntry'] (EXPORT(*ALL) on a module with one exported P-spec); module exports are createSamlog, normaliseLogEntry, formatLegacyLine, toRpgTimestamp, decodeSamlogUserSpace and eight width constants whose values are the cards' (500, 10, 500, 63, ' ***', 600, 7, 5000); nothing named init / reset / truncate / read / list / clear",
+      "pass": true,
+      "detail": {
+        "instance": [
+          "addLogEntry"
+        ],
+        "moduleExports": [
+          "ADDLOGENTRY_ENTRY_LENGTH",
+          "LEGACY_LINE_BUFFER_LENGTH",
+          "LEGACY_LINE_FIXED_LENGTH",
+          "LEGACY_LINE_TERMINATOR",
+          "LEGACY_WRITE_LENGTH",
+          "SAMLOG_HEADER_LENGTH",
+          "SAMLOG_INITIAL_SIZE",
+          "SAMLOG_USER_LENGTH",
+          "createSamlog",
+          "decodeSamlogUserSpace",
+          "formatLegacyLine",
+          "normaliseLogEntry",
+          "toRpgTimestamp"
+        ],
+        "suspicious": [],
+        "constants": {
+          "entry": 500,
+          "user": 10,
+          "buffer": 500,
+          "fixed": 63,
+          "terminator": " ***",
+          "write": 600,
+          "header": 7,
+          "size": 5000
+        }
+      }
+    },
+    {
+      "id": "P09",
+      "card": "c02 / c09",
+      "name": "decoder over 200 machine-built spaces (3075 lines; sizes 5000 .. 65536): pos == 7 + sum of logical line lengths (the 600-byte pads are not counted), '***' marker seen, every line returned without its terminator, tail empty; a fresh LOG100 space decodes to pos 7 and no lines; the c09 reader rule applied by hand agrees",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "lines": 3075,
+        "fresh": {
+          "pos": 7,
+          "headerMarker": true,
+          "lines": [],
+          "tail": ""
+        }
+      }
+    },
+    {
+      "id": "P10",
+      "card": "c02",
+      "name": "a CP037-encoded copy: with the default latin1 text the '***' marker is not seen and no line splits (terminator bytes differ); with text = CP037 -> char and terminator = CP037 ' ***' the decoder returns the three lines exactly; pos (big-endian binary, encoding-independent) agrees in both",
+      "pass": true,
+      "detail": {
+        "latinLines": 0,
+        "latinMarker": false,
+        "ebcdicLines": [
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: ORD700:Order Line deleted 60001 1 article : A00001 quantity : 10",
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: second line",
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: Mixed Case 123 ./-"
+        ],
+        "wantLines": [
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: ORD700:Order Line deleted 60001 1 article : A00001 quantity : 10",
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: second line",
+          "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: Mixed Case 123 ./-"
+        ]
+      }
+    },
+    {
+      "id": "P11",
+      "card": "c03 / c09",
+      "name": "a 450-character message: the machine writes 500 bytes with no ' ***' (as LOG300's 500 varying); the decoder then sees two lines, the second being the cut line glued to 'third' (the c09 'glued lines' consequence); when the cut line is last it is the tail, not a line",
+      "pass": true,
+      "detail": {
+        "cutLen": 500,
+        "gluedCount": 2,
+        "gluedSecondStartsWith": "User: ASH        * Date: 2026-",
+        "tailLen": 500
+      }
+    },
+    {
+      "id": "P12",
+      "card": "c04 CR-L5",
+      "name": "legacy machine: 127-byte ORD700 lines fill a 5000-byte SAMLOG after 35 calls (oracle: pos + 600 > 5000 -> 35; the card's '≈ 35'), pos then stays at 4452 and the remaining 25 calls all fail — silent, permanent; at an 8192-byte allocation 60 lines (the card's '≈ 60'). Modern: 60 addLogEntry calls -> 60 rows, no capacity — CR-L5 observed as the delta",
+      "pass": true,
+      "detail": {
+        "lineLen": 127,
+        "ok": 35,
+        "wantOk": 35,
+        "posAtFirstFailure": 4452,
+        "finalPos": 4452,
+        "failures": 25,
+        "ok8k": 60,
+        "kept": 60
+      }
+    },
+    {
+      "id": "P13",
+      "card": "c06 CR-L6",
+      "name": "fresh schema (applySchema): samlog exists with 0 rows and the first addLogEntry writes (no install step, no never-created state); with the table renamed away the call throws 42P01 to the caller (legacy: swallowed by callp(e)); once the table is back the next call writes — nothing is latched per process (legacy: inz set before the failed resolution, never retried). CR-L6 observed as the delta",
+      "pass": true,
+      "detail": {
+        "before": 0,
+        "after": [
+          {
+            "user_id": "ASH",
+            "msg": "first call in a fresh schema"
+          }
+        ],
+        "thrown": "42P01",
+        "final": [
+          "first call in a fresh schema",
+          "after the object is back"
+        ]
+      }
+    },
+    {
+      "id": "P14",
+      "card": "c10 CR-L8",
+      "name": "modern: 200 concurrent appends -> 200 rows, 200 distinct messages, ids unique and increasing (transactional insert, sequence id). Legacy machine, 40 racing pairs (Interleaving A): 0 'A' lines survive, 40 'B' lines survive, 39 lines start with a blank run, pos over-advanced by the lost lines' lengths — CR-L8 observed as the delta",
+      "pass": true,
+      "detail": {
+        "rows": 200,
+        "distinct": 200,
+        "strictlyIncreasing": true,
+        "lostA": 0,
+        "keptB": 40,
+        "blankRuns": 39,
+        "overAdvanced": true,
+        "legacyPos": 5267
+      }
+    },
+    {
+      "id": "P15",
+      "card": "c01 / c05 / c06 / c09",
+      "name": "no reader and no reset invented: 0 log / samlog routes in the Fastify tree (35 routes), 8 candidate URLs 404, openapi/ = customer.yaml + order.yaml, src/shared has no logging/ directory, shared/samlog is one file whose only SQL statement is the INSERT, app.ts does not reference samlog; the module carries TODO markers for c04, c06 and c09 (the residual questions), none answered",
+      "pass": true,
+      "detail": {
+        "routes": 35,
+        "logRoutes": [],
+        "probes": {
+          "/api/samlog": 404,
+          "/api/log": 404,
+          "/api/logs": 404,
+          "/samlog": 404,
+          "/log": 404,
+          "/api/samlog/1": 404,
+          "/api/application-log": 404,
+          "POST /api/samlog": 404
+        },
+        "openapi": [
+          "customer.yaml",
+          "order.yaml"
+        ],
+        "sharedDirs": [
+          "dat",
+          "farticle",
+          "fcountry",
+          "fcustomer",
+          "fvat",
+          "parm",
+          "samlog"
+        ],
+        "samlogFiles": [
+          "index.ts"
+        ],
+        "sqlInModule": [
+          "INSERT INTO samlog (user_id, msg) VALUES (COALESCE($1, ord700_user()), $2)"
+        ],
+        "todos": [
+          "c04",
+          "c06",
+          "c09"
+        ]
+      }
+    },
+    {
+      "id": "P16",
+      "card": "CR-L2 schema",
+      "name": "samlog == the ORD pack's shape (id bigint from a sequence, logged_at timestamp NOT NULL DEFAULT LOCALTIMESTAMP, user_id varchar(10) NOT NULL DEFAULT '', msg text NOT NULL); PK the only index; no trigger on samlog; the LOG section of db/schema.sql (from line 374) contains 4 statements, all COMMENT ON; comments cite the pack id, c03 (activation-group User, 26-char Date), c04, c09 and CR-L3",
+      "pass": true,
+      "detail": {
+        "shape": [
+          [
+            "id",
+            "bigint",
+            null,
+            "NO",
+            "nextval(seq)"
+          ],
+          [
+            "logged_at",
+            "timestamp without time zone",
+            null,
+            "NO",
+            "LOCALTIMESTAMP"
+          ],
+          [
+            "user_id",
+            "character varying",
+            10,
+            "NO",
+            "''::character varying"
+          ],
+          [
+            "msg",
+            "text",
+            null,
+            "NO",
+            ""
+          ]
+        ],
+        "idx": [
+          "samlog_pkey"
+        ],
+        "trg": [],
+        "kinds": [
+          "COMMENT ON"
+        ],
+        "statements": 4,
+        "logStart": 374,
+        "cites": {
+          "pack": true,
+          "c04": true,
+          "c09": true,
+          "c03user": true,
+          "c03date": true,
+          "crl3": true
+        }
+      }
+    },
+    {
+      "id": "P17",
+      "card": "c03",
+      "name": "the c03 example line ('User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: ORD700:Order Line deleted 123 1 article : ART001 quantity : 10 ***') is rebuilt character for character from a row whose msg is the c07 message oracle; an empty msg gives exactly the 63-byte fixed part",
+      "pass": true,
+      "detail": {
+        "got": "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: ORD700:Order Line deleted 123 1 article : ART001 quantity : 10 ***",
+        "card": "User: ASH        * Date: 2026-09-09-09.15.00.123456 * Msg: ORD700:Order Line deleted 123 1 article : ART001 quantity : 10 ***",
+        "emptyLen": 63
+      }
+    },
+    {
+      "id": "P18",
+      "card": "c03 observation",
+      "name": "observation (G-L2): normaliseLogEntry cuts at 500 UTF-16 code units — 600 x 'é' -> 500 characters / 1000 UTF-8 bytes (a 500A field holds 500 single-byte EBCDIC characters); the user is cut to 10 characters likewise; formatLegacyLine's 500 cut is in characters too. For the ASCII charset every in-tree caller uses the counts coincide exactly; recorded, not behaviour drift on any reachable input",
+      "pass": true,
+      "detail": {
+        "storedChars": 500,
+        "bytes": 1000,
+        "asciiSame": true,
+        "user": "ÄÖÜÄÖÜÄÖÜÄ",
+        "lineChars": 500
+      }
+    }
+  ]
+}

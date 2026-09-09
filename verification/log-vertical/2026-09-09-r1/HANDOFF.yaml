@@ -1,0 +1,62 @@
+run_id: 2026-09-09-r1
+slice_id: log-programs              # the pack's single slice — all ten accepted cards in scope
+station: Verification
+mode: COMPARE
+target: modern
+characterization: WAIVED_PATHFINDER
+authorisation: "Verification ROOM_OK carried in overnight/AGENT_JOB.md line 4 (ROOM_OK: verification LOG only; Field + CTO Verify ROOM_OK batch of five 2026-09-09; paste PASTE-verify-log-vertical-atu-merlin.md @ 744ac29), separate from BIND and from the convert ROOM_OK"
+
+pack_id: atu-merlin-ts-log-v1
+pack_version: 1
+pack_status_at_run: BOUND
+pack_path: architecture/atu-merlin-log/PACK.yaml
+waiver_record: architecture/atu-merlin-log/ADR/0001-log-programs-ts-postgres.md
+
+conversion_handoff:
+  record: architecture/atu-merlin-log/CONVERT_RECORD.md
+  parity_at_handoff: UNVERIFIED
+  branch: cursor/atu-merlin-estate-discovery
+  pr: https://github.com/ashosborne/atuMerlin/pull/1
+  commits:
+    - 2b0fa73   # convert LOG vertical: shared samlog module aligned with the ORD samlog table
+    - 4b2edc2   # README LOG section + CONVERT_RECORD
+    - 666330d   # AGENT_JOB convert DONE
+  head_at_verification: 1e41dc37f1f81edd396faa932cf1c6067eda2f0a
+
+feature_ids:
+  log-programs: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10]
+  ts_boundary_green: [c02, c03, c07, c08]            # c02 decoder half; c03 line contract as-is; c07 reuse; c08 one export
+  residual_explained: [c01, c04, c05, c06, c09, c10] # LOG100 / capacity / cursor / reader — properties of the user space, checked for absence and reason; c04 / c06 / c10 deltas observed
+
+oracle:
+  kind: discovery-cards-and-readme    # NOT IBM i goldens
+  paths:
+    - discovery/log-programs/features/   # c01..c10
+    - modern/README.md                   # LOG card coverage + CONTRACT_RISK CR-L1..CR-L8 + residual vs reuse
+    - architecture/atu-merlin-log/CONVERT_RECORD.md
+  legacy_goldens: none                # tests/characterization/** does not exist for this pathfinder
+  replay_green_run_ids: []
+  probe_oracle: "LOG100 + LOG300 replayed as a byte machine over a user space (7-byte header, big-endian pos at 0, '***' at 4; entry 500A by value through %trim — blanks only, both ends; the line in a 500 varying; a 600-byte fixed write at p1 + pos that fails when pos + 600 > size BEFORE pos advances; pos += %len(data2); c10 Interleaving A as two writers sharing one pos); the ORD700 message from ORD700.PGM.RPGLE:78-81 (%char of the packed fields, ODARID untrimmed at 6); %char(%timestamp()) as YYYY-MM-DD-HH.MM.SS.UUUUUU from components; CP037 bytes for the line charset. Independent of the module's SQL and of test/samlog.test.ts"
+
+modern_boot:
+  runtime: "Node v22.14.0 (pack min node 20)"
+  database: "PostgreSQL 16.15 via modern/scripts/local-pg.sh (server binaries installed on the runner for this session); the probe builds a throw-away schema through modern/test/helpers/db.ts (schema + CUS seed + ORD seed) and drops it; P13 builds and drops a second fresh schema"
+  server: "buildApp() booted once against the throw-away schema for the route-absence check only (no LOG HTTP surface exists)"
+
+scope_guards:
+  sibling_packs_untouched: "git diff --stat fc39676..HEAD -- modern/src/features/customer modern/src/features/order modern/openapi modern/src/db modern/src/app.ts modern/src/server.ts architecture/atu-merlin architecture/atu-merlin-ord architecture/atu-merlin-vat architecture/atu-merlin-dat architecture/atu-merlin-cou architecture/atu-merlin-par is empty (fc39676 = convert RUN tip, the last commit before the LOG code)"
+  schema_additive: "first 371 lines of modern/db/schema.sql (CUS + ORD + VAT + DAT + COU + PAR) byte-identical to fc39676; LOG section (from line 374) is four COMMENT ON statements, no CREATE / ALTER / DROP / INSERT (P16)"
+  atu_src_untouched: "git diff origin/master..HEAD -- ATU_SRC is empty"
+  ord_reuse_not_rewiring: "nothing under modern/src imports shared/samlog (P07); the ORD700 trigger keeps its own INSERT; trigger row and module row for the same event are indistinguishable on msg / user_id / rebuilt line (P06)"
+  edit_surface_this_run: "verification/log-vertical/2026-09-09-r1/**, modern/README.md (LOG status sentences only: header line + LOG section waiver paragraph, VAT / DAT / COU / PAR precedent; this job body carries no STRICT line) and overnight/AGENT_JOB.md line 1"
+
+open_after_this_run:
+  contract_gaps: [G-L1, G-L2]
+  deferred_risks: []                            # CR-L1..CR-L8 all accept-for-demo (CR-L4 code accept; SME confirmation of per-event actor open)
+  deferred_decisions: "preserve the user-space log at all (room; pack known_risk 'whole-slice may be non-functional side effect'; SME_BRIEF item 1); line string vs Msg as the contract (room / SME, item 7); activation-time vs per-event actor confirmation (item 7 / CR-L4); ORD logging through shared/samlog (room; an atu-merlin-ts-ord-v1 version bump, not a LOG edit)"
+  needs_sme: "discovery/log-programs/SME_BRIEF.md — unsigned: c04 allocated size / observed failure, c06 install runbook, c08 binding of LOG into ORD700, c09 ADSPUSRSPC provider and option 84 use, c10 acceptable loss, c03 actor timing and line-string contract, c05 runtime confirmation, c01 / c02 migration (recommendation no)"
+  downstream_packs: "ORD pack version if the room wants one writer through shared/samlog; nothing else consumes the module"
+  estate_status: "all seven packs converted and verified under WAIVED_PATHFINDER: CUS, ORD, VAT, DAT, COU, PAR, LOG — none is parity against IBM i; conveyor idle until a new AGENT_JOB RUN"
+
+forbid_record: true
+goldens: n/a-read-only

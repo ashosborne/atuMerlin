@@ -33,8 +33,8 @@ the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`); DAT: **parit
 TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`); VAT:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`);
 PAR: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/par-vertical/2026-09-09-r1/PARITY.yaml`);
-COU: **PARITY=UNVERIFIED** (Verification deferred); LOG: **PARITY=UNVERIFIED** (Verification
-deferred). None is parity against IBM i.
+LOG: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/log-vertical/2026-09-09-r1/PARITY.yaml`);
+COU: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -915,8 +915,11 @@ Converted under Architecture pack **`atu-merlin-ts-log-v1@1`** (`architecture/at
 `overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
 `architecture/atu-merlin-log/ADR/0001-log-programs-ts-postgres.md`.
 **WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
-PARITY=UNVERIFIED** — Verification is deferred (`verification: DEFERRED` in the pack); nothing here
-is parity against IBM i.
+parity: TS_BOUNDARY_GREEN** under the waiver — `verification/log-vertical/2026-09-09-r1/PARITY.yaml`
+(18/18 independent probe cases, 306/306 tests; CR-L1 … CR-L8 accept-for-demo; whether the user-space
+log is preserved at all and whether the line string is a contract stay with the room / SME;
+observations G-L1 / G-L2 recorded). The pack's `verification: DEFERRED` line is unchanged (BOUND is
+immutable). Nothing here is parity against IBM i.
 
 **Talk-track:** the LOG line contract lives in TypeScript under the waiver, on the `samlog` table the
 ORD vertical already writes — the repo is not fully migrated, and LOG is not "fully migrated" either:

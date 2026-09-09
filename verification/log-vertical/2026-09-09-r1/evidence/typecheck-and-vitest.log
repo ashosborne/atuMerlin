@@ -1,0 +1,41 @@
+# verify LOG vertical — atu-merlin-ts-log-v1@1 — 2026-09-09T19:54:06Z
+# node v22.14.0; PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu; branch cursor/atu-merlin-estate-discovery @ 1e41dc3
+
+$ npm ci
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+$ npm run typecheck
+
+> atu-merlin-modern@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+$ npm test
+
+> atu-merlin-modern@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/modern
+
+ ✓ test/dat.test.ts (63 tests) 121ms
+ ✓ test/order.web.test.ts (9 tests) 1090ms
+ ✓ test/parm.test.ts (13 tests) 1352ms
+ ✓ test/samlog.test.ts (24 tests) 2114ms
+ ✓ test/par.api.test.ts (27 tests) 2462ms
+ ✓ test/customer.api.test.ts (29 tests) 2468ms
+ ✓ test/fcustomer.test.ts (16 tests) 1316ms
+ ✓ test/customer.web.test.ts (10 tests) 996ms
+ ✓ test/fcountry.test.ts (41 tests) 3433ms
+ ✓ test/fvat.test.ts (27 tests) 2080ms
+ ✓ test/order.api.test.ts (47 tests) 4064ms
+
+ Test Files  11 passed (11)
+      Tests  306 passed (306)
+   Start at  19:54:08
+   Duration  4.50s (transform 569ms, setup 0ms, collect 1.78s, tests 21.50s, environment 1ms, prepare 582ms)
+
+exit=0
