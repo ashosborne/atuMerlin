@@ -9,12 +9,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T13:20:29Z
-bind_status: deferred
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
 
 features:
   - id: ord-batch-ord900-c01
     name: ORD900 reset LASTORDNO to max order id
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Reads last ORDER1 key, locks data area, writes ORID.
     entrypoints:
@@ -25,7 +26,7 @@ features:
     open_questions: ["Empty ORDER file -> readp fails/undefined; not guarded."]
   - id: ord-batch-ord900-c02
     name: ORD901 early exit when no orders
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: select max(ordate) = 0 -> return.
     entrypoints:
@@ -36,7 +37,7 @@ features:
     open_questions: []
   - id: ord-batch-ord900-c03
     name: ORD901 shift order dates so newest = today
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: days = today - max(ORDATE); ORDATE += days; ORYEAR recomputed.
     entrypoints:
@@ -47,7 +48,7 @@ features:
     open_questions: []
   - id: ord-batch-ord900-c04
     name: ORD901 derived delivery/close date rules
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Shift ORDATDEL/ORDATCLO; future -> 0; delivered >10 days ago and not closed -> ORDATCLO = ORDATDEL + 10.
     entrypoints:
@@ -58,7 +59,7 @@ features:
     open_questions: []
   - id: ord-batch-ord900-c05
     name: ORD901 resync DETORD.ODYEAR and CUSTOMER.CULASTORD
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Two SQL UPDATEs after the loop.
     entrypoints:
@@ -69,7 +70,7 @@ features:
     open_questions: ["Same CULASTORD rule as ART801 - one card, two implementations?"]
   - id: ord-batch-ord900-c06
     name: ORD901 whole-file rewrite without commitment control
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Arrival-sequence read/update of every ORDER row.
     entrypoints:
@@ -80,7 +81,7 @@ features:
     open_questions: []
   - id: ord-batch-ord900-c07
     name: Purpose - demo-data refresh utilities
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: Menu 'Utilities' group and 'Reset ...' texts suggest sample maintenance, not business batch.
     entrypoints:
@@ -91,7 +92,7 @@ features:
     open_questions: ["If confirmed, recommend defer from conversion scope."]
   - id: ord-batch-ord900-c08
     name: No scheduling or parameters (absence)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Menu CALL only; no CL wrappers or job schedule entries in tree.
     entrypoints:
@@ -102,7 +103,7 @@ features:
     open_questions: ["Runtime JOBSCDE cannot be seen from source."]
   - id: ord-batch-ord900-c09
     name: Variable reuse trap in ORD901
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: lastdate is reassigned to today-10 after computing the shift.
     entrypoints:
