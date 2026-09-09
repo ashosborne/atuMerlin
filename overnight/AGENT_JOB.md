@@ -1,6 +1,19 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual run 16
+# RESULT run 16 (2026-09-09 11:17–12:3xZ): srvpgm-supporting DONE — 9/9 accepted Phase B cards
+#   (c05 inferred carded; bind accepted it); MANIFEST documented; CHARACTERIZATION deferred-waived;
+#   SME_BRIEF checklist; APP_MANIFEST 145→154 documented, surfaces accepted 36→37 (bnddir:SAMPLE;
+#   srvpgm:XML/XSS/ORDER/TXT stay unknown); COVERAGE regenerated; INDEX row 25 done.
+#   Phase A corrected: c07 — default activation group is QILE (job-wide getter caches), not new-per-program;
+#   runtime-confirm DSPPGM <pgm> DETAIL(*BASIC). EXPORT(*ALL) = module exports only: FPARAMETER 5, LOG 1 —
+#   par-maintain-c10 corrected (card correction block + MANIFEST summary + SME_BRIEF line; one-off outside cap-1).
+#   PRO202/PRO203 do not compile from the tree (/copy qprotosrc,xml|Xss members absent). ORD200/201/202 bnddir inert.
+#   Three runs fired on this job (ad697f3 BOUND + ed1687c RUN tip at 11:12Z — both ended idle with nothing
+#   on origin; f2f7e6c PASTE-convert push at 11:17Z — this one). Push operator/ME artefacts only on DONE.
+# Next: set line 1 to RUN, prefer sql-objects (cap 1). Queue after: ord-batch-ord900, cou-maintain COU200 half,
+#   pro-interactive, pro-modules, pro-cobol-pro201. Convert of vat/dat/cou/par/log is a separate station
+#   (its own ROOM_OK gate) — not touched by this runner.
 # Prefer: srvpgm-supporting, then sql-objects, ord-batch-ord900,
 #   cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
