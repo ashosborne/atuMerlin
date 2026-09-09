@@ -1,6 +1,6 @@
-# atuMerlin — modern CUS + ORD + VAT verticals (pathfinder)
+# atuMerlin — modern CUS + ORD + VAT + DAT verticals (pathfinder)
 
-TypeScript modular monolith holding three converted verticals, each under its own BOUND
+TypeScript modular monolith holding four converted verticals, each under its own BOUND
 Architecture pack with a separate convert `ROOM_OK`:
 
 - **CUS** (`cus-interactive` + `cus-modules`) — pack **`atu-merlin-ts-cus-v1@1`**
@@ -10,15 +10,17 @@ Architecture pack with a separate convert `ROOM_OK`:
   **`atu-merlin-ts-ord-v1@1`** (`architecture/atu-merlin-ord/PACK.yaml`). See
   [ORD vertical](#ord-vertical-pack-atu-merlin-ts-ord-v11).
 - **VAT** (`vat-module`) — pack **`atu-merlin-ts-vat-v1@1`** (`architecture/atu-merlin-vat/PACK.yaml`).
-  See [VAT vertical](#vat-vertical-pack-atu-merlin-ts-vat-v11) at the end of this file.
+  See [VAT vertical](#vat-vertical-pack-atu-merlin-ts-vat-v11).
+- **DAT** (`dat-utils`) — pack **`atu-merlin-ts-dat-v1@1`** (`architecture/atu-merlin-dat/PACK.yaml`).
+  See [DAT utilities](#dat-utilities-pack-atu-merlin-ts-dat-v11) at the end of this file.
 
-This is a **pathfinder**, not "Merlin migrated": CUS, ORD and the VAT rule live in TypeScript
-under the waiver; ART, country / VAT / article maintenance, the ORD9xx batches and everything else
-stay on IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens and no
-`REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN**
-under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity:
-TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
-VAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
+This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule and the DAT date rule live
+in TypeScript under the waiver; ART, country / VAT / article maintenance, the ORD9xx batches and
+everything else stay on IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens
+and no `REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **parity:
+TS_BOUNDARY_GREEN** under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD:
+**parity: TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
+VAT and DAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -37,7 +39,8 @@ modern/
   db/schema.sql                    PF -> table, LF -> index, CUSSEQ -> sequence, COUNTRY dependency table;
                                    ORD section appended (orders, detord, article, vatdef, samlog, lastordno,
                                    ordercus view, ORD700 / ORD701 triggers); VAT section appended (vatdef
-                                   mapping note + comments, nothing altered)
+                                   mapping note + comments, nothing altered); DAT section appended (date-lock
+                                   functions dat_iso_num_to_date / dat_date_to_iso_num, no table)
   openapi/customer.yaml            HTTP contract (CUS)
   openapi/order.yaml               HTTP contract (ORD)
   src/app.ts, src/server.ts        Fastify app / entry
@@ -46,6 +49,7 @@ modern/
   src/shared/fcountry/             FCOUNTRY dependency surface (ExistCountry, GetCountryName, list) — read-only
   src/shared/farticle/             FARTICLE dependency surface (GetArtDesc, GetArtRefSalPrice, GetArtVatCode, list) — read-only
   src/shared/fvat/                 FVAT (VAT300 GetVATRate, GetVATDesc, ClcVAT, ExistVATRate) — VAT vertical, shared by ORD
+  src/shared/dat/                  DAT (ISO_Num_To_Date / DAT001, ISOTODATE40 / DAT002, the date lock) — DAT utilities
   src/features/customer/           CUS200 / CUS250: types, repository, service (validation), routes, web
   src/features/order/              ORD100 / ORD101 / ORD200 / ORD201 / ORD202 / ORD500: types, repository,
                                    service, document (ORD500O), routes, web, seed (ORD fixtures)
@@ -496,3 +500,113 @@ the card id; residuals carry a `TODO(<card>)`). Nothing below is a target decisi
 - IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
 - Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1` or the residual DRAFT
   packs; edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.
+
+---
+
+# DAT utilities (pack `atu-merlin-ts-dat-v1@1`)
+
+Converted under Architecture pack **`atu-merlin-ts-dat-v1@1`** (`architecture/atu-merlin-dat/PACK.yaml`,
+`status: BOUND`, bound 2026-09-09T11:12:14Z) with a separate convert `ROOM_OK` carried in
+`overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
+`architecture/atu-merlin-dat/ADR/0001-dat-utils-ts-postgres.md`.
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
+PARITY=UNVERIFIED** (Verification station deferred by the pack).
+
+**Talk-track:** the DAT date rule lives in TypeScript under the waiver — the repo is not fully
+migrated, and DAT is not "fully migrated" either: the eight accepted `dat-utils` cards are present
+at the TS boundary or listed as residual below; the two IBM i SQL functions themselves, their
+possible QM-query callers and every needs-SME item stay on IBM i or open.
+
+## Edit surface honoured
+
+Written: `src/shared/dat/index.ts` (new), `db/schema.sql` (DAT section **appended** — the CUS, ORD
+and VAT objects above it are byte-identical; two functions, no table), `test/dat.test.ts` (new,
+pack-scoped), `package.json` (description), this README, `architecture/atu-merlin-dat/CONVERT_RECORD.md`.
+Untouched: `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/features/customer/**`,
+`src/features/order/**`, `openapi/customer.yaml`, `openapi/order.yaml`, `src/db/**`, `src/app.ts`,
+`src/server.ts`, `architecture/atu-merlin/**`, `architecture/atu-merlin-ord/**`, the sibling packs
+(`vat`, `cou`, `par`, `log`). No `features/dat/` surface and no HTTP route: the pack's
+`contract_paths` is empty and the legacy exposes the rule only through SQL callers, so the shared
+module is the whole surface (same stance as `cus-modules` and `vat-module`).
+
+## Mapping rules applied
+
+| Rule | Where |
+| --- | --- |
+| RPGLE date utilities -> TS shared module | `src/shared/dat/index.ts`: `isoToDate40` (ISOTODATE40 / DAT002), `isoNumToDate` (ISO_Num_To_Date / DAT001), `testIsoNum` (the `test(de) *iso` + `%date` step), `DatArgumentError` (SQLSTATE 38I02) |
+| IBM i blank/never date (1940-01-01 / zero-date) -> NULL, sentinel only at the boundary | `fromLegacyIsoNum` / `toLegacyIsoNum` (numeric shape, 0 <-> `null`), `fromLegacySentinelDate` / `toLegacySentinelDate` (date shape, 1940-01-01 <-> `null`); constants `LEGACY_LOVAL_DATE`, `LEGACY_HIVAL_DATE`, `ISO_NUM_HIVAL`, `ISO_NUM_NONE`. In SQL: `dat_iso_num_to_date(integer)` / `dat_date_to_iso_num(date)` — the same lock the ORD701 trigger applies inline and the CUS pack applies in `lastOrderDateOf` |
+| 99999999 branch (c01) -> preserve as known_risk | `isoToDate40(99999999) = "2039-12-31"` as-is; the lock does **not** treat 2039-12-31 as "never" (nothing invented); no SQL twin |
+
+Nothing consumes the module yet: the ORD repository reads `date NULL` columns directly and the CUS
+pack keeps its own `lastOrderDateOf`; rewriting either is deny-listed here. The module is the
+shared definition those packs can adopt at their next version (see "Not done").
+
+## Card coverage
+
+`converted` = behaviour present at the TS boundary with a test; `as-is` = converted with a known
+legacy quirk deliberately preserved; `residual` = not carried, with the reason; `needs-SME` = left
+open on purpose (no answer invented).
+
+### dat-utils
+
+| Card | Behaviour | Status | Notes |
+| --- | --- | --- | --- |
+| c01 | ISOTODATE40: 0 -> 1940-01-01, 99999999 -> 2039-12-31, valid yyyymmdd -> date, else NULL | converted (**as-is**) | exact-equality sentinels (99999998 is just invalid); years 0001–9999, no business window; leap-year day check; the 2039 branch kept as-is (known_risk, needs-SME) |
+| c02 | ISO_Num_To_Date: same without sentinels, 0 -> NULL | converted | `isoNumToDate`; its semantics are the pack's date lock, so it is carried although it has no legacy caller (c03) — dead-or-not stays needs-SME |
+| c03 | Callers: ORD200 / ORD201 cursors; ISO_Num_To_Date unused | **residual** | the modern ORD lists read `date NULL` columns, no UDF in the query; the un-indicated-fetch truncation defect does not exist here (CR-D2); QM queries have no source |
+| c04 | UDF contract: PARAMETER STYLE SQL, 8 parameters, DETERMINISTIC, NO SQL, RETURNS NULL ON NULL INPUT | converted / n/a | `null` in -> `null` out without evaluating; pure functions; SQL twins declared `IMMUTABLE`, `dat_iso_num_to_date` `STRICT`. Indicators, function / specific names, library-list resolution have no TS equivalent (CR-D1) |
+| c05 | `*PSSR` -> SQLSTATE 38I02 + exception text (70 chars); the statement fails, not a NULL row | converted (**as-is**) | `DatArgumentError { sqlstate: "38I02" }` for an argument a `DECIMAL(8,0)` cannot hold (non-integer, non-finite, beyond ±99999999) — the only TS analogue of a decimal-data error; message cut to 70; an invalid date is still a `null`, not an error |
+| c06 | Programs stay active between rows; no state kept | converted | pure functions; test checks repeated calls and invalid-after-valid |
+| c07 | 0 -> 1940-01-01 implemented three times across the estate; no shared definition | converted | one definition: `LEGACY_LOVAL_DATE`, `toLegacySentinelDate` / `fromLegacySentinelDate`; `isoToDate40(n) === toLegacySentinelDate(fromLegacyIsoNum(n))`. CUS200 / ORD202 copies are not rewritten (deny) |
+| c08 | Result value unassigned on invalid input (port trap) | converted | the return value is `IsoDate \| null`: invalid -> `null`, never a stale value; no date-plus-flag shape exists |
+
+## SME open questions — kept visible, not answered here
+
+From `discovery/dat-utils/SME_BRIEF.md` (unsigned); preserved as-is in the code (comments cite the
+card id). Nothing below is a target decision.
+
+- **c01 / c07** — 1940-01-01 sentinel vs NULL in the target: the pack's date lock says NULL inside,
+  sentinel at the boundary; the module implements exactly that and still offers the as-is
+  `isoToDate40` for COMPARE. Which UI presentation "none" gets is not decided here (CUS / ORD render
+  blank today).
+- **c01** — is the `99999999 -> 2039-12-31` branch used by out-of-tree data? Kept as-is in
+  `isoToDate40`; the lock maps 99999999 to `null` like any other invalid ISO number. If the SME says
+  "never", the branch can be dropped at the next pack version.
+- **c02 / c03** — do the QM queries `CUSQRY` / `ARTQRY` call `ISO_Num_To_Date` or `ISOTODATE40`? No
+  SQL function with either legacy name is created in Postgres; if a ported query needs one it is a
+  pack version bump.
+- **c03** — should order lists tolerate an invalid stored date rather than silently truncating? Moot
+  in the modern schema (`date` columns cannot hold an invalid value) — recorded as CR-D2, ORD scope.
+- **c04 / c06** — activation group, `FENCED`, target library, function creation on deploy: build
+  questions with no TS counterpart (CR-D1).
+
+## Deliberate deltas (CONTRACT_RISK — left open for Verification)
+
+| Id | Delta | Why |
+| --- | --- | --- |
+| CR-D1 | No SQL-function surface for the two legacy names; the null indicators, `Function_Name`, `Specific_Name`, library-list resolution and `FENCED` / activation-group options have no equivalent | The rule is a TS module (pack mapping rule); the only DB objects are the two lock functions, whose names are new. `RETURNS NULL ON NULL INPUT` becomes `null` in -> `null` out |
+| CR-D2 | An invalid `8 0` date cannot reach the modern order lists | ORD stores `date NULL`; the legacy list-load truncation on a NULL from `ISOTODATE40` (c01 / c03) has no path here. Recorded, not "fixed" |
+| CR-D3 | The DAT lock accepts years 0001–0099 (`10101` -> `0001-01-01`) as `test(de) *iso` does; the CUS pack's `lastOrderDateOf` returns `null` for them (`Date.UTC` reads year 1 as 1901) | Found by the alignment test in `test/dat.test.ts`; `features/customer/**` is deny-listed here, so the CUS helper is left as-is for the CUS pack to decide. Out of any business window either way |
+| CR-D4 | `DatArgumentError` (38I02) is raised for a non-`DECIMAL(8,0)` argument in TypeScript and for a malformed ISO string on the way out | The typed SQL signature made this impossible on the box; the modern boundary must decide — the error class is the legacy `*PSSR` contract, not a new one |
+
+## known_risks (from the BOUND pack) — where each lives
+
+| Risk | Status here |
+| --- | --- |
+| Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API | `test/dat.test.ts` expected values derived from the cards (c01 validation rules), not recorded on the box |
+| Date lock MUST match ORD: NULL for blank/never; 1940-01-01 / zero-date only at the boundary | `fromLegacyIsoNum` / `toLegacyIsoNum` / `fromLegacySentinelDate` / `toLegacySentinelDate`; SQL `dat_iso_num_to_date` / `dat_date_to_iso_num`; round-trip and CUS-alignment tests; no sentinel stored anywhere |
+| Dead ISO_Num_To_Date if QM queries unused (c03) | `isoNumToDate` carried (one line, same shape as the lock); no SQL function created; needs-SME kept |
+| 99999999 branch (c01) | as-is in `isoToDate40`; not a "never" in the lock; needs-SME kept |
+| Align with existing ORD/CUS date boundary rules without widening those packs | ORD701 expression equivalence and `lastOrderDateOf` agreement tested read-only; neither pack edited |
+| Architecture BOUND does not authorize Convert | ROOM_OK carried in `overnight/AGENT_JOB.md` body |
+| CUS and ORD modern already exist; accidental re-scope is a fail | `features/customer/**`, `features/order/**`, both OpenAPI files, both packs untouched; CUS / ORD / VAT suites unchanged and green |
+
+## Not done in this pack
+
+- Consuming the module from CUS (`lastOrderDateOf`) or ORD (ORD701's inline `to_char`) — both
+  deny-listed; adopting the shared definition is a version bump of those packs (SUPERSEDE + re-bind).
+- SQL functions named `ISOTODATE40` / `ISO_Num_To_Date` for ported QM queries (c02 / c03 needs-SME).
+- Any HTTP / OpenAPI surface for DAT (`contract_paths: []`); any `features/dat/`.
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
+- Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`
+  or the residual DRAFT packs; edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.

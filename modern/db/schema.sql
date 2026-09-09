@@ -259,3 +259,50 @@ COMMENT ON TABLE vatdef IS
   'VATDEF.PF — VAT code and rate. Read by shared FVAT (GetVATRate, GetVATDesc, ClcVAT, ExistVATRate); no maintenance path (vat-module-c07, needs-SME).';
 COMMENT ON COLUMN vatdef.vatrate IS 'VATRATE 4P 2 "VAT RATE %"; 0 after a miss is indistinguishable from a zero rate (vat-module-c02).';
 COMMENT ON COLUMN vatdef.vatdel IS 'DLCODE: ''X'' = soft-deleted. Only ExistVATRate reads it; ClcVAT still applies the rate (vat-module-c04).';
+
+-- ============================================================================================
+-- atuMerlin DAT utilities — additive DAT objects (pack atu-merlin-ts-dat-v1@1, data.strategy
+-- postgres-greenfield-from-pf, schema_changes additive-only). Nothing above this line is touched
+-- by the DAT pack (forbidden: reshape CUS or ORD schema). Idempotent. No table: DAT001 / DAT002
+-- read no file (dat-utils-c06).
+--
+-- The legacy surface is two SQL scalar functions (ISO_Num_To_Date -> DAT001, ISOTODATE40 ->
+-- DAT002, dat-utils-c04). Their TypeScript twins live in modern/src/shared/dat. In the database
+-- only the *date lock* is defined — the one rule the ORD pack already applies inline in ORD701
+-- (`to_char(ordate, 'YYYYMMDD')::integer`) and the CUS pack applies in TypeScript for CULASTORD:
+-- an `8 0` yyyymmdd crossing the boundary becomes a date or NULL (0 = never, invalid = NULL);
+-- a date leaving becomes yyyymmdd or 0. The 1940-01-01 / 2039-12-31 presentation sentinels of
+-- DAT002 (dat-utils-c01, c07) are deliberately NOT given a SQL function: they must never be
+-- stored, and no modern SQL consumer needs them. ISO_Num_To_Date's only possible callers are
+-- QM queries with no source in the tree (c02 / c03, needs-SME) — nothing is created for them.
+-- ============================================================================================
+
+-- Boundary in: `8 0` yyyymmdd -> date. 0 -> NULL (never); an invalid number -> NULL (the CUS
+-- pack's CR-6 stance; the RPG paths raised an exception). STRICT = RETURNS NULL ON NULL INPUT,
+-- IMMUTABLE = DETERMINISTIC NO SQL (dat-utils-c04). Same values as ISO_Num_To_Date / DAT001.
+CREATE OR REPLACE FUNCTION dat_iso_num_to_date(dat8 integer) RETURNS date
+LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+BEGIN
+  IF dat8 <= 0 THEN
+    RETURN NULL;
+  END IF;
+  -- make_date validates year 1..9999, month and day-of-month (incl. leap years); no leniency.
+  RETURN make_date(dat8 / 10000, (dat8 / 100) % 100, dat8 % 100);
+EXCEPTION
+  WHEN datetime_field_overflow OR invalid_datetime_format THEN
+    RETURN NULL;
+END;
+$$;
+
+COMMENT ON FUNCTION dat_iso_num_to_date(integer) IS
+  'DAT date lock, boundary in: legacy 8 0 yyyymmdd -> date; 0 or invalid -> NULL (dat-utils-c02 semantics, pack atu-merlin-ts-dat-v1@1).';
+
+-- Boundary out: date -> `8 0` yyyymmdd, NULL -> 0 (the storage convention of ORDATDEL / ORDATCLO /
+-- CULASTORD, dat-utils-c07). Not STRICT on purpose: NULL must yield 0.
+CREATE OR REPLACE FUNCTION dat_date_to_iso_num(d date) RETURNS integer
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT COALESCE(to_char(d, 'YYYYMMDD')::integer, 0)
+$$;
+
+COMMENT ON FUNCTION dat_date_to_iso_num(date) IS
+  'DAT date lock, boundary out: date -> legacy 8 0 yyyymmdd; NULL -> 0 (dat-utils-c07, pack atu-merlin-ts-dat-v1@1).';

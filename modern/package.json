@@ -2,7 +2,7 @@
   "name": "atu-merlin-modern",
   "version": "0.1.0",
   "private": true,
-  "description": "atuMerlin pathfinder — CUS vertical (pack atu-merlin-ts-cus-v1@1) + ORD vertical (pack atu-merlin-ts-ord-v1@1) + VAT vertical (pack atu-merlin-ts-vat-v1@1)",
+  "description": "atuMerlin pathfinder — CUS vertical (pack atu-merlin-ts-cus-v1@1) + ORD vertical (pack atu-merlin-ts-ord-v1@1) + VAT vertical (pack atu-merlin-ts-vat-v1@1) + DAT utilities (pack atu-merlin-ts-dat-v1@1)",
   "type": "module",
   "engines": {
     "node": ">=20"
