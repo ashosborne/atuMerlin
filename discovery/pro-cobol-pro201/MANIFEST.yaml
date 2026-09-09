@@ -9,12 +9,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; document as-is; PRO planted-bug/XSS residual
+bind_record: BIND.md
 
 features:
   - id: pro-cobol-pro201-c01
     name: Read-only provider list with paging and options 2/5
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: PROVIDE1 read sequentially, 14 rows per load, PRDEL shown; options 2 and 5 only, others SFLMSG 35.
     entrypoints:
@@ -25,7 +26,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c02
     name: Option 2 displays provider from subfile-carried hidden fields
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: FMT02 output-only, populated by MOVE CORRESPONDING from the subfile row (hidden PRCONT..PRCREA); no re-read of the database.
     entrypoints:
@@ -36,7 +37,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c03
     name: Option 5 -> CALL ART202
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Dynamic CALL "ART202" USING PRID-WRK.
     entrypoints:
@@ -47,7 +48,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c04
     name: One option processed per Enter
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ACT01 reads a single NEXT MODIFIED row; further option rows need another Enter after redisplay.
     entrypoints:
@@ -58,7 +59,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c05
     name: F3 on detail returns to a re-read list without repositioning (likely empty)
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: F3 -> PANEL 1 + STEP01 PRP; PRP01 re-reads PROVIDE1 from the current position with IN80 never reset, so after a full load the list is empty. Code path observed; visible effect needs the box.
     entrypoints:
@@ -69,7 +70,7 @@ features:
     open_questions: ["Confirm the empty-list effect on the box; preserve or fix?"]
   - id: pro-cobol-pro201-c06
     name: F3/F12 on list exit; Page Down via control-area '90'
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Both keys set PANEL 0; PAGEDOWN decoded from F-KEYS value '90'.
     entrypoints:
@@ -80,7 +81,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c07
     name: Read-ahead in PRP01 and sticky IN80
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: First READ happens in PRP01; IN80 set at EOF and never reset.
     entrypoints:
@@ -91,7 +92,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c08
     name: Direct file access, no service programs; CONAME never populated
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No FPROVIDER/FCOUNTRY use; country shown as code; CONAME on FMT02 stays blank.
     entrypoints:
@@ -102,7 +103,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c09
     name: DSPF leftovers from PRO200D (unreachable ERRMSG / CF04)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ERRMSG 41, ERRMSGID ERR0002 and CF04 defined on FMT02 but never reachable from the COBOL.
     entrypoints:
@@ -113,7 +114,7 @@ features:
     open_questions: []
   - id: pro-cobol-pro201-c10
     name: Language outlier - only COBOL member; STOP RUN closes files
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: PROCESS APOST; OPEN INPUT PROVIDE1 / I-O PRO201D at init; CLOSE + STOP RUN on every exit.
     entrypoints:
