@@ -1,4 +1,13 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 — verify ORD vertical under atu-merlin-ts-ord-v1@1 (WAIVED_PATHFINDER, parity: TS_BOUNDARY_GREEN — not IBM i parity)
+# - verification/ord-vertical/2026-09-09-r1/PARITY.yaml           rollup + per-card status (7 slices, 67 cards); parity_green/legacy_green stay false; planted defects listed as preserved
+# - verification/ord-vertical/2026-09-09-r1/REPORT.md             gates, commands, card COMPARE, gaps G-O1..G-O4, CR-O1..CR-O11 table (8 accept-for-demo, 3 defer: CR-O1, CR-O8, CR-O11), pack known_risks table
+# - verification/ord-vertical/2026-09-09-r1/HANDOFF.yaml          inputs, oracle (cards + OpenAPI, no goldens), conversion commits, scope guards
+# - verification/ord-vertical/2026-09-09-r1/evidence/             typecheck-and-vitest.log (111/111), probe.mjs + results.json (48/48 live HTTP + DB side-effect cases)
+# - verification/ord-vertical/2026-09-09-r1/narrative/HOW_IT_WORKS.md
+# - modern/README.md                                              ORD status lines now point at PARITY.yaml
+# Talk-track: ORD pathfinder verified at TS API under waiver — not Merlin migrated. Follow-ups: OpenAPI doc gaps G-O1..G-O4; room/SME decide CR-O1, CR-O8, CR-O11 + seven ord-* SME_BRIEFs. CUS not re-verified; ATU_SRC untouched.
 
 # VERIFY — ORD vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
