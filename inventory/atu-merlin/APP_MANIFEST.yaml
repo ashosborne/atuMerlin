@@ -36,7 +36,11 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   c07 inferred carded, confidence kept); pgm:ORD900 / pgm:ORD901 deferred -> accepted per night residual bind. Sharpened: ORD900 empty file writes LASTORDNO = 0; ORD901 guard works via -305 path; one offset,
   sign from data, double shift on rerun after partial run; 10-day auto-close rule only here, closed-without-delivery reachable; ORD901 is the only writer of DETORD.ODYEAR; CULASTORD statement verbatim ART801:35-37;
   ARCUSQTY/CUCREDIT left stale after closes; no SET OPTION COMMIT (build option not in tree); no scheduling/parameters; lastdate reuse trap. Recommendation unchanged: defer from conversion scope if c07
-  confirmed. CHARACTERIZATION: deferred-waived. No conversion, no tests. Night residual queue left: cou-maintain COU200 half; pro-interactive, pro-modules, pro-cobol-pro201 room-held.'
+  confirmed. CHARACTERIZATION: deferred-waived. No conversion, no tests. Night residual queue left: cou-maintain COU200 half; pro-interactive, pro-modules, pro-cobol-pro201 room-held. | Pack B run 19 (2026-09-09):
+  cou-maintain COU200 half c01-c06, c13 7/7 accepted behaviours documented (cards discovery/cou-maintain/features/; slice now 13/13 across both halves); surface pgm:COU200 deferred -> accepted (night residual
+  bind superseded the 2026-09-08 deferral; run-18 tool lift). Phase A sharpened: PAGEDOWN(25) keyword dead (N80 never true, *IN25 never tested); S02CHK empty - every Enter writes; COU200.RPG:7 the only
+  UF declaration of COUNTRY in the tree, no WRITE/DELET/SQL anywhere; edit F12 goes to the next selected row with the row still locked; list F3 = F12; edited subfile row never rewritten. CHARACTERIZATION:
+  deferred-waived. No conversion, no tests. Night residual queue left: pro-interactive, pro-modules, pro-cobol-pro201 (room-held) - runnable queue EMPTY.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -391,7 +395,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGSRC/COU200.RPG
   repo_path: ATU_SRC/QRPGSRC/COU200.RPG
-  status: deferred
+  status: accepted
   slice_id: cou-maintain
   notes: '*PGM RPG III OPM (only OPM member) - Work with Countries, edit name/ISO only (menu opt 21); screen COU200D'
   discovery_evidence:
@@ -2998,10 +3002,10 @@ behaviours:
     path uses ODQTY - ODQTYLIV; ORD701 assigns, ART801 takes MAX. Whether values actually diverge in practice is a data question. No card (bind: keep inferred labelled inferred).'
 - behaviour_id: cou-maintain-c01
   surface_id: pgm:COU200
-  name: COU200 lists all countries in one load; option 2 only
-  status: deferred
+  name: COU200 lists all countries in one load; the display pages it; option 2 only
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3010,13 +3014,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; *LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35. Deferred at bind (COU200 half); not deepened.'
+  notes: 'confidence: observed-in-code; Menu opt 21. S01PRP clears (SFLCLR) once per call; S01LOD *LOVAL SETLL + no-lock READ to EOF into SFLSIZ 15 / SFLPAG 14 (extendable subfile) - no count, no reload
+    path, no F5. PAGEDOWN(25) is conditioned N80 and 80 is on at every EXFMT (set by the EOF read), and *IN25 is never tested - the keyword is dead; the controller pages the loaded rows, SFLEND(*MORE) shows
+    Bottom. SFLDSP only when RRN01 > 0 (empty file: heading, no rows, no message). Option check in S01CHK: OPT01 in {0,2} else SETON 34 35 (RI + PC on every offending row, SFLMSG ''Invalid Option'' - DDS
+    literal, not SAMMSGF), page set to the first offending row (ERR01 latch), STEP01 back to DSP so valid 2s on the same Enter wait for the next Enter (all-or-nothing). LRRN (INFDS 378-379) -> RRB01 keeps
+    the page across redisplays. Contrast: CUS200 / PRO200 load 14 rows per pass with a pagedown handler.'
 - behaviour_id: cou-maintain-c02
   surface_id: pgm:COU200
-  name: Edit country name / ISO-3 with no validation
-  status: deferred
+  name: Edit country name / ISO-3 with no validation (the estate's only write path to COUNTRY)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3025,13 +3033,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns. Deferred at bind (COU200 half); not deepened.'
+  notes: 'confidence: observed-in-code; Option 2 -> S02PRP locking CHAIN on COID (file values shown, not the subfile''s) -> FMT02: COID output, COUNTR 30A B CHECK(LC), COISO 3A B without CHECK(LC) (keyboard-uppercased);
+    no CHECK(ME/MF) / VALUES / RANGE / ERRMSG in the DDS. S02CHK is ''MOVE ACT'' and nothing else; S02ACT UPDAT FCOUN unconditionally - every Enter writes (unchanged panel included), blank name / blank
+    or short or duplicate ISO all accepted, no confirmation, no changed-test. File has 3 columns (no audit fields - contrast CUSTOMER CUMOD/CUMODID, ARTICLE ARMOD) and no commitment control (F-spec col
+    66 blank). COISO written here has no reader except the uncalled GetCountryIso3 (c08); the name written here is what GetCountryName serves once the caller''s cache misses (c07). UPDAT releases the lock.
+    COU200 is the only member declaring COUNTRY UF; no WRITE / DELET / SQL anywhere.'
 - behaviour_id: cou-maintain-c03
   surface_id: pgm:COU200
-  name: Chain indicator 98 never tested before UPDAT
-  status: deferred
+  name: Chain not-found indicator 98 never tested before UPDAT (unhandled exception path; no in-tree trigger)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3040,13 +3052,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; A concurrent delete between list and edit would UPDAT without a locked record. Deferred at bind (COU200 half); not deepened.'
+  notes: 'confidence: observed-in-code; S02PRP: STEP02 = DSP first, then COID CHAIN COUNTRY with HI 98 (not found) in cols 54-55 and no LO indicator; *IN98 appears nowhere else; no INFSR on COUNTRY, no
+    *PSSR. Row deleted after the no-lock list load: CHAIN fails, input fields unchanged (subfile snapshot), FMT02 shows them as if read; F12 / F3 leave cleanly; Enter -> UPDAT FCOUN with no locked record
+    -> RPG exception (RPG1221-class - platform, inference) -> default handler inquiry message; a G reply re-runs S02ACT and raises again. Row locked by another job: locking CHAIN waits WAITRCD (CRTPF parameter,
+    not in DDS) then raises - the LO case the CHAIN has no indicator for - before FMT02 shows. Row changed (not deleted): CHAIN succeeds, current values shown, last writer wins, no warning. The trigger
+    is not in the tree: COU200 is the only UF declaration of COUNTRY and nothing deletes rows (c04). The ILE panels test their chains (%found); this OPM member does not.'
 - behaviour_id: cou-maintain-c04
   surface_id: pgm:COU200
-  name: No create / delete path; code not editable; no delete flag (absence)
-  status: deferred
+  name: No create / delete / code-change path anywhere in the estate; no delete flag (recorded absence)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3055,14 +3071,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column. Deferred at bind (COU200 half); not deepened. The no-delete-flag fact is carried by
-    c07 for the FCOUNTRY half.'
+  notes: 'confidence: observed-in-code; COU200 accepts OPT01 in {0,2}; legend ''2=Edit'' only; keys CA03 / CA12 only (no CF06 / CF05); COID output-only on SFL01 and FMT02; opcodes on COUNTRY are SETLL /
+    READ / CHAIN / UPDAT - no WRITE, no DELET. Tree-wide: COU200.RPG:7 is the only UF declaration (COU300 / COU301 are IF); no CL (4 QCLSRC members), SQL (8 QSQLSRC members) or trigger (QTRGSRC = ORD700*
+    on DETORD) touches COUNTRY. COUNTRY.PF: 3 columns, UNIQUE K COID, no DLCODE-style flag (contrast CUSTOMER CUDEL, PROVIDER PRDEL, ARTICLE ARDEL) - exists = row present (c07). Countries are loaded / removed
+    outside the tree (unknown). Out-of-tree delete would orphan CUSTOMER.CUCOUN / PROVIDER.PRCOUN (REFFLD(COID), no RI): ExistCountry *off, GetCountryName blanks, CUS200 / PRO200 refuse the save with ERR0002
+    until re-entered; nothing in the tree causes or detects it. Phase A question ''how are countries added on the box'' stays needs-SME.'
 - behaviour_id: cou-maintain-c05
   surface_id: pgm:COU200
-  name: Key semantics (F3 on detail ends program; F12 returns without reload)
-  status: deferred
+  name: Key semantics (list F3 = F12 = end; edit F3 ends from inside the subroutine; edit F12 = next selected row, no write, no reload, lock kept)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3071,13 +3090,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload. Deferred at bind (COU200 half); not deepened.'
+  notes: 'confidence: observed-in-code; CA03 / CA12 at file level (both panels; CA keys transmit no data). List: *IN03 and *IN12 branches are textually identical (PANEL = 0 -> CABEQ 0 ENDPGM -> SETON LR)
+    - F12 ''Cancel'' is exit. Edit: F3 -> GOTO ENDPGM out of S02KEY to the mainline TAG (legal RPG/400 branch out of a subroutine) - pending UPDAT never happens, lock released by the close; F12 -> PANEL
+    = 1 with STEP01 still ACT (c06) so the next option-2 row''s edit panel opens at once, the list redisplays only when none remain; no write, no reload, and the CHAINed row stays locked until the next
+    CHAIN or LR (only the last cancelled row stays locked through the redisplay). F3 on the edit panel discards remaining 2s. No F5 / F6 / F9 / roll handling; PRINT by the system. F12 / F3 are the only
+    ways off panel 2 that avoid c03''s exception.'
 - behaviour_id: cou-maintain-c06
   surface_id: pgm:COU200
-  name: Consecutive option-2 rows processed; subfile row not refreshed
-  status: deferred
+  name: Consecutive option-2 rows edited one after another; the subfile row is never rewritten with the new values (stale list until re-entry)
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3086,7 +3109,12 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; STEP01 stays ''ACT'' after an update so the next changed row is picked up; the list shows stale values. Deferred at bind (COU200 half); not deepened.'
+  notes: 'confidence: observed-in-code; S01CHK: *IN33 (SFLNXTCHG) on, UPDAT SFL01 for every READC row, 33 off after the loop; STEP01 = ACT. S01ACT reads one changed row per pass: OPT01 = 2 -> PANEL 2, STEP02
+    PRP, OPT01 = 0, UPDAT SFL01 under 33 off (row un-flagged and option cleared, with the PRE-edit COUNTR / COISO still in the shared fields); after panel 2 (UPDAT FCOUN or F12) PANEL = 1 with STEP01 still
+    ACT -> READC yields the next 2, whose values overwrite the just-edited ones; 99 -> DSP. No UPDAT SFL01 ever follows the edit, so every edited row shows old data until F3 / F12 + fresh call; choosing
+    2 on it again shows the new values on FMT02 (CHAIN re-reads). Rows edited in RRN (= COID) order regardless of typing order. Invalid option + valid 2s on one Enter: 2s flagged but deferred to the next
+    Enter (nothing lost, nothing early). A typed 0 passes CHK, is skipped by ACT without UPDAT, so its 33-flag persists and it is READC''d on every later Enter - harmless (same shape as c11''s blanked rows
+    in COU301). STEP02 left at KEY after a cancel - harmless, S01ACT sets PRP.'
 - behaviour_id: cou-maintain-c07
   surface_id: srvpgm:FCOUNTRY
   name: GetCountryName / GetCountryIso3 / ExistCountry (cached keyed chain)
@@ -3206,10 +3234,10 @@ behaviours:
     directly.'
 - behaviour_id: cou-maintain-c13
   surface_id: pgm:COU200
-  name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
-  status: deferred
+  name: COU200 is the estate's only OPM RPG III member (QRPGSRC, RPG/400 fixed-form); bypasses FCOUNTRY and writes COUNTRY directly
+  status: documented
   slice_id: cou-maintain
-  discovery_card: null
+  discovery_card: discovery/cou-maintain/features/cou-maintain-c13.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3218,8 +3246,13 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF. Deferred at bind (COU200 half); not deepened. Cited by c07 / c12 as the direct COUNTRY writer that
-    can leave a getter cache stale.'
+  notes: 'confidence: observed-in-code; QRPGSRC = 1 member (138 lines): F / I / C specs with KINFDS / KSFILE continuations, CASEQ dispatcher on PANEL then on a 3-char STEP (PRP / LOD / DSP / KEY / CHK /
+    ACT - the same state machine CUS200 / PRO200 / COU301 write in free-form), CABEQ / GOTO / TAG, SELEC / WHEQ / OTHER (RPG/400 V2R2+, not S/38), DOWEQ, Z-ADD / MOVE, *INZSR. Everything else is ILE RPG
+    (37 QRPGLESRC members) or ILE COBOL (PRO201 - the other language outlier, room-held). %TEXT blank (with ORD700 / ORD900 / ORD901 / PRO203 / ART801); COU200D carries the tree''s only AADDSRCARC provenance
+    text and 2016-11-04 V7R1 %%TS stamps; no compile spec (QILESRC = PAR201 / PRO200 only; CRTRPGPGM options not in tree). No /COPY of COUNTRY.RPGLEINC, no CALLB / CALLP, no FCOUNTRY reference: COUNTRY
+    declared UF and driven with native I/O -> the only writer (c04), its own ODP in the default activation group (OPM cannot join QILE), hence the writer whose renames COU300''s buffer-keyed cache misses
+    (c07); immune to the copybook drift (c08) and to a signature bump (c12); coupled to the file layout only via COU200D REFFLD. Phase A recommendation restated, not decided: retire-and-replace vs convert.
+    COU pack keeps the panel half out of scope until carded and SUPERSEDEd - carded now; superseding is the ME''s / room''s act.'
 - behaviour_id: dat-utils-c01
   surface_id: udf:ISOTODATE40
   name: ISOTODATE40 sentinel conversion (0 -> 1940-01-01, 99999999 -> 2039-12-31, invalid -> NULL)
@@ -5265,5 +5298,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-09T22:20:08Z'
+last_updated: '2026-09-09T22:55:54Z'
 updated_by: document-slices-conveyor

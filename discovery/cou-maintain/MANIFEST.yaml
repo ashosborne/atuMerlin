@@ -10,18 +10,23 @@ seed_entrypoints:
   - ATU_SRC/QDDSSRC/COU200D.DSPF
 out_of_scope_hints:
   - customer / provider screens (callers only) - CUS200 / CUS250 / PRO200 / PRO250 cited for call sites and what they do with the result
-  - COU200 OPM screen (c01-c06, c13) - deferred at bind; cited as the only other reader/writer of COISO and as a direct COUNTRY writer, not deepened
+  - out-of-tree loading of COUNTRY (SQL / DFU / CPYF) - no in-tree create or delete path exists (c04); how countries reach the box stays needs-SME
   - FAM301 / FAM300 (fam-maintain, unbound) - cited for the template comparison in c10 / c11 only
   - modern/src/shared/fcountry (converted CUS vertical dependency surface) - pointer only; never widen atu-merlin-ts-cus-v1
   - conversion / test generation / bind
 phase: B
-updated_at: 2026-09-08T21:30:00Z
-bind_status: accepted   # night residual: COU200 half c01-c06+c13 now accepted; FCOUNTRY already documented
+updated_at: 2026-09-09T23:05:00Z
+bind_status: accepted   # split bind completed: FCOUNTRY half accepted 2026-09-08 (residual bind), COU200 half c01-c06+c13 accepted 2026-09-09 (night residual bind)
 bind_record: BIND.md
-documented_by: document-slices-conveyor (Pack B run 7, 2026-09-08)
-characterization: deferred-waived   # see CHARACTERIZATION.md - no RECORD/REPLAY, no goldens, no conversion unlock
-feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-6."
+documented_by: document-slices-conveyor (Pack B run 7, 2026-09-08 - FCOUNTRY half c07-c12; Pack B run 19, 2026-09-09 - COU200 half c01-c06, c13)
+characterization: deferred-waived   # see CHARACTERIZATION.md - no RECORD/REPLAY, no goldens, no conversion unlock; both halves
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-18."
 needs_sme:
+  - "c13 (room): retire-and-replace (thin target maintain form over country) vs convert the 138-line OPM COU200. Inputs, all as-is: one operation (c02), no validation (c02), unguarded concurrency (c03), no create / delete (c04), key quirks (c05), stale list (c06). The COU pack keeps the panel half out of scope 'until Pack B cards it and pack SUPERSEDEd' - carding is now done; superseding is the ME's proposal to the room, not this station's."
+  - "c02 (room / product owner): does the target need ISO-3 validation (format, uniqueness, consistency with the 2-character code)? As-is: none - blank, short, lowercase-uppercased, duplicate all written. And: is an unaudited, unconfirmed edit of reference data acceptable given the converted CUS / ORD / PRO surfaces read the name through GetCountryName?"
+  - "c04 (room / product owner + data owner): does the target need create / delete (or a soft-delete flag) for countries, or is a fixed reference table maintained by data load the model? As-is the estate has no create / delete anywhere - a target adding them adds behaviour. How do countries reach COUNTRY on the box (out-of-tree loader)?"
+  - "c03 / c05 / c06 (room, target presentation): re-validate row existence / detect concurrent change before write (as-is: no); release the row on cancel and return to the list rather than the next selected row (as-is: no / no); list F12 as a synonym of exit (as-is: yes); reflect the edit in the list at once (as-is: no). Recorded so each difference is a choice."
+  - "c02 / c03 (build owner): WAITRCD of COUNTRY (record-lock wait before the unhandled exception on a locked row); CRTRPGPGM options for COU200 (no compile spec in the tree)."
   - "c08 (room): GetCountryIso3 is exported with no caller in ATU_SRC and COISO has one reader/writer (the deferred COU200 panel). Carry it into the target as an unused export, or reject it (and possibly the COISO column) until a consumer exists?"
   - "c10 (room / fam-maintain bind): the COU301 / FAM301 F8 divergence is source-level only - both windows show the new order from the top on every toggle and lose the caller's code position. Card the target selector once (shared keyed-selector rule) rather than twice as Phase A recommended?"
   - "c09 (target): should the selector show a message when position-to / pcod is beyond the last key (as-is: empty frame, no message), and should it keep the caller's current code as the position across the F8 toggle (neither legacy window does)?"
@@ -30,71 +35,77 @@ needs_sme:
 
 features:
   - id: cou-maintain-c01
-    name: COU200 lists all countries in one load; option 2 only
-    status: accepted
+    name: COU200 lists all countries in one load; the display pages it; option 2 only
+    status: documented
     confidence: observed-in-code
-    summary: "*LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35. Deferred at bind (COU200 half); not deepened."
+    summary: "Menu opt 21. S01PRP clears (SFLCLR) once per call; S01LOD *LOVAL SETLL + no-lock READ to EOF into SFLSIZ 15 / SFLPAG 14 (extendable subfile) - no count, no reload path, no F5. PAGEDOWN(25) is conditioned N80 and 80 is on at every EXFMT (set by the EOF read), and *IN25 is never tested - the keyword is dead; the controller pages the loaded rows, SFLEND(*MORE) shows Bottom. SFLDSP only when RRN01 > 0 (empty file: heading, no rows, no message). Option check in S01CHK: OPT01 in {0,2} else SETON 34 35 (RI + PC on every offending row, SFLMSG 'Invalid Option' - DDS literal, not SAMMSGF), page set to the first offending row (ERR01 latch), STEP01 back to DSP so valid 2s on the same Enter wait for the next Enter (all-or-nothing). LRRN (INFDS 378-379) -> RRB01 keeps the page across redisplays. Contrast: CUS200 / PRO200 load 14 rows per pass with a pagedown handler."
     entrypoints:
       - kind: screen
         locator: COU200 CTL01/SFL01 (menu opt 21)
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:37-47", "ATU_SRC/QRPGSRC/COU200.RPG:69-88", "ATU_SRC/QDDSSRC/COU200D.DSPF:24-33", "ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142"]
-    dependencies: [COUNTRY.PF]
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:4-5", "ATU_SRC/QRPGSRC/COU200.RPG:9-10", "ATU_SRC/QRPGSRC/COU200.RPG:12-19", "ATU_SRC/QRPGSRC/COU200.RPG:21-29", "ATU_SRC/QRPGSRC/COU200.RPG:30-57", "ATU_SRC/QRPGSRC/COU200.RPG:58-67", "ATU_SRC/QRPGSRC/COU200.RPG:68-88", "ATU_SRC/QRPGSRC/COU200.RPG:134-138", "ATU_SRC/QDDSSRC/COU200D.DSPF:6-11", "ATU_SRC/QDDSSRC/COU200D.DSPF:12-46", "ATU_SRC/QDDSSRC/COU200D.DSPF:47-51", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10", "ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142", "ATU_SRC/QRPGLESRC/CUS200.PGM.SQLRPGLE:135", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:104"]
+    behaviour_doc: features/cou-maintain-c01.md
+    dependencies: [COUNTRY.PF, COU200D.DSPF, SAMREF.PF, menu-cmd-shell-c01, cou-maintain-c07, cou-maintain-c09]
     open_questions: []
   - id: cou-maintain-c02
-    name: Edit country name / ISO-3 with no validation
-    status: accepted
+    name: Edit country name / ISO-3 with no validation (the estate's only write path to COUNTRY)
+    status: documented
     confidence: observed-in-code
-    summary: "FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns. Deferred at bind (COU200 half); not deepened."
+    summary: "Option 2 -> S02PRP locking CHAIN on COID (file values shown, not the subfile's) -> FMT02: COID output, COUNTR 30A B CHECK(LC), COISO 3A B without CHECK(LC) (keyboard-uppercased); no CHECK(ME/MF) / VALUES / RANGE / ERRMSG in the DDS. S02CHK is 'MOVE ACT' and nothing else; S02ACT UPDAT FCOUN unconditionally - every Enter writes (unchanged panel included), blank name / blank or short or duplicate ISO all accepted, no confirmation, no changed-test. File has 3 columns (no audit fields - contrast CUSTOMER CUMOD/CUMODID, ARTICLE ARMOD) and no commitment control (F-spec col 66 blank). COISO written here has no reader except the uncalled GetCountryIso3 (c08); the name written here is what GetCountryName serves once the caller's cache misses (c07). UPDAT releases the lock. COU200 is the only member declaring COUNTRY UF; no WRITE / DELET / SQL anywhere."
     entrypoints:
       - kind: screen
         locator: COU200 FMT02
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:94-98", "ATU_SRC/QRPGSRC/COU200.RPG:109-112", "ATU_SRC/QRPGSRC/COU200.RPG:127-133", "ATU_SRC/QDDSSRC/COU200D.DSPF:70-73"]
-    dependencies: []
-    open_questions: ["Does the target need ISO-3 validation?"]
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:7", "ATU_SRC/QRPGSRC/COU200.RPG:90", "ATU_SRC/QRPGSRC/COU200.RPG:94-98", "ATU_SRC/QRPGSRC/COU200.RPG:101-108", "ATU_SRC/QRPGSRC/COU200.RPG:109-116", "ATU_SRC/QRPGSRC/COU200.RPG:117-126", "ATU_SRC/QRPGSRC/COU200.RPG:127-133", "ATU_SRC/QDDSSRC/COU200D.DSPF:52-73", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10", "ATU_SRC/QDDSSRC/SAMREF.PF:18", "ATU_SRC/QDDSSRC/SAMREF.PF:20", "ATU_SRC/QDDSSRC/CUSTOMER.PF:25-28", "ATU_SRC/QRPGLESRC/COU300.RPGLE:57"]
+    behaviour_doc: features/cou-maintain-c02.md
+    dependencies: [COUNTRY.PF, COU200D.DSPF, SAMREF.PF, cou-maintain-c07, cou-maintain-c08, cou-maintain-c09, cou-maintain-c12]
+    open_questions: ["needs-SME (room / product owner): does the target need ISO-3 validation (format, uniqueness, consistency with COID)? As-is: none.", "needs-SME (room): unaudited, unconfirmed edit of reference data acceptable in the target?", "Build owner: WAITRCD of COUNTRY."]
   - id: cou-maintain-c03
-    name: Chain indicator 98 never tested before UPDAT
-    status: accepted
+    name: Chain not-found indicator 98 never tested before UPDAT (unhandled exception path; no in-tree trigger)
+    status: documented
     confidence: observed-in-code
-    summary: "A concurrent delete between list and edit would UPDAT without a locked record. Deferred at bind (COU200 half); not deepened."
+    summary: "S02PRP: STEP02 = DSP first, then COID CHAIN COUNTRY with HI 98 (not found) in cols 54-55 and no LO indicator; *IN98 appears nowhere else; no INFSR on COUNTRY, no *PSSR. Row deleted after the no-lock list load: CHAIN fails, input fields unchanged (subfile snapshot), FMT02 shows them as if read; F12 / F3 leave cleanly; Enter -> UPDAT FCOUN with no locked record -> RPG exception (RPG1221-class - platform, inference) -> default handler inquiry message; a G reply re-runs S02ACT and raises again. Row locked by another job: locking CHAIN waits WAITRCD (CRTPF parameter, not in DDS) then raises - the LO case the CHAIN has no indicator for - before FMT02 shows. Row changed (not deleted): CHAIN succeeds, current values shown, last writer wins, no warning. The trigger is not in the tree: COU200 is the only UF declaration of COUNTRY and nothing deletes rows (c04). The ILE panels test their chains (%found); this OPM member does not."
     entrypoints:
       - kind: other
         locator: COU200 S02PRP / S02ACT
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:111", "ATU_SRC/QRPGSRC/COU200.RPG:131"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:4-7", "ATU_SRC/QRPGSRC/COU200.RPG:12-17", "ATU_SRC/QRPGSRC/COU200.RPG:101-108", "ATU_SRC/QRPGSRC/COU200.RPG:109-112", "ATU_SRC/QRPGSRC/COU200.RPG:113-129", "ATU_SRC/QRPGSRC/COU200.RPG:130-133", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10", "ATU_SRC/QRPGLESRC/COU300.RPGLE:6", "ATU_SRC/QRPGLESRC/COU300.RPGLE:46", "ATU_SRC/QRPGLESRC/COU300.RPGLE:60", "ATU_SRC/QRPGLESRC/COU301.RPGLE:6"]
+    behaviour_doc: features/cou-maintain-c03.md
+    dependencies: [cou-maintain-c01, cou-maintain-c02, cou-maintain-c04, cou-maintain-c05, COUNTRY.PF]
+    open_questions: ["needs-SME (room, target): re-validate row existence / detect concurrent change before write? As-is: no.", "Build owner: WAITRCD of COUNTRY."]
   - id: cou-maintain-c04
-    name: No create / delete path; code not editable; no delete flag (absence)
-    status: accepted
+    name: No create / delete / code-change path anywhere in the estate; no delete flag (recorded absence)
+    status: documented
     confidence: observed-in-code
-    summary: "No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column. Deferred at bind (COU200 half); not deepened. The no-delete-flag fact is carried by c07 for the FCOUNTRY half."
+    summary: "COU200 accepts OPT01 in {0,2}; legend '2=Edit' only; keys CA03 / CA12 only (no CF06 / CF05); COID output-only on SFL01 and FMT02; opcodes on COUNTRY are SETLL / READ / CHAIN / UPDAT - no WRITE, no DELET. Tree-wide: COU200.RPG:7 is the only UF declaration (COU300 / COU301 are IF); no CL (4 QCLSRC members), SQL (8 QSQLSRC members) or trigger (QTRGSRC = ORD700* on DETORD) touches COUNTRY. COUNTRY.PF: 3 columns, UNIQUE K COID, no DLCODE-style flag (contrast CUSTOMER CUDEL, PROVIDER PRDEL, ARTICLE ARDEL) - exists = row present (c07). Countries are loaded / removed outside the tree (unknown). Out-of-tree delete would orphan CUSTOMER.CUCOUN / PROVIDER.PRCOUN (REFFLD(COID), no RI): ExistCountry *off, GetCountryName blanks, CUS200 / PRO200 refuse the save with ERR0002 until re-entered; nothing in the tree causes or detects it. Phase A question 'how are countries added on the box' stays needs-SME."
     entrypoints:
       - kind: other
         locator: COU200 options / COUNTRY.PF
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:74-76", "ATU_SRC/QDDSSRC/COU200D.DSPF:70", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10"]
-    dependencies: []
-    open_questions: ["How are countries added on the box?"]
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:7", "ATU_SRC/QRPGSRC/COU200.RPG:18-19", "ATU_SRC/QRPGSRC/COU200.RPG:39-44", "ATU_SRC/QRPGSRC/COU200.RPG:74-77", "ATU_SRC/QRPGSRC/COU200.RPG:94", "ATU_SRC/QRPGSRC/COU200.RPG:111", "ATU_SRC/QRPGSRC/COU200.RPG:131", "ATU_SRC/QDDSSRC/COU200D.DSPF:8-9", "ATU_SRC/QDDSSRC/COU200D.DSPF:19", "ATU_SRC/QDDSSRC/COU200D.DSPF:38", "ATU_SRC/QDDSSRC/COU200D.DSPF:70", "ATU_SRC/QDDSSRC/COUNTRY.PF:4-10", "ATU_SRC/QRPGLESRC/COU300.RPGLE:6", "ATU_SRC/QRPGLESRC/COU301.RPGLE:6", "ATU_SRC/QDDSSRC/CUSTOMER.PF:16", "ATU_SRC/QDDSSRC/CUSTOMER.PF:29", "ATU_SRC/QDDSSRC/PROVIDER.PF:17", "ATU_SRC/QDDSSRC/PROVIDER.PF:24"]
+    behaviour_doc: features/cou-maintain-c04.md
+    dependencies: [COUNTRY.PF, SAMREF.PF, cou-maintain-c01, cou-maintain-c02, cou-maintain-c07, cou-maintain-c09]
+    open_questions: ["needs-SME (room / product owner): create / delete (or soft-delete flag) needed in the target, or fixed reference table by data load? As-is: none anywhere.", "needs-SME (data owner): how do countries reach COUNTRY on the box - is there an out-of-tree loader that belongs to the estate?"]
   - id: cou-maintain-c05
-    name: Key semantics (F3 on detail ends program; F12 returns without reload)
-    status: accepted
+    name: Key semantics (list F3 = F12 = end; edit F3 ends from inside the subroutine; edit F12 = next selected row, no write, no reload, lock kept)
+    status: documented
     confidence: observed-in-code
-    summary: "List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload. Deferred at bind (COU200 half); not deepened."
+    summary: "CA03 / CA12 at file level (both panels; CA keys transmit no data). List: *IN03 and *IN12 branches are textually identical (PANEL = 0 -> CABEQ 0 ENDPGM -> SETON LR) - F12 'Cancel' is exit. Edit: F3 -> GOTO ENDPGM out of S02KEY to the mainline TAG (legal RPG/400 branch out of a subroutine) - pending UPDAT never happens, lock released by the close; F12 -> PANEL = 1 with STEP01 still ACT (c06) so the next option-2 row's edit panel opens at once, the list redisplays only when none remain; no write, no reload, and the CHAINed row stays locked until the next CHAIN or LR (only the last cancelled row stays locked through the redisplay). F3 on the edit panel discards remaining 2s. No F5 / F6 / F9 / roll handling; PRINT by the system. F12 / F3 are the only ways off panel 2 that avoid c03's exception."
     entrypoints:
       - kind: screen
         locator: COU200 S01KEY / S02KEY
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:58-67", "ATU_SRC/QRPGSRC/COU200.RPG:117-126"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:12-19", "ATU_SRC/QRPGSRC/COU200.RPG:53-55", "ATU_SRC/QRPGSRC/COU200.RPG:58-67", "ATU_SRC/QRPGSRC/COU200.RPG:89-100", "ATU_SRC/QRPGSRC/COU200.RPG:111", "ATU_SRC/QRPGSRC/COU200.RPG:117-126", "ATU_SRC/QRPGSRC/COU200.RPG:127-133", "ATU_SRC/QDDSSRC/COU200D.DSPF:8-10", "ATU_SRC/QDDSSRC/COU200D.DSPF:26", "ATU_SRC/QDDSSRC/COU200D.DSPF:47-51", "ATU_SRC/QDDSSRC/COU200D.DSPF:58-61"]
+    behaviour_doc: features/cou-maintain-c05.md
+    dependencies: [cou-maintain-c01, cou-maintain-c02, cou-maintain-c03, cou-maintain-c06, COU200D.DSPF]
+    open_questions: ["needs-SME (room, target): release the row on cancel? return to the list rather than the next selected row? keep list F12 = exit? All as-is behaviours a web target would not reproduce literally."]
   - id: cou-maintain-c06
-    name: Consecutive option-2 rows processed; subfile row not refreshed
-    status: accepted
+    name: Consecutive option-2 rows edited one after another; the subfile row is never rewritten with the new values (stale list until re-entry)
+    status: documented
     confidence: observed-in-code
-    summary: "STEP01 stays 'ACT' after an update so the next changed row is picked up; the list shows stale values. Deferred at bind (COU200 half); not deepened."
+    summary: "S01CHK: *IN33 (SFLNXTCHG) on, UPDAT SFL01 for every READC row, 33 off after the loop; STEP01 = ACT. S01ACT reads one changed row per pass: OPT01 = 2 -> PANEL 2, STEP02 PRP, OPT01 = 0, UPDAT SFL01 under 33 off (row un-flagged and option cleared, with the PRE-edit COUNTR / COISO still in the shared fields); after panel 2 (UPDAT FCOUN or F12) PANEL = 1 with STEP01 still ACT -> READC yields the next 2, whose values overwrite the just-edited ones; 99 -> DSP. No UPDAT SFL01 ever follows the edit, so every edited row shows old data until F3 / F12 + fresh call; choosing 2 on it again shows the new values on FMT02 (CHAIN re-reads). Rows edited in RRN (= COID) order regardless of typing order. Invalid option + valid 2s on one Enter: 2s flagged but deferred to the next Enter (nothing lost, nothing early). A typed 0 passes CHK, is skipped by ACT without UPDAT, so its 33-flag persists and it is READC'd on every later Enter - harmless (same shape as c11's blanked rows in COU301). STEP02 left at KEY after a cancel - harmless, S01ACT sets PRP."
     entrypoints:
       - kind: screen
-        locator: COU200 S01ACT
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:89-100", "ATU_SRC/QRPGSRC/COU200.RPG:130-133"]
-    dependencies: []
-    open_questions: []
+        locator: COU200 S01CHK / S01ACT
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:21-29", "ATU_SRC/QRPGSRC/COU200.RPG:37-47", "ATU_SRC/QRPGSRC/COU200.RPG:48-57", "ATU_SRC/QRPGSRC/COU200.RPG:68-88", "ATU_SRC/QRPGSRC/COU200.RPG:89-100", "ATU_SRC/QRPGSRC/COU200.RPG:109-133", "ATU_SRC/QDDSSRC/COU200D.DSPF:14", "ATU_SRC/QDDSSRC/COU200D.DSPF:19-21", "ATU_SRC/QDDSSRC/COU200D.DSPF:70-73", "ATU_SRC/QDDSSRC/COUNTRY.PF:7-9"]
+    behaviour_doc: features/cou-maintain-c06.md
+    dependencies: [cou-maintain-c01, cou-maintain-c02, cou-maintain-c03, cou-maintain-c05, COU200D.DSPF]
+    open_questions: ["needs-SME (room, target): reflect the edit in the list at once and return to the list after each save (as-is: neither)? Presentation choices, recorded as differences."]
   - id: cou-maintain-c07
     name: GetCountryName / GetCountryIso3 / ExistCountry (cached keyed chain)
     status: documented
@@ -168,13 +179,14 @@ features:
     dependencies: [SAMPLE.BNDDIR, PRO200.ILEPGM, COUNTRY.RPGLEINC, cou-maintain-c07, cou-maintain-c08, cou-maintain-c09]
     open_questions: ["Build owner: activation group of CUS200 / CUS250 / PRO250; has SIGNATURE('V1') ever been bumped; target library of FCOUNTRY vs callers (*LIBL)."]
   - id: cou-maintain-c13
-    name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
-    status: accepted
+    name: COU200 is the estate's only OPM RPG III member (QRPGSRC, RPG/400 fixed-form); bypasses FCOUNTRY and writes COUNTRY directly
+    status: documented
     confidence: observed-in-code
-    summary: "Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF. Deferred at bind (COU200 half); not deepened. Cited by c07 / c12 as the direct COUNTRY writer that can leave a getter cache stale."
+    summary: "QRPGSRC = 1 member (138 lines): F / I / C specs with KINFDS / KSFILE continuations, CASEQ dispatcher on PANEL then on a 3-char STEP (PRP / LOD / DSP / KEY / CHK / ACT - the same state machine CUS200 / PRO200 / COU301 write in free-form), CABEQ / GOTO / TAG, SELEC / WHEQ / OTHER (RPG/400 V2R2+, not S/38), DOWEQ, Z-ADD / MOVE, *INZSR. Everything else is ILE RPG (37 QRPGLESRC members) or ILE COBOL (PRO201 - the other language outlier, room-held). %TEXT blank (with ORD700 / ORD900 / ORD901 / PRO203 / ART801); COU200D carries the tree's only AADDSRCARC provenance text and 2016-11-04 V7R1 %%TS stamps; no compile spec (QILESRC = PAR201 / PRO200 only; CRTRPGPGM options not in tree). No /COPY of COUNTRY.RPGLEINC, no CALLB / CALLP, no FCOUNTRY reference: COUNTRY declared UF and driven with native I/O -> the only writer (c04), its own ODP in the default activation group (OPM cannot join QILE), hence the writer whose renames COU300's buffer-keyed cache misses (c07); immune to the copybook drift (c08) and to a signature bump (c12); coupled to the file layout only via COU200D REFFLD. Phase A recommendation restated, not decided: retire-and-replace vs convert. COU pack keeps the panel half out of scope until carded and SUPERSEDEd - carded now; superseding is the ME's / room's act."
     entrypoints:
       - kind: other
-        locator: COU200 F-specs
-        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:4-19"]
-    dependencies: []
-    open_questions: ["Retire-and-replace or convert?"]
+        locator: COU200 F-specs / mainline
+        evidence: ["ATU_SRC/QRPGSRC/COU200.RPG:2", "ATU_SRC/QRPGSRC/COU200.RPG:4-10", "ATU_SRC/QRPGSRC/COU200.RPG:12-29", "ATU_SRC/QRPGSRC/COU200.RPG:59-66", "ATU_SRC/QRPGSRC/COU200.RPG:101-108", "ATU_SRC/QRPGSRC/COU200.RPG:134-138", "ATU_SRC/QDDSSRC/COU200D.DSPF:2", "ATU_SRC/QDDSSRC/COU200D.DSPF:4", "ATU_SRC/QDDSSRC/COU200D.DSPF:7", "ATU_SRC/QDDSSRC/COU200D.DSPF:19-21", "ATU_SRC/QDDSSRC/COU200D.DSPF:70-73", "ATU_SRC/QPNLSRC/SAMMNU.MENU:139-142", "ATU_SRC/QRPGLESRC/COU300.RPGLE:6", "ATU_SRC/QRPGLESRC/COU300.RPGLE:57", "ATU_SRC/QRPGLESRC/COU301.RPGLE:6", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:88-174"]
+    behaviour_doc: features/cou-maintain-c13.md
+    dependencies: [cou-maintain-c01, cou-maintain-c02, cou-maintain-c04, cou-maintain-c05, cou-maintain-c06, cou-maintain-c07, cou-maintain-c08, cou-maintain-c12, menu-cmd-shell-c01]
+    open_questions: ["needs-SME (room): retire-and-replace (thin target maintain form over country) vs convert the OPM program - inputs on the card; the room decides.", "needs-SME (ME, COU pack): propose a superseding pack version with a maintain surface, or leave country read-only in the target? Outside this station."]

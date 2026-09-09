@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-09T22:20:08Z` by `document-slices-conveyor`
+- last_updated: `2026-09-09T22:55:54Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -25,20 +25,19 @@
   - Pack B run 16 (2026-09-09): srvpgm-supporting 9/9 accepted behaviours documented (cards discovery/srvpgm-supporting/features/); c05 inferred carded (bind accepted it); surface bnddir:SAMPLE candidate -> accepted; srvpgm:XML / XSS / ORDER / TXT stay unknown (absence recorded in c02). Phase A c07 corrected: default activation group is QILE (job-wide caches), not new-per-program - runtime-confirm. par-maintain-c10 corrected via srvpgm-supporting-c06: EXPORT(*ALL) exports 5 (not 7). CHARACTERIZATION deferred-waived. Night residual queue left: sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.
   - Pack B run 17 (2026-09-09): sql-objects 10/10 accepted behaviours documented (cards discovery/sql-objects/features/); c04 inferred carded (bind accepted it); surfaces view:ORDERCUS / view:ARTLSTDAT / table:ARTIINF / seq:CUSSEQ / sqlprc:ART801 candidate -> accepted. c07 / c08 are object-surface cards pointing at cus-interactive-c02 / ord-trigger-ord700-c10 (CUS/ORD not widened). CHARACTERIZATION deferred-waived. No conversion, no tests. Night residual queue left: ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201.
   - Pack B run 18 (2026-09-09): ord-batch-ord900 9/9 accepted behaviours documented (cards discovery/ord-batch-ord900/features/; c07 inferred carded, confidence kept); pgm:ORD900 / pgm:ORD901 deferred -> accepted per night residual bind. Sharpened: ORD900 empty file writes LASTORDNO = 0; ORD901 guard works via -305 path; one offset, sign from data, double shift on rerun after partial run; 10-day auto-close rule only here, closed-without-delivery reachable; ORD901 is the only writer of DETORD.ODYEAR; CULASTORD statement verbatim ART801:35-37; ARCUSQTY/CUCREDIT left stale after closes; no SET OPTION COMMIT (build option not in tree); no scheduling/parameters; lastdate reuse trap. Recommendation unchanged: defer from conversion scope if c07 confirmed. CHARACTERIZATION: deferred-waived. No conversion, no tests. Night residual queue left: cou-maintain COU200 half; pro-interactive, pro-modules, pro-cobol-pro201 room-held.
+  - Pack B run 19 (2026-09-09): cou-maintain COU200 half c01-c06, c13 7/7 accepted behaviours documented (cards discovery/cou-maintain/features/; slice now 13/13 across both halves); surface pgm:COU200 deferred -> accepted (night residual bind superseded the 2026-09-08 deferral; run-18 tool lift). Phase A sharpened: PAGEDOWN(25) keyword dead (N80 never true, *IN25 never tested); S02CHK empty - every Enter writes; COU200.RPG:7 the only UF declaration of COUNTRY in the tree, no WRITE/DELET/SQL anywhere; edit F12 goes to the next selected row with the row still locked; list F3 = F12; edited subfile row never rewritten. CHARACTERIZATION: deferred-waived. No conversion, no tests. Night residual queue left: pro-interactive, pro-modules, pro-cobol-pro201 (room-held) - runnable queue EMPTY.
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 44 |
+| surfaces `accepted` | 45 |
 | surfaces `candidate` | 19 |
-| surfaces `deferred` | 1 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
 | behaviours `candidate` | 88 |
-| behaviours `deferred` | 7 |
-| behaviours `documented` | 173 |
+| behaviours `documented` | 180 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -53,7 +52,7 @@
 | --- | ---: | ---: | ---: | --- |
 | `art-interactive` | 5 | 16 | 0 | `candidate` |
 | `art-modules` | 4 | 11 | 0 | `candidate` |
-| `cou-maintain` | 4 | 13 | 6 | `deferred` |
+| `cou-maintain` | 4 | 13 | 13 | `documented` |
 | `cus-interactive` | 4 | 12 | 12 | `documented` |
 | `cus-modules` | 3 | 11 | 10 | `candidate` |
 | `dat-utils` | 2 | 8 | 8 | `documented` |
