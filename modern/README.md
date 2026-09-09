@@ -32,8 +32,9 @@ TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the waiver
 the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`); DAT: **parity:
 TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`); VAT:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`);
-COU: **PARITY=UNVERIFIED** (Verification deferred); PAR: **PARITY=UNVERIFIED** (Verification
-deferred); LOG: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
+PAR: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/par-vertical/2026-09-09-r1/PARITY.yaml`);
+COU: **PARITY=UNVERIFIED** (Verification deferred); LOG: **PARITY=UNVERIFIED** (Verification
+deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -766,8 +767,10 @@ Converted under Architecture pack **`atu-merlin-ts-par-v1@1`** (`architecture/at
 `overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
 `architecture/atu-merlin-par/ADR/0001-par-maintain-ts-postgres.md`.
 **WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
-PARITY=UNVERIFIED** — Verification is deferred (`verification: DEFERRED` in the pack); nothing here
-is parity against IBM i.
+parity: TS_BOUNDARY_GREEN** under the waiver — `verification/par-vertical/2026-09-09-r1/PARITY.yaml`
+(22/22 independent probe cases, 306/306 tests; CR-P1 … CR-P7 accept-for-demo; c11 PATH-as-configuration,
+the c07 trailing-slash data fact and the estate list/edit lock template stay with the room / SME;
+observations G-P1 … G-P4 open). Not parity against IBM i.
 
 **Talk-track:** the PAR parameter store lives in TypeScript under the waiver — the repo is not
 fully migrated, and PAR is not "fully migrated" either: the thirteen accepted `par-maintain` cards

@@ -1,0 +1,38 @@
+$ node -v
+v22.14.0
+$ psql -tAc 'select version()'
+PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+
+$ npm run typecheck
+
+> atu-merlin-modern@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+$ npm test
+
+> atu-merlin-modern@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/modern
+
+ ✓ test/dat.test.ts (63 tests) 141ms
+ ✓ test/order.web.test.ts (9 tests) 1922ms
+ ✓ test/parm.test.ts (13 tests) 2388ms
+ ✓ test/samlog.test.ts (24 tests) 3880ms
+ ✓ test/par.api.test.ts (27 tests) 4668ms
+ ✓ test/fcustomer.test.ts (16 tests) 2749ms
+ ✓ test/customer.api.test.ts (29 tests) 4871ms
+ ✓ test/customer.web.test.ts (10 tests) 1960ms
+ ✓ test/fcountry.test.ts (41 tests) 6647ms
+ ✓ test/fvat.test.ts (27 tests) 4156ms
+ ✓ test/order.api.test.ts (47 tests) 7395ms
+
+ Test Files  11 passed (11)
+      Tests  306 passed (306)
+   Start at  19:25:30
+   Duration  7.85s (transform 666ms, setup 0ms, collect 1.87s, tests 40.78s, environment 1ms, prepare 611ms)
+
+exit=0
