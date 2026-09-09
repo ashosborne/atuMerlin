@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual run 18
 # Prefer: ord-batch-ord900, then cou-maintain COU200 half
@@ -8,6 +8,7 @@ RUN
 # Cap 1 slice. sql-objects DONE (run 17 tip 72340fd). CHARACTERIZATION deferred-waived.
 # Never widen CUS/ORD. Room 2026-09-09: Field+CTO+ME clear Pack B resume.
 # Prior: Pack B run 17 DONE. Field landing AGENT_JOB after Smith Auto-review block.
+# Result run 18 (2026-09-09 22:05-22:5x UTC): ord-batch-ord900 DONE — 9/9 accepted Phase B cards (c07 inferred carded), MANIFEST documented, CHARACTERIZATION deferred-waived, SME_BRIEF checklist; APP_MANIFEST 164->173, pgm:ORD900/ORD901 deferred->accepted (mark_documented.py lifts deferred surfaces on a re-accepting bind); INDEX row 12 done. Single run fired. Next after DONE: cou-maintain COU200 half (last runnable; pro-* room-held). Room: c07 real-vs-sample decides the slice's disposition.
 # House style: never use pin / pinned / landed.
 
 # PASTE THIS as the entire Cloud Agent prompt
