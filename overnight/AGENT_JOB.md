@@ -9,6 +9,7 @@ RUN
 # known_risks as-is / needs-SME — do not invent SoT twin, presentation, PDF scope
 # Talk-track after: ORD lives in TypeScript under waiver — not repo fully migrated
 # House style: never use pin / pinned / landed.
+# Nudge 2026-09-09T02:05Z — automation did not pick up prior RUN tip 4aa24f2; re-touch to re-fire. Still RUN.
 
 # PASTE — Convert ORD vertical (atuMerlin)
 
