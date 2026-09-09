@@ -1,0 +1,174 @@
+# DRAFT SUPERSEDE pack. Does not authorise Convert. Does not overwrite atu-merlin-ts-cou-v1.
+# v1 stays BOUND until this pack is BOUND. Do not overwrite architecture/atu-merlin-cou/PACK.yaml.
+pack_id: atu-merlin-ts-cou-v2
+version: 2
+status: DRAFT
+migration_id: atu-merlin
+slice_ids:
+  - cou-maintain
+supersedes: atu-merlin-ts-cou-v1
+supersedes_note: "New pack; v1 stays BOUND until this pack is BOUND; do not overwrite v1 in place."
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: shared/fcountry (existing CUS dependency surface; country feature only if the room chooses convert)
+  preferred_paths:
+    - modern/src/shared/fcountry/**
+    - modern/src/features/country/**
+
+boundaries:
+  in_scope:
+    - "FCOUNTRY / COU300 / COU301 half already in v1 (do not re-convert unless a card gap; none is recorded in this draft)"
+    - "COU200 panel half cards c01-c06 and c13 (now documented). Documentation is in scope. Panel Convert is not."
+  stay_legacy:
+    - ATU_SRC
+    - "CUS pack atu-merlin-ts-cus-v1 (do not widen or edit)"
+    - "ORD pack atu-merlin-ts-ord-v1 (do not widen or edit)"
+    - "ART and providers"
+  deferred:
+    - "COU200 panel disposition is unset. c13 is a ROOM QUESTION. Do not guess retire-and-replace versus convert."
+    - "Panel Convert waits on c13. This DRAFT does not authorise Convert."
+  anti_corruption: "Keep FCOUNTRY on existing modern/src/shared/fcountry. Do not rewrite modern/src/features/customer/** or modern/src/features/order/**. Do not bridge ART or providers into this pack. Do not invent create, delete, soft-delete, country-code change, ISO-3 validation, a data loader, or ART302."
+
+disposition_open:
+  - "c13 is a ROOM QUESTION: retire-and-replace versus convert the 138-line OPM COU200. Do not guess. Unset. Panel Convert waits on c13."
+
+api_contract_policy:
+  mode: conditional-on-c13
+  contract_paths: []
+  sourced_vs_inferred: documented-as-is
+  notes: "modern/openapi/country.yaml only if the room chooses convert. If the room chooses retire, do not add a new write API. HTTP is not preserve-wire against IBM i 5250."
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: additive-only
+  migration_tool: null
+  notes: "COUNTRY table additive only under modern/db/**. Do not reshape CUS or ORD schema. Do not invent a data loader for how countries reach the table. As-is (c04) countries are loaded and removed outside the source tree; the method is not in source and is not decided here."
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM. Unchanged from v1. Not a new decision."
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+  notes: "May extend existing modern/src/shared/fcountry for CUS callers without rewriting the customer feature tree. Do not widen CUS or ORD."
+
+mapping_rules:
+  - from: RPGLE service program FCOUNTRY (COU300 / COU301)
+    to: "existing modern/src/shared/fcountry (stays; do not re-convert unless a card gap)"
+  - from: PF COUNTRY / LF COUNTR1
+    to: "postgres COUNTRY table / index (additive only)"
+  - from: DSPF COU200D / program COU200 (138-line OPM)
+    to: "undecided — c13 ROOM QUESTION. If convert: thin web maintain of name and ISO-3 on an existing row, as-is (no validation, no create, no delete). If retire: no panel port; reference data stays a loaded table. Room chooses."
+
+non_goals:
+  - "No in-place edit of atu-merlin-ts-cou-v1. Do not overwrite architecture/atu-merlin-cou/PACK.yaml."
+  - "No guessing c13 (retire-and-replace versus convert the 138-line OPM COU200)."
+  - "No inventing create, delete, soft-delete, or country code change. As-is (c04) has none."
+  - "No inventing ISO-3 validation (format, uniqueness, or consistency with the 2-character code). As-is (c02) has none: blank, short, and duplicate are all written."
+  - "No inventing a data loader for how countries reach the table."
+  - "No inventing ART302."
+  - "No inventing a consumer for unused GetCountryIso3 (c08)."
+  - "No widening or editing CUS pack atu-merlin-ts-cus-v1 or ORD pack atu-merlin-ts-ord-v1."
+  - "No reshape of CUS or ORD schema. No rewrite of CUS or ORD tests."
+  - "No edits under ATU_SRC/**."
+  - "No Convert while status is DRAFT. Convert is not authorised by this DRAFT."
+  - "No COU200 panel Convert while c13 is unset."
+  - "No claim of REPLAY_GREEN."
+  - "No claim that the estate is fully migrated."
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TypeScript API only. Convert is not authorised by this DRAFT. Panel Convert also waits on c13."
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+  replay_green_run_ids: []
+
+convert:
+  authorised_by_this_draft: false
+  note: "Convert is NOT authorised by this DRAFT. Convert requires separate ROOM_OK after this pack is BOUND. Panel Convert also waits on c13."
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Widen or edit CUS pack atu-merlin-ts-cus-v1 or ORD pack atu-merlin-ts-ord-v1"
+  - "Overwrite architecture/atu-merlin-cou/PACK.yaml (v1 stays BOUND until this pack is BOUND; do not overwrite v1 in place)"
+  - "Invent create, delete, soft-delete, country code change, or ISO-3 validation (format, uniqueness, consistency with the 2-character code)"
+  - "Guess c13 (retire-and-replace versus convert the 138-line OPM COU200)"
+  - "Start COU200 Convert while c13 is unset"
+  - "Reshape CUS or ORD schema"
+  - "Rewrite CUS or ORD tests"
+  - "Convert while status is DRAFT"
+  - "Claim REPLAY_GREEN or invent replay_green_run_ids"
+  - "Invent SME answers"
+  - "String-concat SQL"
+  - "Rewrite discovery cards"
+  - "Claim the estate is fully migrated"
+  - "Invent a data loader for how countries reach the table"
+  - "Invent ART302"
+  - "Invent a consumer for unused GetCountryIso3 (c08)"
+  - "Add a new write API if the room chooses retire (modern/openapi/country.yaml only if the room chooses convert)"
+
+edit_surface:
+  allow:
+    - modern/src/shared/fcountry/**
+    - modern/src/features/country/**
+    - modern/openapi/country.yaml
+    - modern/db/**   # additive / pack-scoped only; no reshape of CUS or ORD schema
+    - modern/test/**   # additive / pack-scoped only; no rewrite of CUS or ORD tests
+    - modern/src/app.ts
+    - modern/src/server.ts
+    - architecture/atu-merlin-cou-v2/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**
+    - architecture/atu-merlin-cou/PACK.yaml
+    - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-ord-batch/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-par/**
+    - architecture/atu-merlin-log/**
+    - modern/src/features/customer/**
+    - modern/src/features/order/**
+    - modern/openapi/customer.yaml
+    - modern/openapi/order.yaml
+
+known_risks:
+  - "c13 is a ROOM QUESTION: retire-and-replace versus convert the 138-line OPM COU200. Do not guess. Unset. Panel Convert waits on c13."
+  - "c02 ISO-3: as-is has no validation (format, uniqueness, or consistency with the 2-character code). Blank, short, and duplicate are all written. Do not invent ISO-3 validation."
+  - "c04 create/delete: as-is has no create, no delete, no soft-delete, and no country code change. Do not invent them. Do not invent a data loader for how countries reach the table."
+  - "c03 / c05 / c06 presentation differences (unguarded not-found CHAIN; F3/F12 key semantics and lock held after cancel; stale list after edit and chained option-2 rows) are recorded as-is and are not decided here."
+  - "c08 unused GetCountryIso3: do not invent a consumer."
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at the TypeScript API. replay_green_run_ids is empty. Do not claim REPLAY_GREEN."
+  - "DRAFT is not Convert. This pack does not authorise Convert. Convert requires separate ROOM_OK after BOUND. Panel Convert also waits on c13."
+  - "Do not widen CUS or ORD. Do not reshape CUS or ORD schema. Do not rewrite CUS or ORD tests."
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/cou-maintain/features/
+  prior_pack: architecture/atu-merlin-cou/PACK.yaml
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-cou-v2/ADR/0001-cou-v2-supersede-cou200.md
+
+bound_by: null
+bound_at: null
+change_policy: "BOUND is immutable. Convert requires separate ROOM_OK. v1 stays BOUND until this pack is BOUND. Do not overwrite v1 in place."
+reference_skeleton: null
