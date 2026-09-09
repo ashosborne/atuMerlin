@@ -1,49 +1,36 @@
-DONE
+RUN
 
-# RESULT — Convert COU vertical FCOUNTRY half: DONE 2026-09-09 (atu-merlin-ts-cou-v1@1, WAIVED_PATHFINDER, PARITY=UNVERIFIED)
-# Code: e90dfb2 (first runner; turn ended after push). Docs + DONE: 0a6aa22 + this commit (second runner, fired by the e90dfb2 push).
-# Artefacts: modern/src/shared/fcountry/index.ts (existCountry, getCountryName, getCountryIso3, sltCountry + COU301 reducer;
-#   listCountries unchanged for CUS) · modern/db/schema.sql COU section appended (countr1 index + COMMENT ON, nothing altered) ·
-#   modern/test/fcountry.test.ts (41 tests, c07..c12) · modern/README.md COU section (CR-C1..CR-C5) · modern/package.json ·
-#   architecture/atu-merlin-cou/CONVERT_RECORD.md
-# Gates: npm run typecheck clean; npm test 242/242 (8 files) green on PostgreSQL 16; CUS/ORD/VAT/DAT suites unchanged.
-# As-is kept / needs-SME: c08 GetCountryIso3 unused (no consumer invented), c09 empty window no message, c10 F8 position lost,
-#   c07 no hit cache (CR-C1). No COU200 presentation, no HTTP surface, no features/cou, no CUS/ORD rewrite.
-# Open: Verification station for COU (COMPARE at TS API; decide CR-C1..CR-C5); SME sign-off on discovery/cou-maintain/SME_BRIEF.md.
-# Next per header: Convert par -> log (each needs its own ROOM_OK in this body). Then Verify per pack.
-# Runner note: the RUN tip 6246243 fired one run; it pushed the code commit and stopped without stamping DONE. The push of
-#   e90dfb2 fired a second run which finished the job (list-cloud-agents showed the first IDLE and no other run active).
-
-# CONVERT — COU vertical FCOUNTRY half (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
+# CONVERT — PAR vertical (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# ROOM_OK: convert COU FCOUNTRY / COU300 / COU301 only (atu-merlin-ts-cou-v1@1 BOUND tip ad697f3)
-# Field + CTO Convert ROOM_OK 2026-09-09 (batch of five). Paste: PASTE-convert-cou-vertical-atu-merlin.md @ f2f7e6c
+# ROOM_OK: convert PAR only (atu-merlin-ts-par-v1@1 BOUND tip ad697f3)
+# Field + CTO Convert ROOM_OK 2026-09-09 (batch of five). Paste: PASTE-convert-par-vertical-atu-merlin.md @ f2f7e6c
 # WAIVED_PATHFINDER — COMPARE at TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
-# Scope: FCOUNTRY half ONLY. Refuse COU200 invent. Never rewrite CUS/ORD. Sibling architecture deny.
-# After DONE: Convert par → log (each needs its own ROOM_OK in this body). Then Verify per pack.
-# Prior: Verify VAT DONE at 90d5e27. Field landing AGENT_JOB after Smith Auto-review block.
+# Never rewrite CUS/ORD. Sibling architecture deny. known_risks as-is.
+# After DONE: Convert log (needs its own ROOM_OK in this body). Then Verify per pack.
+# Prior: Convert COU DONE at 418d5cf. Field landing AGENT_JOB after Smith Auto-review block.
 # House style: never use pin / pinned / landed.
 
-# PASTE — Convert COU vertical (atuMerlin)
+# PASTE — Convert PAR vertical (atuMerlin)
 
-Use only after Architecture pack `atu-merlin-ts-cou-v1` is **BOUND** and the job body contains convert **ROOM_OK**.
+Use only after Architecture pack `atu-merlin-ts-par-v1` is **BOUND** and the job body contains convert **ROOM_OK**.
 
 ## Hard gate
 
-1. Read `architecture/atu-merlin-cou/PACK.yaml`. Refuse if status is not BOUND.
+1. Read `architecture/atu-merlin-par/PACK.yaml`. Refuse if status is not BOUND.
 2. Refuse if job body does not contain ROOM_OK for convert.
-3. Cite pack_id@version `atu-merlin-ts-cou-v1@1` in every commit and PR description.
+3. Cite pack_id@version `atu-merlin-ts-par-v1@1` in every commit and PR description.
 4. Never edit ATU_SRC/**. Never push master directly. Open or update PR to master.
 5. Honour edit_surface STRICTLY from BOUND pack:
 
    ALLOW only:
 
-   - modern/src/shared/fcountry/**
-   - modern/db/** (additive COU tables only — do not reshape CUS or ORD schema)
-   - modern/test/** for cou/fcountry only (pack-scoped)
+   - modern/src/shared/parm/**
+   - modern/src/features/par/**
+   - modern/db/** (additive PAR tables only — do not reshape CUS or ORD schema)
+   - modern/test/** for par only (pack-scoped)
    - modern/src/app.ts, modern/src/server.ts (additive wiring only)
    - modern/package.json, package-lock.json, tsconfig.json, vitest.config.ts, README.md, .gitignore, scripts/**
-   - architecture/atu-merlin-cou/**
+   - architecture/atu-merlin-par/**
 
    DENY:
 
@@ -56,43 +43,41 @@ Use only after Architecture pack `atu-merlin-ts-cou-v1` is **BOUND** and the job
    - architecture/atu-merlin-ord/**
    - architecture/atu-merlin-vat/**
    - architecture/atu-merlin-dat/**
-   - architecture/atu-merlin-par/**
+   - architecture/atu-merlin-cou/**
    - architecture/atu-merlin-log/**
 
 6. Characterization WAIVED_PATHFINDER. No invent IBM i goldens. No claim REPLAY_GREEN against legacy.
-7. Scope: cou-maintain FCOUNTRY / COU300 / COU301 ONLY. Refuse COU200 until Pack B cards it and pack is SUPERSEDEd. May extend shared/fcountry without rewriting customer. Never widen CUS or ORD packs. No ART.
+7. Scope: par-maintain only. PATH as config. Do not rewrite order. Never widen or edit atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1. No ART.
 
 ## Target (from BOUND pack)
 
 - TypeScript modular monolith Node 20 + Fastify
-- Extend existing shared/fcountry (CUS dependency surface)
-- GetCountryName, GetCountryIso3, ExistCountry, SltCountry as documented
-- COUNTRY / COUNTR1 additive under modern/db/**
-- Prefer shared module reuse; HTTP only if Convert needs it
-- COU200 panel half stay_legacy / deferred — do not invent presentation
+- Shared parm/PATH under modern/src/shared/parm/ and/or features/par
+- PATH consumers such as ORD500 already converted — document interop as reuse of config
+- Do not rewrite modern/src/features/order/**
+- Prefer shared config module; HTTP maintain UI only if Convert needs it
 
 ## Inputs (read-only)
 
-- architecture/atu-merlin-cou/PACK.yaml (BOUND)
-- architecture/atu-merlin-cou/ADR/0001-cou-fcountry-ts-postgres.md
-- discovery/cou-maintain/features/*.md (FCOUNTRY/COU300/COU301 cards only)
-- discovery/cou-maintain/SME_BRIEF.md — open SME questions stay as-is; do not invent answers
+- architecture/atu-merlin-par/PACK.yaml (BOUND)
+- architecture/atu-merlin-par/ADR/0001-par-maintain-ts-postgres.md
+- discovery/par-maintain/features/*.md
+- discovery/par-maintain/SME_BRIEF.md — open SME questions stay as-is; do not invent answers
 
 ## Work
 
-1. Extend modern/src/shared/fcountry. Do not rewrite modern/src/features/customer/**.
-2. Implement documented FCOUNTRY/COU300/COU301 behaviours from accepted cards only. Leave inferred/needs-SME stubbed with TODO citing card id.
-3. Map PF→Postgres (COUNTRY, …); LF→index/query; DSPF COU301D→web selector only if Convert includes SltCountry UI.
-4. Refuse COU200 panel conversion. Do not invent COU200 presentation.
-5. GetCountryIso3 unused export (c08) — do not invent consumer or dispose COISO without SME.
-6. COU301 selector open questions (empty position message, F8 position retention) stay needs-SME.
-7. modern/db and modern/test are additive and pack-scoped only.
-8. Add API tests at TypeScript boundary only.
-9. Keep known_risks visible in modern/README.md (COU section).
+1. Extend modern/src/shared/parm and/or modern/src/features/par. Do not rewrite order or customer features.
+2. Implement documented PAR behaviours from accepted cards only. Leave inferred/needs-SME stubbed with TODO citing card id.
+3. Map PF→Postgres or config (PARM / PATH). PATH as config vs maintained table (c11) — choose at convert; document choice; do not invent disposition.
+4. Document PATH interop for ORD500 as config reuse. Do not rewrite ORD500 / order feature.
+5. PATH trailing slash / filesystem semantics (c07) stay known_risk. Unused GetPARM getters — do not invent consumers.
+6. modern/db and modern/test are additive and pack-scoped only.
+7. Add API tests at TypeScript boundary only.
+8. Keep known_risks visible in modern/README.md (PAR section).
 
 ## Done
 
-- Documented COU (FCOUNTRY/COU300/COU301) behaviours present in TypeScript, or listed as residual.
+- Documented PAR behaviours present in TypeScript, or listed as residual.
 - Talk-track: residual lives in TypeScript under waiver — not Merlin migrated.
 - Tests pass for what you claimed.
 - PR to master updated; description cites pack + WAIVED_PATHFINDER.
@@ -101,13 +86,13 @@ Use only after Architecture pack `atu-merlin-ts-cou-v1` is **BOUND** and the job
 ## Refuse
 
 - Convert while pack DRAFT
-- COU200 panel convert until pack SUPERSEDEd after Pack B cards it
-- Inventing COU200 presentation
 - Whole-estate convert / ART work
+- Rewrite order feature for PATH consumers (ORD500)
+- Widen atu-merlin-ts-ord-v1 or atu-merlin-ts-cus-v1
 - Rewrite CUS under modern/src/features/customer/** or modern/openapi/customer.yaml
 - Rewrite ORD under modern/src/features/order/** or modern/openapi/order.yaml
 - Reshape CUS or ORD schema under modern/db/**
-- Edit sibling architecture packs (CUS/ORD/VAT/DAT/PAR/LOG)
+- Edit sibling architecture packs (CUS/ORD/VAT/DAT/COU/LOG)
 - Silent overwrite of Discovery cards
-- Claiming Merlin is fully migrated / claiming COU is fully migrated
+- Claiming Merlin is fully migrated / claiming PAR is fully migrated
 - Inventing SME answers or “fixing” planted defects
