@@ -11,12 +11,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
 
 features:
   - id: menu-cmd-shell-c01
     name: SAMMNU entry map (20 options, all parameterless CALLs)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Master files 1-9, Reports 10/12/13, Utilities 20/21/80-84, 90 signoff; every action is cmd call <pgm> or STRQMQRY / ADSPUSRSPC.
     entrypoints:
@@ -27,7 +28,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c02
     name: Menu options reaching objects not in the tree (12, 13, 84)
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: QM queries CUSQRY / ARTQRY with form CUSQRYFMT and command ADSPUSRSPC are referenced but absent; option 11 does not exist.
     entrypoints:
@@ -38,7 +39,7 @@ features:
     open_questions: ["Obtain CUSQRY, ARTQRY, CUSQRYFMT, ADSPUSRSPC sources?"]
   - id: menu-cmd-shell-c03
     name: Command line and system function keys on the menu
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: cmdline size=long; F4 prompt, F9 retrieve, F6 DSPMSG, F10 DSPJOBLOG, F14 WRKSBMJOB *USER.
     entrypoints:
@@ -49,7 +50,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c04
     name: Help mapping broken / placeholder only
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: help=srt200 undefined (typo for ART200); options 6-9 -> undefined ord100; defined topics are 'Text' / 'Help not available'.
     entrypoints:
@@ -60,7 +61,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c05
     name: SAMMSGF message catalogue (12 ids)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ERR0001-0005, ERR0103, ERR1001/1002, ERR2000-2002; file CCSID 65535, messages CCSID 297; user-visible error strings for the screens.
     entrypoints:
@@ -71,7 +72,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c06
     name: Four messages never referenced (ERR0001/0003/0004/0005)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No DSPF or program uses them; the other 8 are live.
     entrypoints:
@@ -82,7 +83,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c07
     name: CVTSPLPDF command parameter contract (no PGM in source)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: FROMFILE/TOSTMF/TODIR required; JOB, SPLNBR, STMFOPT, STMFCODPAG, TITLE, PAGESIZE, CUSTOMPAGE, FONT, BOOKMARK (+BMARKPOS/BMARKKEY); processing program unknown.
     entrypoints:
@@ -93,7 +94,7 @@ features:
     open_questions: ["Which product supplies CVTSPLPDF?"]
   - id: menu-cmd-shell-c08
     name: Shell message plumbing (QCPFMSG default, SAMMSGF substitute, CPD9817 on Enter)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: dftmsgf=qcpfmsg submsgf=sammsgf; Enter without option -> msg cpd9817; imports SAMHELP.
     entrypoints:
@@ -104,7 +105,7 @@ features:
     open_questions: []
   - id: menu-cmd-shell-c09
     name: Menu titles vs program text mismatches
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Option 9 'Provider by id' calls PRO250 whose %TEXT says 'Display Article'; cosmetic.
     entrypoints:
