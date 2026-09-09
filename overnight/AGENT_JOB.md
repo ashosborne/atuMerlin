@@ -1,4 +1,11 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 (run 2026-09-09-r1): parity TS_BOUNDARY_GREEN under WAIVED_PATHFINDER — not IBM i parity, not Merlin migrated.
+# typecheck clean; 201/201 tests (27 VAT); independent probe 23/23 (1.8M cent-sweep + 200k random 9P2 x 4P2 pairs vs literal RPG oracle; query-counting proxy for buffer rules).
+# Planted defects preserved: silent zero (c02), soft-deleted still applied (c04), blank code never reads — 0 SQL (c05), no maintenance path (c07). CR-V1 no-cache delta observed (7 reads / 7 calls).
+# CR-V1 / CR-V2 / CR-V3 accept-for-demo; CR-V4 defer (room decides c07). G-V1 contract observation: decimal(9,2) side of c10 not enforced on net (no modern caller reaches it).
+# Artefacts: verification/vat-vertical/2026-09-09-r1/{PARITY.yaml,REPORT.md,HANDOFF.yaml,evidence/,narrative/}. README status sentences updated.
+# Next: Convert cou -> par -> log (each needs its own ROOM_OK in this body). Pack B night-residual queue still held (sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201).
 
 # VERIFY — VAT vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
