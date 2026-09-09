@@ -45,3 +45,198 @@ CREATE TABLE IF NOT EXISTS country (
   countr  varchar(30)  NOT NULL DEFAULT '',     -- COUNTR 30A
   coiso   varchar(3)   NOT NULL DEFAULT ''      -- COISO 3A
 );
+
+-- ============================================================================================
+-- atuMerlin ORD vertical — additive ORD objects (pack atu-merlin-ts-ord-v1@1, data.strategy
+-- postgres-greenfield-from-pf). Nothing above this line is touched by the ORD pack (forbidden:
+-- reshape CUS schema). Idempotent.
+--
+-- Date lock (pack mapping rule): IBM i blank/never dates (0 / 1940-01-01) are stored as NULL;
+-- the sentinel only appears at the boundary. CUSTOMER.CULASTORD keeps the CUS pack's
+-- yyyymmdd integer shape, so the ORD701 trigger converts at that boundary.
+-- ============================================================================================
+
+-- LASTORDNO.DTAARA: TYPE(*DEC) LEN(6 0) VALUE(60719) holds the LAST number used; ORD100 does
+-- IN *LOCK / +1 / OUT (ord-entry-ord100-c07), so the first modern order is 60720. ORID is 6P 0.
+CREATE SEQUENCE IF NOT EXISTS lastordno
+  AS integer
+  START WITH 60720
+  INCREMENT BY 1
+  MAXVALUE 999999
+  NO CYCLE;
+
+-- ORDER.PF record format FORDE. "order" is a reserved word (the legacy view quotes "ORDER" too),
+-- so the table is named orders. No FK to customer: ORD100 accepts any non-zero id without an
+-- ExistCus check (ord-entry-ord100-c01 / c14); orphans exist and stay hidden by ORDERCUS.
+CREATE TABLE IF NOT EXISTS orders (
+  orid      integer   PRIMARY KEY CHECK (orid >= 0 AND orid <= 999999),   -- ORID 6P 0
+  oryear    smallint  NOT NULL DEFAULT 0 CHECK (oryear >= 0 AND oryear <= 9999), -- ORYEAR (YEAR 4P 0)
+  orcuid    integer   NOT NULL CHECK (orcuid >= 0 AND orcuid <= 99999),    -- ORCUID (CUID 5P 0)
+  ordate    date      NOT NULL,          -- ORDATE 8 0 yyyymmdd; ORD100 always writes today
+  ordatdel  date,                        -- ORDATDEL 8 0; NULL = never delivered (legacy 0)
+  ordatclo  date                         -- ORDATCLO 8 0; NULL = never closed (legacy 0)
+);
+
+-- ORDER1.LF UNIQUE K ORID -> primary key. ORDER2.LF (ORCUID, ORID), ORDER3.LF (ORDATE, ORID).
+CREATE INDEX IF NOT EXISTS order2 ON orders (orcuid, orid);
+CREATE INDEX IF NOT EXISTS order3 ON orders (ordate, orid);
+
+-- DETORD.PF record format FDETO. DETORD1.LF is UNIQUE (ODORID, ODLINE) -> primary key; the PF
+-- key (ODLINE, ODORID, ODYEAR) becomes a plain index. No FK to orders: legacy has none and
+-- ORD200's header-first delete can leave orphan lines (ord-maintain-ord200-c13).
+CREATE TABLE IF NOT EXISTS detord (
+  odorid    integer       NOT NULL CHECK (odorid >= 0 AND odorid <= 999999),  -- ODORID (ORID 6P 0)
+  odyear    smallint      NOT NULL DEFAULT 0 CHECK (odyear >= 0 AND odyear <= 9999), -- ODYEAR; ORD100 writes 0 (c07)
+  odline    integer       NOT NULL CHECK (odline >= 0 AND odline <= 99999),   -- ODLINE 5P 0
+  odarid    varchar(6)    NOT NULL DEFAULT '',   -- ODARID (ARID 6A)
+  odqty     integer       NOT NULL DEFAULT 0 CHECK (odqty > -100000 AND odqty < 100000),      -- QUANTITY 5 0 signed
+  odqtyliv  integer       NOT NULL DEFAULT 0 CHECK (odqtyliv > -100000 AND odqtyliv < 100000),
+  odprice   numeric(7,2)  NOT NULL DEFAULT 0,    -- ODPRICE (UNITPRICE 7P 2)
+  odtot     numeric(9,2)  NOT NULL DEFAULT 0,    -- ODTOT (TOTPRICE 9P 2)
+  odtotvat  numeric(9,2)  NOT NULL DEFAULT 0,    -- ODTOTVAT 9P 2 "TOTAL LINE WITH VAT"
+  PRIMARY KEY (odorid, odline)
+);
+CREATE INDEX IF NOT EXISTS detord_pf ON detord (odline, odorid, odyear);
+
+-- ARTICLE.PF: dependency table only (FARTICLE GetArtDesc / GetArtRefSalPrice / GetArtVatCode /
+-- SltArticle are consumed by ORD100, ORD101, ORD202, ORD500; ORD700 maintains ARCUSQTY).
+-- ART is stay_legacy in this pack: no article maintenance path exists here.
+CREATE TABLE IF NOT EXISTS article (
+  arid      varchar(6)    PRIMARY KEY,                    -- ARID 6A
+  ardesc    varchar(50)   NOT NULL DEFAULT '',            -- ARDESC 50A
+  arsalepr  numeric(7,2)  NOT NULL DEFAULT 0,             -- ARSALEPR (UNITPRICE 7P 2) "REF SALE PRICE"
+  arwhspr   numeric(7,2)  NOT NULL DEFAULT 0,             -- ARWHSPR
+  artifa    varchar(3)    NOT NULL DEFAULT '',            -- ARTIFA (FAID 3A)
+  arstock   integer       NOT NULL DEFAULT 0,             -- ARSTOCK (QUANTITY 5 0)
+  arminqty  integer       NOT NULL DEFAULT 0,             -- ARMINQTY
+  arcusqty  integer       NOT NULL DEFAULT 0              -- ARCUSQTY "CUSTOMER ORDER QTY", ORD700-maintained
+            CHECK (arcusqty > -100000 AND arcusqty < 100000),
+  arpurqty  integer       NOT NULL DEFAULT 0,             -- ARPURQTY
+  arvatcd   char(1)       NOT NULL DEFAULT '2',           -- ARVATCD (VATCODE 1A, DFT('2'))
+  arcrea    date,                                          -- ARCREA L
+  armod     timestamp,                                     -- ARMOD Z (never stamped by ORD700, c05)
+  armodid   varchar(10)   NOT NULL DEFAULT '',            -- ARMODID 10A
+  ardel     char(1)       NOT NULL DEFAULT ' '            -- ARDEL (DLCODE 1A); never tested by ORD
+);
+
+-- VATDEF.PF: dependency table only (FVAT GetVATRate / CLCVat). vat-module is not converted here.
+CREATE TABLE IF NOT EXISTS vatdef (
+  vatcode   char(1)       PRIMARY KEY,                    -- VATCODE 1A
+  vatrate   numeric(4,2)  NOT NULL DEFAULT 0,             -- VATRATE 4 2 "VAT RATE %"
+  vatdesc   varchar(20)   NOT NULL DEFAULT '',            -- VATDESC 20A
+  vatcrea   date,
+  vatmod    timestamp,
+  vatmodid  varchar(10)   NOT NULL DEFAULT '',
+  vatdel    char(1)       NOT NULL DEFAULT ' '
+);
+
+-- SAMLOG user space (LOG300 AddLogEntry): the only in-tree reader is menu option 84. Entries
+-- are appended, never wrapped or trimmed (ord-trigger-ord700-c03).
+CREATE TABLE IF NOT EXISTS samlog (
+  id         bigserial     PRIMARY KEY,
+  logged_at  timestamp     NOT NULL DEFAULT LOCALTIMESTAMP,
+  user_id    varchar(10)   NOT NULL DEFAULT '',
+  msg        text          NOT NULL
+);
+
+-- ORDERCUS.VIEW as-is: inner join "ORDER" x CUSTOMER on ORCUID = CUID (planted defect kept: an
+-- order whose customer row is missing is not listed anywhere), TOTVAL = COALESCE(SUM(ODTOTVAT), 0).
+CREATE OR REPLACE VIEW ordercus AS
+  SELECT h.orid, h.orcuid, c.custnm, h.oryear, h.ordate, h.ordatdel, h.ordatclo,
+         COALESCE((SELECT SUM(d.odtotvat) FROM detord d WHERE d.odorid = h.orid), 0)::numeric(11,2) AS totval
+    FROM orders h, customer c
+   WHERE h.orcuid = c.cuid;
+
+-- --------------------------------------------------------------------------------------------
+-- ORD700 / ORD701 side effects. Pack mapping rule left the shape open (application-level vs
+-- Postgres trigger); the ORD convert chose Postgres triggers so that every writer of detord /
+-- orders (including ad-hoc SQL, as on IBM i) produces the same side effects. The as-is
+-- arithmetic is kept exactly, asymmetries included — see modern/README.md, ORD section.
+-- --------------------------------------------------------------------------------------------
+
+-- ORD700.UpdArt (ord-trigger-ord700-c05): zero delta -> no-op; unknown article -> silent no-op;
+-- ARMOD / ARMODID are not stamped; sign and bounds are not checked (the CHECK on arcusqty is
+-- the modern stand-in for the 5 0 size exception).
+CREATE OR REPLACE FUNCTION ord700_updart(p_qty integer, p_arid varchar) RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF p_qty = 0 THEN
+    RETURN;
+  END IF;
+  UPDATE article SET arcusqty = arcusqty + p_qty WHERE arid = p_arid;
+END;
+$$;
+
+-- Who is writing, for the SAMLOG "User:" column (legacy *USER). The repository sets
+-- atu.user per transaction; falls back to the database role when unset.
+CREATE OR REPLACE FUNCTION ord700_user() RETURNS varchar
+LANGUAGE sql STABLE AS $$
+  SELECT LEFT(COALESCE(NULLIF(current_setting('atu.user', true), ''), current_user), 10)
+$$;
+
+-- ORD700 event '1' (ord-trigger-ord700-c02): the FULL ordered quantity is added; new.ODQTYLIV
+-- is ignored on insert (as-is asymmetry with delete/update).
+CREATE OR REPLACE FUNCTION ord700_detord_insert() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM ord700_updart(NEW.odqty, NEW.odarid);
+  RETURN NULL;
+END;
+$$;
+
+-- ORD700 event '2' (ord-trigger-ord700-c03): log first (message carries ODQTY, not the
+-- outstanding quantity; ODARID untrimmed as-is), then subtract the outstanding quantity.
+CREATE OR REPLACE FUNCTION ord700_detord_delete() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO samlog (user_id, msg)
+  VALUES (ord700_user(),
+          'ORD700:Order Line deleted ' || OLD.odorid || ' ' || OLD.odline
+          || ' article : ' || RPAD(OLD.odarid, 6) || ' quantity : ' || OLD.odqty);
+  PERFORM ord700_updart(-OLD.odqty + OLD.odqtyliv, OLD.odarid);
+  RETURN NULL;
+END;
+$$;
+
+-- ORD700 event '3' (ord-trigger-ord700-c04). TRGUPDCND(*CHANGE) is the WHEN clause below.
+CREATE OR REPLACE FUNCTION ord700_detord_update() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.odarid = OLD.odarid THEN
+    PERFORM ord700_updart((NEW.odqty - OLD.odqty) - (NEW.odqtyliv - OLD.odqtyliv), NEW.odarid);
+  ELSE
+    PERFORM ord700_updart(NEW.odqty - NEW.odqtyliv, NEW.odarid);
+    PERFORM ord700_updart(-OLD.odqty + OLD.odqtyliv, OLD.odarid);
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS ord700_detord_article_insert ON detord;
+CREATE TRIGGER ord700_detord_article_insert
+  AFTER INSERT ON detord FOR EACH ROW EXECUTE FUNCTION ord700_detord_insert();
+
+DROP TRIGGER IF EXISTS ord700_detord_article_delete ON detord;
+CREATE TRIGGER ord700_detord_article_delete
+  AFTER DELETE ON detord FOR EACH ROW EXECUTE FUNCTION ord700_detord_delete();
+
+DROP TRIGGER IF EXISTS ord700_detord_article_update ON detord;
+CREATE TRIGGER ord700_detord_article_update
+  AFTER UPDATE ON detord FOR EACH ROW
+  WHEN (OLD.* IS DISTINCT FROM NEW.*)
+  EXECUTE FUNCTION ord700_detord_update();
+
+-- ORD701_Insert_order (ord-trigger-ord700-c07): unconditional assignment (no MAX), no
+-- existence / CUDEL check, CUMOD / CUMODID untouched. Insert only — no update/delete twin
+-- exists in the legacy tree (c08, needs-SME). Boundary: CULASTORD stays yyyymmdd integer.
+CREATE OR REPLACE FUNCTION ord701_insert_order() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE customer SET culastord = to_char(NEW.ordate, 'YYYYMMDD')::integer WHERE cuid = NEW.orcuid;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS ord701_insert_order ON orders;
+CREATE TRIGGER ord701_insert_order
+  AFTER INSERT ON orders FOR EACH ROW EXECUTE FUNCTION ord701_insert_order();
