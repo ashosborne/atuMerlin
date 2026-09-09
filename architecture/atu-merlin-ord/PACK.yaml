@@ -1,6 +1,6 @@
 pack_id: atu-merlin-ts-ord-v1
 version: 1
-status: DRAFT
+status: BOUND
 migration_id: atu-merlin
 slice_ids:
   - ord-entry-ord100
@@ -97,6 +97,7 @@ forbidden:
   - "Pull ART into modern ORD scope"
   - "Widen or overwrite atu-merlin-ts-cus-v1"
   - "Rewrite or re-convert CUS under modern/src/features/customer/** or modern/openapi/customer.yaml"
+- "Reshape existing CUS schema under modern/db/** — ORD tables additive only"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
@@ -140,6 +141,7 @@ known_risks:
   - "Planted defects stay as-is/residual: ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero — do not “fix” in Architecture"
   - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
   - "CUS modern already exists under atu-merlin-ts-cus-v1; accidental re-scope of CUS is a fail"
+- "modern/db/** additive ORD tables only — do not reshape CUS schema"
   - "ORD700/ORD701 side-effect shape (application-level vs Postgres DB trigger) undecided until Convert; document the choice at convert time"
 
 evidence:
@@ -155,7 +157,7 @@ evidence:
   replay_green_run_ids: []
   waiver_record: architecture/atu-merlin-ord/ADR/0001-ord-vertical-ts-postgres.md
 
-bound_by: null
-bound_at: null
+bound_by: "atuMerlin migration room (Field Engineer 9.5/10 + CTO skim; Agent Smith recorded)"
+bound_at: "2026-09-09T00:46:59Z"
 change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
 reference_skeleton: null

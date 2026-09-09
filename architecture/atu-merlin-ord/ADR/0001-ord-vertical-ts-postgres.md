@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for DRAFT pack `atu-merlin-ts-ord-v1` @ version 1. Does **not** authorize Convert.
+Accepted — pack `atu-merlin-ts-ord-v1` @ version 1 is **BOUND**. Does **not** authorize Convert (separate ROOM_OK required).
 
 ## Context
 
