@@ -306,3 +306,27 @@ $$;
 
 COMMENT ON FUNCTION dat_date_to_iso_num(date) IS
   'DAT date lock, boundary out: date -> legacy 8 0 yyyymmdd; NULL -> 0 (dat-utils-c07, pack atu-merlin-ts-dat-v1@1).';
+
+-- ============================================================================================
+-- atuMerlin COU vertical, FCOUNTRY half — additive COU objects (pack atu-merlin-ts-cou-v1@1,
+-- data.strategy postgres-greenfield-from-pf, schema_changes additive-only). Nothing above this
+-- line is touched by the COU pack (forbidden: reshape CUS or ORD schema). Idempotent.
+--
+-- COUNTRY.PF (record format FCOUN, REF(SAMREF), UNIQUE K COID) is already mapped column-for-column
+-- by the `country` table in the CUS section, where it was a read-only dependency. The COU convert
+-- takes over the semantics of that table without altering it: COID 2A -> varchar(2) PK (the PF
+-- key), COUNTR 30A -> varchar(30), COISO 3A -> varchar(3). COUNTRY has no create / modify / delete
+-- columns (cou-maintain-c07): "exists" means "row present".
+--
+-- COUNTR1.LF (K COUNTR, not UNIQUE) is the by-name order of the SltCountry window (c09, c10). The
+-- index below is the LF -> index mapping rule; byte order (COLLATE "C") stands in for the keyed
+-- order and the code is the tie-breaker for equal names (the LF listed them in arrival order).
+-- COU200 (the deferred panel half, the only writer of COUNTRY) is not mapped: no maintenance path.
+-- ============================================================================================
+
+CREATE INDEX IF NOT EXISTS countr1 ON country (countr COLLATE "C", coid COLLATE "C");
+
+COMMENT ON TABLE country IS
+  'COUNTRY.PF — country code, name, ISO-3. Read by shared FCOUNTRY (ExistCountry, GetCountryName, GetCountryIso3, SltCountry); written only by the deferred COU200 panel (cou-maintain-c13), no maintenance path here.';
+COMMENT ON COLUMN country.coiso IS 'COISO 3A literal (not SAMREF); read by GetCountryIso3, which has no caller in the estate (cou-maintain-c08, needs-SME).';
+COMMENT ON INDEX countr1 IS 'COUNTR1.LF — by-name order of COU301 SltCountry (cou-maintain-c09); not unique, code tie-breaks equal names.';
