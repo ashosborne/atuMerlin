@@ -1,4 +1,21 @@
-RUN
+DONE
+
+# RESULT — CONVERT VAT vertical (atuMerlin) — atu-merlin-ts-vat-v1@1 — 2026-09-09
+# Station: Convert · ROOM_OK honoured (body) · pack BOUND @ ad697f3 · WAIVED_PATHFINDER · PARITY=UNVERIFIED
+# Branch: cursor/atu-merlin-estate-discovery · PR #1 to master updated by the runner · convert commit 02a9916
+# Result paths:
+#   modern/src/shared/fvat/index.ts         FVAT (VAT300) as shared module: getVatRate / getVatDesc / clcVat / existVatRate; clcVatWithRate; normaliseVatCode (1A contract)
+#   modern/db/schema.sql                    VAT section APPENDED (vatdef mapping note + COMMENT ON); CUS and ORD objects byte-identical, vatdef not altered
+#   modern/test/fvat.test.ts (27)           138/138 green (55 CUS, 56 ORD unchanged, 27 VAT), typecheck clean
+#   modern/README.md                        VAT section: edit surface, mapping rules, card coverage c01-c10, SME open questions, CR-V1..CR-V4, known_risks table
+#   architecture/atu-merlin-vat/CONVERT_RECORD.md
+# Preserved planted defects / known_risks: VAT silent zero (c02), soft-deleted VATDEL still applied (c04), blank code never reads (c05); dead ART200 fields untouched (c03).
+# Residual / not reproduced: last-key cache (c06, CR-V1 stateless); binder signature / BNDDIR / ACTGRP (c09, CR-V2).
+# Not invented (needs-SME, open): unknown-code policy (c02), soft-delete semantics (c04), intra-day rate changes (c06), VATDEF maintenance path (c07) — no route, no screen, no seed of its own (fixture rows via ORD dev seed, CR-V4).
+# No HTTP / OpenAPI surface (contract_paths empty); no features/vat/; app.ts / server.ts untouched. ORD callers reuse shared fvat unchanged (c08).
+# Not touched: ATU_SRC/**, discovery/**, inventory/**, modern/src/features/customer/**, modern/src/features/order/**, both openapi files, modern/src/db/**, architecture/atu-merlin/**, architecture/atu-merlin-ord/**, architecture/atu-merlin-{dat,cou,par,log}/** — CUS/ORD never widened.
+# Talk-track: VAT rule lives in TypeScript under waiver — not Merlin migrated.
+# Next: Verification station for VAT (COMPARE at TS API, decide CR-V1..CR-V4); SME sign-off on discovery/vat-module/SME_BRIEF.md; then per header dat -> cou -> par -> log (each needs its own ROOM_OK in this body).
 
 # CONVERT — VAT vertical (atuMerlin) — FIRE after Field+CTO Convert ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
