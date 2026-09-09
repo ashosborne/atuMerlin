@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual run 17
 # Prefer: sql-objects, then ord-batch-ord900, then cou-maintain COU200 half
@@ -8,6 +8,7 @@ RUN
 # Cap 1 slice. srvpgm-supporting DONE (run 16). CHARACTERIZATION deferred-waived.
 # Never widen CUS/ORD. Room 2026-09-09: Field+CTO+ME clear Pack B resume after residual Verify wave DONE.
 # House style: never use pin / pinned / landed.
+# RESULT run 17 (2026-09-09 ~22:1xZ): sql-objects DONE — 10/10 cards, MANIFEST documented, CHARACTERIZATION deferred-waived, SME_BRIEF checklist; APP_MANIFEST documented 154->164; INDEX row 27 done. Next: prefer ord-batch-ord900, then cou-maintain COU200 half (pro-* stay room-held). Single run fired this time.
 
 # PASTE THIS as the entire Cloud Agent prompt
 # PACK B — Document-slices conveyor (atuMerlin)

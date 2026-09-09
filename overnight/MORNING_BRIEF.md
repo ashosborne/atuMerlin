@@ -47,13 +47,12 @@ Previous briefs preserved in git: Pack B run 16 at `369065b:overnight/MORNING_BR
 
 ## 5. Remaining accepted undocumenteds (queue for next run)
 
-Five, in the bind record's preferred order (cap 1 per run; Ash sets `overnight/AGENT_JOB.md` line 1 back to `RUN` each time):
+Five accepted and undocumented; **two runnable** under the run-17 job header (cap 1 per run; Ash sets `overnight/AGENT_JOB.md` line 1 back to `RUN` each time):
 
 1. `ord-batch-ord900` (9; `ORD900` / `ORD901` — note `sql-objects-c08` / `-c10`: `ORD901` duplicates `ART801` statement 3 and writes `from order` undelimited at `:11,43,45`)
 2. `cou-maintain` COU200 half (`c01`–`c06`, `c13`; FCOUNTRY half already documented in run 7)
-3. `pro-interactive` (15; planted `PRO200` edit bug and XML/XSS as-is — do not invent fixes; `c07` / `c12` outputs cannot get past "file written to `PATH`" until `XML` / `XSS` are seen — `srvpgm-supporting-c02`)
-4. `pro-modules` (14)
-5. `pro-cobol-pro201` (10)
+
+**Room-held by the job header ("Hold: pro-interactive, pro-modules, pro-cobol-pro201")** — accepted in the bind record, not to be run until the header releases them: `pro-interactive` (15; planted `PRO200` edit bug and XML/XSS as-is — do not invent fixes; `c07` / `c12` outputs cannot get past "file written to `PATH`" until `XML` / `XSS` are seen — `srvpgm-supporting-c02`), `pro-modules` (14), `pro-cobol-pro201` (10).
 
 Still held per the bind record and the job header: `art-interactive`, `art-modules` (wait `ART302` / SME — `sql-objects-c05` / `c06` now give the ART pack its table contract and two as-is defects to decide on), `fam-maintain` (hold until ART).
 
@@ -80,8 +79,8 @@ Awaiting human SME sign-off (`SME_BRIEF.md` checklists): `cus-interactive`, `cus
 
 ## 8. completeness: incomplete
 
-Human residual gate untouched. Five accepted slices are still undocumented (queue above); the estate scan is partial (`overnight/METHOD_COVERAGE.md` — the QM queries `ARTQRY` / `CUSQRY` remain the report-side blind spot, now with the sharper fact that `ARTLSTDAT` has no other possible reader); ART slices unbound pending ART302; `fam-maintain` held; seventeen `SME_BRIEF` checklists unsigned.
+Human residual gate untouched. Five accepted slices are still undocumented (two runnable, three `pro-*` room-held — queue above); the estate scan is partial (`overnight/METHOD_COVERAGE.md` — the QM queries `ARTQRY` / `CUSQRY` remain the report-side blind spot, now with the sharper fact that `ARTLSTDAT` has no other possible reader); ART slices unbound pending ART302; `fam-maintain` held; seventeen `SME_BRIEF` checklists unsigned.
 
 ## 9. Next action
 
-**Ash:** set `overnight/AGENT_JOB.md` line 1 back to `RUN` (job header should prefer `ord-batch-ord900` next) — one slice per run, five to go. A Pack B run takes ~40–60 minutes; **any push to the branch while line 1 is `RUN` fires another run on the same slice** — this run was clean, but the pattern from runs 13–16 stands. Cheapest protection: push operator / ME / room artefacts only while line 1 reads `DONE`. **Source owner (one retrieval):** `RTVQMQRY ARTQRY` + `RTVQMQRY CUSQRY` + `RTVQMFORM CUSQRYFMT` into the allowlist — turns `sql-objects-c04` from inferred to observed and closes the report blind spot. **Room (ORD pack, two yes/no):** orphan orders stay hidden (`c01`)? list total stays gross (`c02`)? Both already implemented as-is in `modern/`; this only records the decision. **ME:** when the ART pack is drafted, `sql-objects-c05` / `c06` / `c10` are its `ARTIINF` contract — long names canonical, `CCSID 297` mapping, lost-edit path and orphan text as recorded as-is defects.
+**Ash:** set `overnight/AGENT_JOB.md` line 1 back to `RUN` (job header should prefer `ord-batch-ord900` next, then `cou-maintain` COU200 half) — one slice per run, two runnable, three `pro-*` room-held. A Pack B run takes ~40–60 minutes; **any push to the branch while line 1 is `RUN` fires another run on the same slice** — this run was clean, but the pattern from runs 13–16 stands. Cheapest protection: push operator / ME / room artefacts only while line 1 reads `DONE`. **Source owner (one retrieval):** `RTVQMQRY ARTQRY` + `RTVQMQRY CUSQRY` + `RTVQMFORM CUSQRYFMT` into the allowlist — turns `sql-objects-c04` from inferred to observed and closes the report blind spot. **Room (ORD pack, two yes/no):** orphan orders stay hidden (`c01`)? list total stays gross (`c02`)? Both already implemented as-is in `modern/`; this only records the decision. **ME:** when the ART pack is drafted, `sql-objects-c05` / `c06` / `c10` are its `ARTIINF` contract — long names canonical, `CCSID 297` mapping, lost-edit path and orphan text as recorded as-is defects.
