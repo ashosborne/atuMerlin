@@ -1,74 +1,24 @@
-DONE
+RUN
 
-# RESULT 2026-09-09 — verify ORD vertical under atu-merlin-ts-ord-v1@1 (WAIVED_PATHFINDER, parity: TS_BOUNDARY_GREEN — not IBM i parity)
-# - verification/ord-vertical/2026-09-09-r1/PARITY.yaml           rollup + per-card status (7 slices, 67 cards); parity_green/legacy_green stay false; planted defects listed as preserved
-# - verification/ord-vertical/2026-09-09-r1/REPORT.md             gates, commands, card COMPARE, gaps G-O1..G-O4, CR-O1..CR-O11 table (8 accept-for-demo, 3 defer: CR-O1, CR-O8, CR-O11), pack known_risks table
-# - verification/ord-vertical/2026-09-09-r1/HANDOFF.yaml          inputs, oracle (cards + OpenAPI, no goldens), conversion commits, scope guards
-# - verification/ord-vertical/2026-09-09-r1/evidence/             typecheck-and-vitest.log (111/111), probe.mjs + results.json (48/48 live HTTP + DB side-effect cases)
-# - verification/ord-vertical/2026-09-09-r1/narrative/HOW_IT_WORKS.md
-# - modern/README.md                                              ORD status lines now point at PARITY.yaml
-# Talk-track: ORD pathfinder verified at TS API under waiver — not Merlin migrated. Follow-ups: OpenAPI doc gaps G-O1..G-O4; room/SME decide CR-O1, CR-O8, CR-O11 + seven ord-* SME_BRIEFs. CUS not re-verified; ATU_SRC untouched.
-
-# VERIFY — ORD vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
-# Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# ROOM_OK: verification ORD vertical only (atu-merlin-ts-ord-v1@1 BOUND; Convert DONE tip 2684902)
-# Field + CTO Verify ROOM_OK 2026-09-09. Paste: PASTE-verify-ord-vertical-atu-merlin.md @ tip (CR-O1..CR-O11)
-# WAIVED_PATHFINDER — COMPARE at TypeScript API only. No IBM i goldens. No REPLAY_GREEN. PARITY at most TS_BOUNDARY_GREEN / UNVERIFIED.
-# Never rewrite CUS. Never reshape CUS schema. Never claim repo fully migrated.
+# PACK B — Document-slices conveyor (atuMerlin) — night residual wave after Ash authorize
+# Prefer: par-maintain (then log-programs → menu-cmd-shell → srvpgm-supporting → sql-objects →
+#   ord-batch-ord900 → cou-maintain COU200 half → pro-interactive → pro-modules → pro-cobol-pro201)
+# Skip: art-* and fam-maintain (ART302). Never widen CUS/ORD packs. Never ATU_SRC. Never master.
+# Cap 1 slice per run. CHARACTERIZATION deferred-waived. Do not convert.
+# PRO planted-bug / XML-XSS: document as-is residual — do not invent fixes.
+# Bind record: overnight/BIND_RECORD_NIGHT_RESIDUAL_2026-09-09.md
 # House style: never use pin / pinned / landed.
+# ROOM_OK: residual night bind from Ash + Field 2026-09-09.
 
-# PASTE — Verify ORD vertical (atuMerlin)
+You are running a re-runnable document-slices conveyor on atuMerlin.
 
-Use only after ORD convert is DONE under `modern/src/features/order/` and the room posts Verification ROOM_OK in `overnight/AGENT_JOB.md`.
+Job this run: pick one accepted but not-yet-documented slice — prefer par-maintain from the night residual bind wave. Run Discovery Phase B deepen (behaviour cards from source), update MANIFEST to documented, regenerate COVERAGE, commit on factory branch, stop.
 
-## Hard gate
+Cap: 1 slice per run.
+Branch: cursor/atu-merlin-estate-discovery. Never commit to master. Never edit ATU_SRC/**.
+House style: never use pin / pinned / landed.
+Non-goals: no Phase A, no conversion, no test-gen/RECORD/goldens. CHARACTERIZATION deferred-waived.
+Do not widen atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1.
+Do not invent ART302 / GetArtInfo. Do not "fix" PRO planted-bug or XML/XSS — document as-is.
 
-1. Read `architecture/atu-merlin-ord/PACK.yaml`. Refuse if status is not BOUND.
-2. Refuse if the job body does not contain ROOM_OK for verification.
-3. Cite pack_id@version `atu-merlin-ts-ord-v1@1` in every commit and PR description.
-4. Never edit `ATU_SRC/**`. Never push master directly. Open or update PR to master.
-5. Mode is COMPARE at the TypeScript API only. Characterization is WAIVED_PATHFINDER.
-6. Do not invent IBM i goldens. Do not claim REPLAY_GREEN against legacy.
-7. Do not claim PARITY=GREEN against IBM i. At most claim TS-boundary evidence under the waiver.
-8. Scope ORD only (seven slices). CUS already verified under its own pack — do not re-verify CUS as this job claim. ART out of scope.
-9. Honour Smith gate: if another Cloud Agent job is still RUN, stop and do not stamp a new job.
-10. Never rewrite CUS under `modern/src/features/customer/**` or `modern/openapi/customer.yaml`. Do not reshape CUS schema.
-
-## Inputs (read-only)
-
-- `architecture/atu-merlin-ord/PACK.yaml` (BOUND)
-- `architecture/atu-merlin-ord/CONVERT_RECORD.md` if present (else `modern/README.md` ORD section)
-- `modern/README.md` (ORD card coverage + CONTRACT_RISK / known_risks)
-- `modern/openapi/order.yaml`
-- `modern/test/**` (order-related)
-- `modern/src/features/order/**`
-- `discovery/ord-entry-ord100/features/`
-- `discovery/ord-entry-ord101/features/`
-- `discovery/ord-maintain-ord200/features/`
-- `discovery/ord-maintain-ord201/features/`
-- `discovery/ord-maintain-ord202/features/`
-- `discovery/ord-print-ord500/features/`
-- `discovery/ord-trigger-ord700/features/`
-## Work
-
-1. Run typecheck and tests in modern. Record the summary.
-2. COMPARE converted cards in README against OpenAPI order routes and tests. List gaps.
-3. For each ORD CONTRACT_RISK CR-O1 through CR-O11 (and pack known_risks): mark accept-for-demo or defer in one sentence. Do not invent SME answers. Do not claim IBM i match.
-4. Preserve planted defects as residual: ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero.
-5. Write verification/ord-vertical/RUN_ID/PARITY.yaml and REPORT.md with WAIVED_PATHFINDER. Parity UNVERIFIED or TS_BOUNDARY_GREEN only if checks pass and gaps are explained. Never IBM i GREEN.
-6. Do not rewrite Discovery cards except a clear harness bug that blocks COMPARE.
-
-## Done
-- PARITY.yaml and REPORT.md under verification/ord-vertical/
-- Explicit accept/defer table for ORD risks
-- PR updated; talk-track ORD under waiver not fully migrated
-- AGENT_JOB line 1 DONE
-
-## Refuse
-
-- Verification while convert incomplete
-- IBM i parity claims
-- Whole-estate verification or ART
-- Editing ATU_SRC
-- Starting while AGENT_JOB is still RUN
-- Claiming the repo is fully migrated
+When finished: set line 1 of overnight/AGENT_JOB.md to DONE, commit, push, open/update PR to master.
