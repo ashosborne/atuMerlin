@@ -1,76 +1,164 @@
-DONE
+RUN
 
-# RESULT 2026-09-09 (Cloud Agent, sole runner, RUN tip 1e41dc3): verify LOG vertical DONE — atu-merlin-ts-log-v1@1,
-# parity TS_BOUNDARY_GREEN under WAIVED_PATHFINDER (never IBM i GREEN). typecheck clean; 306/306 tests (24 LOG);
-# independent probe 18/18 x3 (LOG100/LOG300 byte-machine oracle, ORD700 message from source, CP037 copy).
-# c02/c03/c07/c08 TS_BOUNDARY_GREEN; c01/c04/c05/c06/c09/c10 residual explained (c04/c06/c10 deltas observed).
-# CR-L1..CR-L8 accept-for-demo. Deferred to room/SME: preserve user-space log at all (SME_BRIEF item 1);
-# line string vs Msg contract + per-event actor confirmation (item 7); ORD logging through shared/samlog (ORD version).
-# Observations G-L1 (Db = pg.Pool rejects the transaction client; runtime OK), G-L2 (characters not bytes).
-# Artefacts: verification/log-vertical/2026-09-09-r1/{PARITY.yaml,REPORT.md,HANDOFF.yaml,evidence/,narrative/}.
-# README LOG status sentences updated (COU header sentence stale from its STRICT run — follow-up, not touched).
-# Verify commit b119fa7. All seven packs now converted + verified under waiver (CUS, ORD, VAT, DAT, COU, PAR, LOG).
-# Next: none queued — conveyor idle until Ash sets a new RUN. Pack B night-residual queue still held.
-
-# VERIFY — LOG vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
+# PACK B — Document-slices conveyor (atuMerlin) — night residual run 17
+# Prefer: sql-objects, then ord-batch-ord900, then cou-maintain COU200 half
+# Hold: art-* / fam-* (ART302). Hold: pro-interactive, pro-modules, pro-cobol-pro201 (room-held)
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
-# ROOM_OK: verification LOG only (atu-merlin-ts-log-v1@1 BOUND; Convert DONE tip 666330d)
-# Field + CTO Verify ROOM_OK batch of five 2026-09-09. Paste: PASTE-verify-log-vertical-atu-merlin.md @ 744ac29
-# WAIVED_PATHFINDER — COMPARE at TypeScript API only. No IBM i goldens. No REPLAY_GREEN. PARITY at most TS_BOUNDARY_GREEN / UNVERIFIED.
-# Never rewrite CUS/ORD. Never claim Merlin migrated. samlog may reuse ORD table — do not widen ORD pack.
-# Prior: Verify PAR DONE at b468a3f. Field landing AGENT_JOB after Smith Auto-review block.
+# Bind tip: overnight/BIND_RECORD_NIGHT_RESIDUAL_2026-09-09.md
+# Cap 1 slice. srvpgm-supporting DONE (run 16). CHARACTERIZATION deferred-waived.
+# Never widen CUS/ORD. Room 2026-09-09: Field+CTO+ME clear Pack B resume after residual Verify wave DONE.
 # House style: never use pin / pinned / landed.
 
-# PASTE — Verify LOG vertical (atuMerlin)
+# PASTE THIS as the entire Cloud Agent prompt
+# PACK B — Document-slices conveyor (atuMerlin)
+# Phase B behaviour cards ONLY — after human bind of accepted SLICE_IDs
+#
+# NOT estate radar. NOT test-gen / goldens / characterization RECORD.
+# NOT conversion (target stack is noted in TARGET.md for later convert stations only).
 
-Use only after LOG convert is DONE under `modern/src/shared/samlog/` and/or `modern/src/shared/logging/` and the room posts Verification ROOM_OK in `overnight/AGENT_JOB.md`.
+You are running a **re-runnable document-slices conveyor** on **atuMerlin**.
 
-## Hard gate
+**Job this run:** pick **one** accepted but not-yet-documented slice, run Discovery **Phase B** deepen (behaviour cards from source), update MANIFEST → `documented`, regenerate COVERAGE, commit on factory branch, stop.
 
-1. Read `architecture/atu-merlin-log/PACK.yaml`. Refuse if status is not BOUND.
-2. Refuse if the job body does not contain ROOM_OK for verification.
-3. Cite pack_id@version `atu-merlin-ts-log-v1@1` in every commit and PR description.
-4. Never edit `ATU_SRC/**`. Never push master directly. Open or update PR to master.
-5. Mode is COMPARE at the TypeScript API only. Characterization is WAIVED_PATHFINDER.
-6. Do not invent IBM i goldens. Do not claim REPLAY_GREEN against legacy.
-7. Do not claim PARITY=GREEN against IBM i. At most claim TS-boundary evidence under the waiver.
-8. Scope LOG only (`log-programs`). Prefer align/reuse with existing ORD samlog without widening `atu-merlin-ts-ord-v1`. CUS and ORD stay under their own packs — do not rewrite them. ART out of scope.
-9. Honour Smith gate: if another Cloud Agent job is still RUN, stop and do not stamp a new job.
-10. Never rewrite CUS under `modern/src/features/customer/**` or `modern/openapi/customer.yaml`. Never rewrite ORD under `modern/src/features/order/**` or `modern/openapi/order.yaml`. Do not reshape CUS or ORD schema.
-11. Sibling architecture deny: do not edit `architecture/atu-merlin/**`, `architecture/atu-merlin-ord/**`, `architecture/atu-merlin-vat/**`, `architecture/atu-merlin-dat/**`, `architecture/atu-merlin-cou/**`, or `architecture/atu-merlin-par/**`.
-12. `modern/db/**` and `modern/test/**` are additive / shared reuse and pack-scoped only — do not reshape CUS or ORD schema non-additively; tests only for this pack's surface.
+**Cap:** 1 slice per run (re-run until brief says done or no remaining seeds).
 
-## Inputs (read-only)
+**Law:** Field Guide + `discovery-agent-v0.2` + deepen-phase-b skill win. Never invent factory rules.
 
-- `architecture/atu-merlin-log/PACK.yaml` (BOUND)
-- `architecture/atu-merlin-log/CONVERT_RECORD.md` if present (else `modern/README.md` LOG / samlog section)
-- `modern/README.md` (LOG card coverage + CONTRACT_RISK / known_risks)
-- `modern/src/shared/samlog/**` and/or `modern/src/shared/logging/**`
-- `modern/test/**` (log/samlog-related)
-- `discovery/log-programs/features/`
+**Branch:** `cursor/atu-merlin-estate-discovery` (from `master` or latest radar/bind branch as appropriate). Never commit to `master`. Never edit `ATU_SRC/**`.
 
-## Work
+**House style:** never use pin / pinned / landed.
 
-1. Run typecheck and tests in modern. Record the summary.
-2. COMPARE converted cards in README against shared logging/samlog exports/tests (and any OpenAPI if Convert added it). List gaps. Document residual vs reuse relative to ORD samlog.
-3. For each LOG CONTRACT_RISK / pack known_risks (capacity silent fail c04; whole-slice may be non-functional side effect): mark accept-for-demo or defer in one sentence. Do not invent SME answers or business-value claims. Do not claim IBM i match.
-4. Preserve capacity silent fail (c04) as residual; do not invent.
-5. Write `verification/log-vertical/<RUN_ID>/PARITY.yaml` and `REPORT.md` with WAIVED_PATHFINDER. Parity UNVERIFIED or TS_BOUNDARY_GREEN only if checks pass and gaps are explained. Never IBM i GREEN.
-6. Do not rewrite Discovery cards except a clear harness bug that blocks COMPARE.
+**Explicit non-goals for this pack:**
+- No estate Phase A re-hunt (that is Pack A)
+- No conversion (see `TARGET.md` — TypeScript modular monolith + PostgreSQL + simple web UI — for **later** convert stations only)
+- No test generation, no RECORD/REPLAY, no goldens
+- Characterization: **deferred / waived** where no IBM i runtime (documentation from source only). You may leave a one-line `CHARACTERIZATION: deferred-waived` note under the slice; do **not** invent WAIVED_PATHFINDER unlocks for Conversion here.
 
-## Done
+---
 
-- PARITY.yaml and REPORT.md under `verification/log-vertical/`
-- Explicit accept/defer table for LOG risks
-- PR updated; talk-track LOG residual under waiver — not Merlin migrated
-- AGENT_JOB line 1 DONE
+## Operator charter (filled — Pack B)
 
-## Refuse
+```yaml
+OPERATOR: Ash Osborne
+APP_ID: atu-merlin
+REPO_ROOT: .
+FACTORY_ROOT: migration-factory
+WORK_BRANCH: cursor/atu-merlin-estate-discovery
+NO_COMMITS_TO_DEFAULT_BRANCH: true
+PHASE_A: false
+PHASE_B: true
+CAP_SLICES_PER_RUN: 1
+ALLOW_CONVERSION: false
+ALLOW_TEST_GEN: false
+ALLOW_TEST_EXEC: false
+CHARACTERIZATION: deferred-waived
+AUTO_ACCEPT_POLICY: observed-in-code-within-seed-only
+# inferred / needs-SME candidates stay needs-SME — do not deepen as accepted
+WRITE_SCOPE:
+  - discovery/**
+  - inventory/**
+  - overnight/**
+  - docs/estate/**          # dual-write INDEX status for Ash
+  - migration-factory/**    # copy pack in if missing only
+COMMIT_AS: document-slices-conveyor
+TARGET_STACK_DOC: TARGET.md  # read for context only — do not convert
+```
 
-- Verification while convert incomplete
-- IBM i parity claims
-- Whole-estate verification or ART
-- Editing ATU_SRC
-- Starting while AGENT_JOB is still RUN
-- Rewriting CUS/ORD features or OpenAPI / widening ORD pack
-- Claiming the repo is fully migrated
+---
+
+## Preconditions (hard)
+
+1. Factory pack present under `migration-factory/` (copy from operator pack / `ashosborne/migration-factory` main if missing). If still missing → `overnight/BLOCKED.md` and STOP.
+2. Read: Field Guide, Operator runbook, `prompts/discovery-agent-v0.2.md`, `skills/operator/deepen-phase-b/SKILL.md`, `skills/operator/waive-characterization/SKILL.md` (for deferred note only), discovery + app-manifest schemas, optional `TARGET.md` (context only).
+3. `inventory/atu-merlin/APP_MANIFEST.yaml` exists (from Pack A).
+4. Human bind has occurred for at least one `SLICE_ID` (`accepted` in slice `discovery/<SLICE_ID>/MANIFEST.yaml` and/or bind record). If **no** accepted slices → write MORNING_BRIEF "waiting on human bind" and STOP (do not self-bind).
+5. Emit `overnight/CONTEXT_GATE.md` (files read + HEAD SHA + chosen SLICE_ID).
+
+---
+
+## Pick next slice (exactly one)
+
+Priority order:
+
+1. Accepted features/slices in `discovery/*/MANIFEST.yaml` with status not yet `documented` (missing behaviour cards).
+2. Else APP_MANIFEST behaviours/surfaces marked accepted / in-scope but not documented.
+3. Else `INITIAL_SEEDS` / `SLICE_SEED_QUEUE.md` rows that are human-accepted in INDEX or bind notes but lack `discovery/<id>/features/`.
+4. Else unscanned_hints **only if** they already have a human accept bind — never promote radar candidates here.
+5. If none → MORNING_BRIEF "document conveyor idle — no remaining accepted undocumenteds" + `completeness: incomplete` and STOP.
+
+Refuse mega-slices. Shared PF/LF remain **deps**, not the slice.
+
+---
+
+## Auto-accept policy (within the chosen seed only)
+
+During deepen, you may treat Phase A candidates as deepen-able **only when**:
+
+- Human bind already `accepted` them, **or**
+- Charter allows auto-accept of **`observed-in-code`** candidates that clearly sit inside the bound seed entrypoints
+
+**`inferred` stay `needs-SME`.** Do not invent accepts. Do not widen outside seed + deps citations.
+
+---
+
+## Per-run loop body (one slice)
+
+### 1) Journal start
+Append `overnight/document-conveyor/JOURNAL.md`: SLICE_ID, HEAD SHA, timestamp (UTC; Ash is Europe/London).
+
+### 2) Phase B deepen
+Follow Discovery agent Phase B + deepen-phase-b skill:
+
+- Behaviour cards under `discovery/<SLICE_ID>/features/<FEATURE_ID>.md` for **accepted** items only
+- As-is behaviour from source (RPGLE/COBOL/CL/DDS citations); no desired-future / target-stack redesign
+- Update `discovery/<SLICE_ID>/MANIFEST.yaml` → `documented` for completed cards; keep `needs-SME` / `blocked` explicit
+- Refresh `SME_BRIEF.md` sign-off checklist (human SME still signs later)
+
+### 3) Characterization stance
+Add brief note in slice README or `discovery/<SLICE_ID>/CHARACTERIZATION.md`:
+
+```text
+CHARACTERIZATION: deferred-waived
+Reason: IBM i runtime not available in this environment; documentation from source only.
+No RECORD/REPLAY. No goldens. No Conversion unlock claimed by this conveyor.
+```
+
+Do **not** run test-gen or waive-characterization as a Conversion unlock path.
+
+### 4) Portfolio inventory
+Upsert `inventory/atu-merlin/APP_MANIFEST.yaml` (status bumps + pointers only; do not invent new estate surfaces beyond what deepen observed inside the seed). Regenerate `COVERAGE.md` (never hand-edit).
+
+### 5) Optional dual-write INDEX
+Update `docs/estate/INDEX.md` row for this slice: status mirror (`doing`→`done` when documented), members summary, deps. INDEX is for Ash readability; slice MANIFEST remains deep SoT.
+
+### 6) Commit
+On `cursor/atu-merlin-estate-discovery` only. Message prefix: `document-slices: <SLICE_ID>`.
+
+### 7) Stop
+Always stop after one slice. If more accepted undocumenteds remain, MORNING_BRIEF says "re-run conveyor". If none remain, MORNING_BRIEF says document pass idle / waiting on more binds or residual human gate.
+
+---
+
+## MORNING_BRIEF.md (end of every run)
+
+1. Banner: **`PHASE B DOCUMENT ONLY — NO TESTS — NO CONVERSION`**
+2. Slice processed (or idle reason)
+3. Cards written / needs-SME left
+4. Characterization deferred-waived note present
+5. COVERAGE / APP_MANIFEST / optional INDEX delta
+6. Remaining accepted undocumenteds (queue)
+7. Explicit: Did **not** convert (target remains `TARGET.md` for later stations), did **not** test-gen/RECORD
+8. `completeness: incomplete`
+9. Next action: re-run this paste **or** bind more slices from Pack A radar
+
+---
+
+## Anti-patterns (refuse)
+
+- Self-bind of Pack A candidates
+- Phase A estate crawl disguised as deepen
+- Writing modern TypeScript / SQL migrations / UI (that is Conversion later)
+- Generating characterization suites or goldens
+- Editing `ATU_SRC/**` or committing to `master`
+- Merging ORD* because of shared `ORDER.PF`
+- Claiming parity, verified, or "% documented complete"
