@@ -30,12 +30,11 @@ Use only after ORD convert is DONE under `modern/src/features/order/` and the ro
 - `discovery/ord-maintain-ord202/features/`
 - `discovery/ord-print-ord500/features/`
 - `discovery/ord-trigger-ord700/features/`
-
 ## Work
 
 1. Run typecheck and tests in modern. Record the summary.
 2. COMPARE converted cards in README against OpenAPI order routes and tests. List gaps.
-3. For each ORD CONTRACT_RISK and known_risk: mark accept-for-demo or defer in one sentence. Do not invent SME answers. Do not claim IBM i match.
+3. For each ORD CONTRACT_RISK CR-O1 through CR-O11 (and pack known_risks): mark accept-for-demo or defer in one sentence. Do not invent SME answers. Do not claim IBM i match.
 4. Preserve planted defects as residual: ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero.
 5. Write verification/ord-vertical/RUN_ID/PARITY.yaml and REPORT.md with WAIVED_PATHFINDER. Parity UNVERIFIED or TS_BOUNDARY_GREEN only if checks pass and gaps are explained. Never IBM i GREEN.
 6. Do not rewrite Discovery cards except a clear harness bug that blocks COMPARE.
