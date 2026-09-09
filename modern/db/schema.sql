@@ -330,3 +330,42 @@ COMMENT ON TABLE country IS
   'COUNTRY.PF — country code, name, ISO-3. Read by shared FCOUNTRY (ExistCountry, GetCountryName, GetCountryIso3, SltCountry); written only by the deferred COU200 panel (cou-maintain-c13), no maintenance path here.';
 COMMENT ON COLUMN country.coiso IS 'COISO 3A literal (not SAMREF); read by GetCountryIso3, which has no caller in the estate (cou-maintain-c08, needs-SME).';
 COMMENT ON INDEX countr1 IS 'COUNTR1.LF — by-name order of COU301 SltCountry (cou-maintain-c09); not unique, code tie-breaks equal names.';
+
+-- ============================================================================================
+-- atuMerlin PAR vertical — additive PAR objects (pack atu-merlin-ts-par-v1@1, data.strategy
+-- postgres-greenfield-from-pf, schema_changes additive-only). Nothing above this line is touched
+-- by the PAR pack (forbidden: reshape CUS or ORD schema). Idempotent.
+--
+-- PARAMETER.PF (record format FPARAM, UNIQUE K PACODE + K PASUBCODE, par-maintain-c12): a plain
+-- two-key key/value table. PACODE 10A / PASUBCODE 10A -> the composite primary key (the PF UNIQUE);
+-- PARM1 10A, PARM2 100A, PARM3 2A -> varchar; PARM4 zoned 1 0 and PARM5 zoned 3 0 -> smallint with
+-- the DDS width as a CHECK (the getters returned them packed; no value change). No delete flag
+-- (deletes are physical, c05), no audit columns, no TEXT, no logical file, no trigger, no SQL
+-- consumer in the legacy tree — none is added. A blank/blank key is legal (one row, c02) and is
+-- never read by the getters (c09). No PATH row is seeded: its presence is installation data (c08)
+-- and PAR200 (features/par) is the only writer, as on the box.
+--
+-- Mapping choice recorded at Convert (pack mapping rule "PF PARM / PATH -> postgres table or
+-- config surface; choose at convert"): the PF is mapped to a table so that the accepted cards
+-- (c01-c06 maintain, c09 getters, c11 PATH reader) hold as-is. Whether PATH becomes target
+-- configuration instead (c11, room) is NOT decided here; see modern/README.md, PAR section.
+-- ============================================================================================
+
+CREATE TABLE IF NOT EXISTS parameter (
+  pacode    varchar(10)   NOT NULL,              -- PACODE 10A "Parameter code"
+  pasubcode varchar(10)   NOT NULL,              -- PASUBCODE 10A "Parameter sub-Code"
+  parm1     varchar(10)   NOT NULL DEFAULT '',   -- PARM1 10A (GetPARM1: no caller, c11)
+  parm2     varchar(100)  NOT NULL DEFAULT '',   -- PARM2 100A, CHECK(LC) on PAR200 (PATH lives here, c11)
+  parm3     varchar(2)    NOT NULL DEFAULT '',   -- PARM3 2A (GetPARM3: no caller)
+  parm4     smallint      NOT NULL DEFAULT 0     -- PARM4 1S 0 (GetPARM4 -> 1P 0: no caller)
+            CHECK (parm4 >= -9 AND parm4 <= 9),
+  parm5     smallint      NOT NULL DEFAULT 0     -- PARM5 3S 0 (GetPARM5 -> 3P 0: no caller)
+            CHECK (parm5 >= -999 AND parm5 <= 999),
+  PRIMARY KEY (pacode, pasubcode)                -- UNIQUE K PACODE K PASUBCODE (c12)
+);
+
+COMMENT ON TABLE parameter IS
+  'PARAMETER.PF — two-key key/value store. Written only by PAR200 (features/par); read by shared FPARAMETER (GetPARM1..5). The one live row is (PATH, blank) read by GetParm2 (par-maintain-c11); PATH-as-configuration is an open room decision.';
+COMMENT ON COLUMN parameter.parm2 IS 'PARM2 100A, case kept (CHECK(LC)). For the PATH row: an IFS directory, expected to end with ''/'' by two of four legacy consumers (par-maintain-c07, known_risk).';
+COMMENT ON COLUMN parameter.parm4 IS 'PARM4 zoned 1 0; the CHECK is the DDS width. Maintained by PAR200, read by nobody (par-maintain-c11).';
+COMMENT ON COLUMN parameter.parm5 IS 'PARM5 zoned 3 0; the CHECK is the DDS width. Maintained by PAR200, read by nobody (par-maintain-c11).';
