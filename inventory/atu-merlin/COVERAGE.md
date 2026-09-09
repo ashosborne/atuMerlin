@@ -4,7 +4,7 @@
 > Counts only. No completion percentage exists or should be derived from this file.
 
 - app status: `in_progress` · completeness: `incomplete` (human residual gate)
-- last_updated: `2026-09-08T23:32:37Z` by `document-slices-conveyor`
+- last_updated: `2026-09-09T00:10:36Z` by `document-slices-conveyor`
 - notes:
   - estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar output: candidates only, nothing bound. Surfaces are callable IBM i objects (PGM/MODULE/SRVPGM/CL/CMD/trigger); DSPF/PRTF are evidence on the owning program. kind=other for all IBM i surfaces (schema enum is integration-flavoured). Human residual gate required.
   - Room bind 2026-09-08: accepted cus-interactive, cus-modules (fold srvpgm-fcustomer), ord-entry-ord100, ord-trigger-ord700; deferred ord-batch-ord900; skip art-* until ART302 answered. Pack B document only; inferred stay needs-SME; convert later CUS-only.
@@ -18,20 +18,21 @@
   - Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500
   - Pack B run 10 (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500
   - Pack B run 11 (2026-09-08): ord-maintain-ord202 documented (6/6 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-print-ord500
+  - Pack B run 12 (2026-09-08): ord-print-ord500 documented (7/7 accepted cards; c04 needs-SME inferred, no card); CHARACTERIZATION deferred-waived; ORD-wave queue EMPTY - all five ORD slices carded; next: ME drafts the new ORD Architecture pack (ROOM_OK then)
 
 ## Histogram
 
 | Metric | Count |
 | --- | ---: |
 | surfaces_total | 71 |
-| surfaces `accepted` | 23 |
-| surfaces `candidate` | 38 |
+| surfaces `accepted` | 25 |
+| surfaces `candidate` | 36 |
 | surfaces `deferred` | 3 |
 | surfaces `unknown` | 7 |
 | behaviours_known | 268 |
-| behaviours `candidate` | 155 |
+| behaviours `candidate` | 148 |
 | behaviours `deferred` | 7 |
-| behaviours `documented` | 106 |
+| behaviours `documented` | 113 |
 | behaviours confidence `inferred` | 21 |
 | behaviours confidence `observed-in-code` | 247 |
 | scanned_seeds | 24 |
@@ -59,7 +60,7 @@
 | `ord-maintain-ord200` | 1 | 13 | 12 | `candidate` |
 | `ord-maintain-ord201` | 1 | 11 | 11 | `documented` |
 | `ord-maintain-ord202` | 1 | 6 | 6 | `documented` |
-| `ord-print-ord500` | 2 | 8 | 0 | `candidate` |
+| `ord-print-ord500` | 2 | 8 | 7 | `candidate` |
 | `ord-trigger-ord700` | 3 | 11 | 8 | `candidate` |
 | `par-maintain` | 4 | 13 | 0 | `candidate` |
 | `pro-cobol-pro201` | 1 | 10 | 0 | `candidate` |

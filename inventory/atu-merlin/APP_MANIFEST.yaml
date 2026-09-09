@@ -17,7 +17,9 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   deferred-waived. No conversion, no tests. | Pack B run 8 (2026-09-08): ord-entry-ord101 documented (11 cards; c11 needs-SME); ORD wave queue left: ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202,
   ord-print-ord500 | Pack B run 9 (2026-09-08): ord-maintain-ord200 documented (12 cards; c12 needs-SME); ORD wave queue left: ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500 | Pack B run 10
   (2026-09-08): ord-maintain-ord201 documented (11/11 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-maintain-ord202, ord-print-ord500 | Pack B run
-  11 (2026-09-08): ord-maintain-ord202 documented (6/6 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-print-ord500'
+  11 (2026-09-08): ord-maintain-ord202 documented (6/6 accepted cards; no needs-SME candidates); CHARACTERIZATION deferred-waived; ORD-wave queue left: ord-print-ord500 | Pack B run 12 (2026-09-08): ord-print-ord500
+  documented (7/7 accepted cards; c04 needs-SME inferred, no card); CHARACTERIZATION deferred-waived; ORD-wave queue EMPTY - all five ORD slices carded; next: ME drafts the new ORD Architecture pack (ROOM_OK
+  then)'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -323,7 +325,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: ord-print-ord500
   notes: '*PGM RPGLE - Print order to spool ORD500O then call ORD500C'
   discovery_evidence:
@@ -333,7 +335,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
   repo_path: ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
-  status: candidate
+  status: accepted
   slice_id: ord-print-ord500
   notes: '*PGM CLLE - CVTSPLPDF spool to IFS PDF (command impl not in tree)'
   discovery_evidence:
@@ -2616,9 +2618,9 @@ behaviours:
 - behaviour_id: ord-print-ord500-c01
   surface_id: pgm:ORD500
   name: Print order document to spool
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2627,13 +2629,19 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Header formats, one DETAIL per line, page break every 14 details, TOTAL (net, VAT, total), FOOTER.'
+  notes: 'confidence: observed-in-code; Externally described printer file ORD500O (*SCS, width 90), positional layout via SKIPB/SPACEB: HEADER (hard-coded company block, skip 5), HEADER2 (customer id/name,
+    three address lines, country code + zip + city), HEADER3 (skip 18: ''Order Number'' ORYEAR/ORID, ''Order Date'' DATORD DATFMT(*JOB), column headings Line/Article/Quantity/U.Price - no heading over the
+    amount column), one two-line DETAIL per DETORD1 line (line 1 ODLINE ODQTY ODPRICE ODTOT; line 2 ODARID ARDESC ODTOTVAT HIGHLIGHT; ODQTYLIV not printed), TOTAL (skip 52: Net / VAT / Total, 9P 2 EDTCDE(2)
+    HIGHLIGHT), FOOTER (skip 58: ''This is the footer'' + ''.'' at col 90). Manual page break at count > 14 -> 15 details per page (Phase A said 14): footer, header, header3 re-written, HEADER2 NOT (customer
+    block only on page 1); the eject is HEADER''s SKIPB(005) behind the current line. TOTNET = sum of stored ODTOT, TOTTOT = sum of stored ODTOTVAT, TOTVAT = TOTTOT - TOTNET (derived, never recomputed;
+    vat-module-c02 silent zero -> blank VAT line). Empty order -> headings + blank totals. Delivered/closed orders print identically. close ord500o before the PDF step completes the spooled file. Every
+    call fresh (*inlr).'
 - behaviour_id: ord-print-ord500-c02
   surface_id: pgm:ORD500
   name: Resolve IFS path from PATH parameter and hand off to PDF step
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2642,13 +2650,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; getParm2(''PATH'','' '') then ORD500C(orid, path).'
+  notes: 'confidence: observed-in-code; After close ord500o: path = getParm2(''PATH'':'' '') via FPARAMETER (PAR300: lazy open of PARAMETER usropn, last-key cache, clear *all FPARAM then chain; ClosePARAMETER
+    called by nobody; ACTGRP(*CALLER) -> PATH cached for the life of the activation group, a PAR200 change is not seen until then). Missing PATH row -> blank 100-byte path passed unchecked. pdfOrd(%trim(%char(orid)):path)
+    -> extpgm ORD500C with id 5 const / path 100 const: a six-digit orid is right-truncated to 5 (Custord12345.pdf collision, *REPLACE). Synchronous CALL, no return value, no monitor/(e)/*PSSR - any escape
+    from ORD500C -> status 00202 unmonitored -> caller. orid is the ORDER1 record field, not the id parameter (equal when found). Not reached on a not-found id (c08).'
 - behaviour_id: ord-print-ord500-c03
   surface_id: pgm:ORD500
   name: Spool to PDF via CVTSPLPDF
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2657,7 +2668,12 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Custord<orid>.pdf in &PATH, last spool, replace, A4 portrait, Courier 11, no bookmarks.'
+  notes: 'confidence: observed-in-code; ORD500C(&ORD 5, &PATH 100): &FILENAME = ''Custord'' *CAT &ORD *TCAT ''.pdf'' (blanks trimmed, no zero padding); CVTSPLPDF FROMFILE(ORD500O) TOSTMF(&FILENAME) TODIR(&PATH)
+    SPLNBR(*LAST) STMFOPT(*REPLACE) PAGESIZE(*A4 *PORTRAIT) FONT(*COURIER 11) BOOKMARK(*NONE); defaults left: JOB(*) current job, STMFCODPAG 1250, TITLE *NONE. Converts the newest ORD500O spooled file of
+    the job (correct because ORD500 closed it immediately before); replaces an existing Custord<orid>.pdf (a re-print from ORD200/ORD201 overwrites - the PDF is always the latest print); the spooled file
+    stays in the output queue (no delete/hold parameter). No MONMSG, no CHKOBJ, no ENDPGM: any escape (blank/missing directory, command or processing program not found, conversion error) ends ORD500C in
+    error and propagates to ORD500 and the interactive caller. TOSTMF is TYPE(*NAME) LEN(64) (case handling of ''Custord'' from a CL variable not decidable from source); TODIR is *PNAME LEN(256). Only caller:
+    ORD500. Rendering is entirely the converter''s (c04 blind spot).'
 - behaviour_id: ord-print-ord500-c04
   surface_id: pgm:ORD500
   name: CVTSPLPDF implementation not in tree
@@ -2676,9 +2692,9 @@ behaviours:
 - behaviour_id: ord-print-ord500-c05
   surface_id: pgm:ORD500
   name: Callers of ORD500
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2687,13 +2703,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ORD100 after confirm; ORD200/ORD201 option 6; ORD101 declares only.'
+  notes: 'confidence: observed-in-code; Exactly three call sites under ATU_SRC, all RPG, synchronous, orid by reference through Prtord extpgm(''ORD500''), none monitored, no result read: ORD100 prints EVERY
+    confirmed order right after writing header + lines and before the FMT03 window ''The order is printed.'' (unconditional - no print? prompt; user waits for spool + PDF); ORD200 / ORD201 option 6 with
+    no state or existence guard, then opt01 = 0, update sfl01, no reload (screen unchanged). ORD101 declares the prototype and never calls it (ord-entry-ord101-c08) - line changes reach the document only
+    on a re-print. No menu, CMD, CL or scheduler entry; ORD500C called only by ORD500. Ghost row / concurrent delete + option 6 -> the c08 exception in the list program''s session (twin of ord-maintain-ord202-c04).
+    Delivered/closed orders re-print identically and replace the PDF. A failure in the print path leaves the ORD100 order written and the confirmation window unshown.'
 - behaviour_id: ord-print-ord500-c06
   surface_id: pgm:ORD500
   name: Direct file access instead of service programs
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2702,13 +2722,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; ARTICLE1 and CUSTOME1 chained directly; only FPARAMETER used.'
+  notes: 'confidence: observed-in-code; farticle1 / fcustome1 if e k disk chained directly (chain odarid article1 per line, chain orcuid custome1 once; no %found, no clear) where ORD100:117,266 / ORD101:114,223
+    call FARTICLE.GetArtDesc and ORD100:328 / ORD101:283 call FCUSTOMER.GetCusName. Miss semantics differ: FARTICLE.chainARTICLE1 clears *all FARTI first -> blank; ORD500 leaves the buffer -> previous line''s
+    ARDESC repeated (blank on the first line). Missing customer -> ORCUID printed, six blank address lines. ARDEL / CUDEL never tested (deleted rows print normally). Only service dependency: FPARAMETER
+    via /COPY PARAMETER.RPGLEINC; H spec has dftactgrp(*no) and NO bnddir, no .ILEPGM under QILESRC (srvpgm-supporting-c05 blind spot: binding is ARCAD/elias build metadata); FPARAMETER listed in SAMPLE.BNDDIR
+    which ORD500 does not name. Four LFs open/close per call (*inlr); PARAMETER stays open inside FPARAMETER (c02). Same seams as the list twins (ORDER1/DETORD1), no ORDERCUS view - an order with no customer
+    row prints with a blank block.'
 - behaviour_id: ord-print-ord500-c07
   surface_id: pgm:ORD500
   name: Code quirks (datord overwrite, unused oflind, early *inlr)
-  status: candidate
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2717,13 +2742,18 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Harmless as-is oddities to document rather than replicate blindly.'
+  notes: 'confidence: observed-in-code; Nine as-is oddities, none changing the document for a found order: (1) datord = %date() dead - overwritten unconditionally, not a guard (the missing guard is c08);
+    (2) oflind(overflow) declared with no D-spec (compiler-implicit indicator - inference) and never tested -> the program owns overflow and ejects only via count > 14 + HEADER SKIPB(005); (3) *inlr = *on
+    before total/footer/close/getParm2/pdfOrd - harmless, and the reason every call is fresh; (4) id parameter used once, record field orid thereafter (equal when found; never written back); (5) %trim(%char(orid))
+    redundant - the real issue is the 5-byte const target (c02); (6) page break re-writes header + header3, not header2 (customer block page 1 only); (7) totnet/tottot/totvat/datord have no D-spec - they
+    are the printer-file output fields (9P 2 EDTCDE(2); L); (8) placeholder literals ''This is the footer'' / ''Company Sample'' address hard-coded in the DDS; (9) count 3u 0 never above 15. NOT a quirk:
+    close ord500o before ORD500C is load-bearing - it completes the spooled file that SPLNBR(*LAST) converts. Recorded as-is; carry-or-normalise is a room decision for the ORD pack.'
 - behaviour_id: ord-print-ord500-c08
   surface_id: pgm:ORD500
-  name: Unknown order id prints blank document
-  status: candidate
+  name: 'Unknown order id: unmonitored date exception, not a blank document (Phase A corrected)'
+  status: documented
   slice_id: ord-print-ord500
-  discovery_card: null
+  discovery_card: discovery/ord-print-ord500/features/ord-print-ord500-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -2732,7 +2762,12 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; No %found check after chain ORDER1.'
+  notes: 'confidence: observed-in-code; chain id order1 untested, then datord = %date(ORDATE:*iso) unguarded: a miss leaves ORDATE = 0 (fresh call, c07) -> %date(0) invalid -> RPG status 00112, no monitor/(e)/*PSSR
+    -> unmonitored exception BEFORE the first write. No document (blank or otherwise), no PDF, PATH not read; failure surfaces in the caller''s interactive session (inference: RNQ0112 inquiry). The printer
+    file was opened at program start, so a spooled file was created - its disposition after the abnormal end is runtime-confirmable. Phase A ''prints with blank header fields'' corrected - that path is
+    unreachable as written. Producers: ORD200 / ORD201 option 6 on a ghost row (ORD201 blanks to orid 0, ORD200 leaves the deleted id) or after a concurrent delete; direct CALL; not ORD100. Zero/invalid
+    stored ORDATE fails the same way (no in-tree writer stores 0). Missing customer is the different, non-fatal case (blank block, c06). After the exception the list program''s option 6 is still on the
+    row (opt01 = 0 follows the call). Twin of ord-maintain-ord202-c01 (same two statements).'
 - behaviour_id: ord-trigger-ord700-c01
   surface_id: trgpgm:ORD700
   name: Trigger registration on DETORD
@@ -5003,5 +5038,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-08T23:32:37Z'
+last_updated: '2026-09-09T00:10:36Z'
 updated_by: document-slices-conveyor
