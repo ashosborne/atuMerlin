@@ -3,6 +3,8 @@ import formbody from "@fastify/formbody";
 import type { Db } from "./db/pool.js";
 import { registerCustomerFeature } from "./features/customer/index.js";
 import { apiErrorHandler } from "./features/customer/customer.routes.js";
+import { registerOrderFeature } from "./features/order/index.js";
+import { orderApiErrorHandler } from "./features/order/order.routes.js";
 
 export interface BuildAppOptions {
   db: Db;
@@ -20,11 +22,12 @@ export async function buildApp({ db, logger = false }: BuildAppOptions): Promise
   });
 
   app.setErrorHandler((err, req, reply) => {
-    if (req.url.startsWith("/api/")) return apiErrorHandler(err, reply, app.log);
+    if (req.url.startsWith("/api/")) return orderApiErrorHandler(err, reply) ?? apiErrorHandler(err, reply, app.log);
     app.log.error(err);
     return reply.code(500).type("text/plain").send("internal error");
   });
 
   await registerCustomerFeature(app, db);
+  await registerOrderFeature(app, db);
   return app;
 }

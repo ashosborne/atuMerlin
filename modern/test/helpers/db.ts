@@ -3,11 +3,12 @@ import pg from "pg";
 import { createPool, quoteIdent, type Db } from "../../src/db/pool.js";
 import { applySchema } from "../../src/db/migrate.js";
 import { seed } from "../../src/db/seed.js";
+import { seedOrder } from "../../src/features/order/order.seed.js";
 
 export interface TestDb {
   db: Db;
   schema: string;
-  /** Drop every customer row and reset CUSSEQ to 1551 (fixtures stay below the sequence). */
+  /** Drop every customer / order row and reset CUSSEQ to 1551, LASTORDNO to 60720 (fixtures stay below). */
   reset(): Promise<void>;
   close(): Promise<void>;
 }
@@ -29,14 +30,17 @@ export async function createTestDb(): Promise<TestDb> {
   const db = createPool({ connectionString, schema });
   await applySchema(db);
   await seed(db);
+  await seedOrder(db);
 
   return {
     db,
     schema,
     async reset() {
-      await db.query("TRUNCATE customer");
+      await db.query("TRUNCATE customer, orders, detord, article, vatdef, samlog");
       await db.query("ALTER SEQUENCE cusseq RESTART");
+      await db.query("ALTER SEQUENCE lastordno RESTART");
       await seed(db);
+      await seedOrder(db);
     },
     async close() {
       await db.query(`DROP SCHEMA ${quoteIdent(schema)} CASCADE`);

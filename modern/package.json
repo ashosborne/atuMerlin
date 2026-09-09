@@ -2,7 +2,7 @@
   "name": "atu-merlin-modern",
   "version": "0.1.0",
   "private": true,
-  "description": "atuMerlin pathfinder — CUS vertical (cus-interactive + cus-modules) under Architecture pack atu-merlin-ts-cus-v1@1",
+  "description": "atuMerlin pathfinder — CUS vertical (pack atu-merlin-ts-cus-v1@1) + ORD vertical (pack atu-merlin-ts-ord-v1@1)",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -14,6 +14,7 @@
     "start": "node dist/server.js",
     "db:migrate": "tsx src/db/cli.ts migrate",
     "db:seed": "tsx src/db/cli.ts seed",
+    "db:seed:order": "tsx src/features/order/order.seed.cli.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

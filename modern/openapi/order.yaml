@@ -1,0 +1,492 @@
+openapi: 3.1.0
+info:
+  title: atuMerlin — Order (ORD vertical)
+  version: 0.1.0
+  description: |
+    New HTTP JSON API for the ORD vertical (pack `atu-merlin-ts-ord-v1@1`,
+    `api_contract_policy.mode: new-http-json`, `sourced_vs_inferred: inferred`, authored at
+    convert). Not preserve-wire against IBM i 5250. Behaviour follows the Discovery cards under
+    `discovery/ord-entry-ord100`, `ord-entry-ord101`, `ord-maintain-ord200`, `ord-maintain-ord201`,
+    `ord-maintain-ord202`, `ord-print-ord500` and `ord-trigger-ord700`.
+
+    Screen mapping (DSPF -> HTTP):
+    - ORD201 CTL01/SFL01 (all orders) / ORD200 (one customer)  -> GET /api/orders[?cuid]
+    - ORD100 FMT02 pricing (S02prp / S02chk)                    -> POST /api/orders/lines/quote
+    - ORD100 F8 confirm (header + lines + print)                -> POST /api/orders
+    - ORD202 (read-only display)                                -> GET /api/orders/{orid}
+    - ORD101 FMT02 edit / option 4 delete                       -> PUT | DELETE /api/orders/{orid}/lines/{odline}
+    - ORD200/ORD201 option 4 / 7 / 8                            -> DELETE /api/orders/{orid}, POST .../close, POST .../deliver
+    - ORD500 spool (ORD500O)                                    -> GET /api/orders/{orid}/document (text/plain)
+    - FARTICLE SltArticle list (dependency, ART stays legacy)   -> GET /api/articles
+
+    Deliberately absent: an add-line endpoint for an existing order (ord-entry-ord101-c10), any
+    PDF (`CVTSPLPDF` is needs-SME, ord-print-ord500-c04), any customer / article / stock / credit
+    check at entry (ord-entry-ord100-c14).
+
+    Dates are ISO `yyyy-mm-dd`; a never-delivered / never-closed order carries `null` (pack date
+    lock: NULL in Postgres, IBM i `0` / `1940-01-01` only at the boundary).
+
+    Auth is pathfinder-open: the caller identifies itself with `X-User-Id` (max 10 chars,
+    default `WEB`); the value is recorded in the SAMLOG entry written when a line is deleted.
+
+    WAIVED_PATHFINDER: no IBM i goldens; COMPARE at this API only. Deltas from the legacy
+    screens are listed in `modern/README.md` (ORD section, CONTRACT_RISK).
+servers:
+  - url: http://127.0.0.1:3000
+tags:
+  - name: orders
+  - name: lines
+  - name: articles
+
+paths:
+  /api/orders:
+    get:
+      tags: [orders]
+      summary: List orders from ORDERCUS (ORD201 c01 / ORD200 c01)
+      description: |
+        Rows of the `ordercus` view — an INNER JOIN of orders and customers, so an order whose
+        customer row is missing is not listed (planted defect kept as-is). Ordered by order date
+        descending, then order id descending (the ORD201 tie-breaker; ORD200 had none). 14 rows per
+        page with a one-row look-ahead: `more` = "More...", `nextOffset` for the next page.
+        `totval` is the VAT-inclusive sum of the stored line totals, 0 for an order without lines.
+        With `cuid` the list is ORD200's (one customer, blank header name when the customer is
+        unknown, no message when there are no orders).
+      parameters:
+        - in: query
+          name: cuid
+          schema: { type: integer, minimum: 0, maximum: 99999 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        "200":
+          description: One page of the list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderListPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+    post:
+      tags: [orders]
+      summary: Confirm a new order (ORD100 F8, cards c01, c07, c08, c12, c13, c14)
+      description: |
+        The staged lines are sent in one request (the QTEMP staging copy of the 5250 flow is
+        client-held). On success: the next number from `lastordno` (LASTORDNO + 1; 60720 first),
+        one header row (`oryear` = current year, `ordate` = today, delivery and close `null`), and
+        one line per staged line renumbered 1..n in staged-line order (gaps closed, c12) with
+        `odyear` 0 and `odqtyliv` 0 as staged (c07). Line totals are computed at confirm with the
+        article's VAT code (`odtot = odqty x odprice`, `odtotvat = odtot + CLCVat`, unknown VAT code
+        -> VAT 0 silently).
+
+        No customer existence / soft-delete check, no article, stock, credit, date or line-count
+        check (c01, c14): any non-zero `orcuid` and any `odarid` are accepted; a zero-line order is
+        confirmed. Side effects: ORD701 stamps `customer.culastord` (unconditionally, yyyymmdd);
+        ORD700 adds each line's full `odqty` to `article.arcusqty`.
+
+        The response carries `document`, the path of the printable order (ORD100 c08 prints after
+        confirm; whether the print must be a synchronous side effect is needs-SME).
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OrderInput" }
+      responses:
+        "201":
+          description: Order written
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OrderDetail"
+                  - type: object
+                    properties:
+                      document: { type: string, example: /api/orders/60720/document }
+        "400": { $ref: "#/components/responses/Validation" }
+
+  /api/orders/lines/quote:
+    post:
+      tags: [lines]
+      summary: Price one staged line (ORD100 FMT02, cards c03, c04)
+      description: |
+        S02prp / S02chk without writing anything (c13). Omitted `odqty` defaults to 1 and omitted
+        `odprice` to `GetArtRefSalPrice(odarid)` (first display after the article prompt, c03);
+        given values are used as typed (Enter recompute, c04). Returns the description (blank for an
+        unknown article), `odtot`, the VAT amount (`CLCVat`, half-adjusted; 0 for an unknown VAT
+        code), `odtotvat` and the VAT rate. Zero and negative quantities / prices are accepted
+        as-is. A product that does not fit ODTOT 9P 2 is rejected with `TOTAL_OVERFLOW` (legacy:
+        unmonitored size exception).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [odarid]
+              properties:
+                odarid: { type: string, maxLength: 6 }
+                odline: { type: integer }
+                odqty: { type: integer }
+                odprice: { type: number }
+      responses:
+        "200":
+          description: Figures for the line
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuotedLine" }
+        "400": { $ref: "#/components/responses/Validation" }
+
+  /api/orders/{orid}:
+    parameters:
+      - $ref: "#/components/parameters/Orid"
+    get:
+      tags: [orders]
+      summary: Display an order (ORD202, cards c01, c02)
+      description: |
+        Header with the customer name (`GetCusName`, blank when the customer is missing), every
+        line in `odline` order with the article description (blank for an unknown article — the
+        FARTICLE rule; ORD202 itself repeated the previous line's description, CONTRACT_RISK), and
+        `tot` / `totvat` as sums of the STORED line totals (never recomputed).
+        An unknown id is 404 — legacy raised an unmonitored date exception (needs-SME).
+      responses:
+        "200":
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrderDetail" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [orders]
+      summary: Delete an order (ORD200 / ORD201 option 4, cards c04, c08, c13)
+      description: |
+        Refused with `CLOSED_ORDER` when the close date is set and with `ORDER_HAS_DELIVERIES`
+        when any line has `odqtyliv > 0` (DDS text kept with its typo). Otherwise lines then header
+        are deleted in one transaction (neither twin's failure residue can occur); ORD700 subtracts
+        each line's outstanding quantity and logs to SAMLOG. `customer.culastord` is NOT maintained
+        (ord-maintain-ord200-c12, as-is). No confirmation step.
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "204": { description: Deleted }
+        "400": { $ref: "#/components/responses/OptionRefused" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/orders/{orid}/close:
+    parameters:
+      - $ref: "#/components/parameters/Orid"
+    post:
+      tags: [orders]
+      summary: Close an order (option 7, ord-maintain-ord200-c06)
+      description: |
+        Sets `ordatclo` = today and `ordatdel` = today only when it was null. Lines are untouched:
+        `odqtyliv` stays 0 and `article.arcusqty` is not reduced by a close (as-is). An already
+        closed order is refused with the generic `INVALID_OPTION` text (SFLMSG 35, as-is).
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Updated header
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "400": { $ref: "#/components/responses/OptionRefused" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/orders/{orid}/deliver:
+    parameters:
+      - $ref: "#/components/parameters/Orid"
+    post:
+      tags: [orders]
+      summary: Deliver an order (option 8, ord-maintain-ord200-c07)
+      description: |
+        Sets `ordatdel` = today and, for every line still at `odqtyliv = 0`, `odqtyliv = odqty`
+        (ORD700 update: `arcusqty -= odqty`). Partially delivered lines are skipped; the order is
+        not closed. Refused with `INVALID_OPTION` when a delivery date is already set — since close
+        stamps that date, deliver-after-close is impossible (as-is).
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Updated header and the number of lines set to fully delivered
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order, linesDelivered]
+                properties:
+                  order: { $ref: "#/components/schemas/Order" }
+                  linesDelivered: { type: integer }
+        "400": { $ref: "#/components/responses/OptionRefused" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/orders/{orid}/document:
+    parameters:
+      - $ref: "#/components/parameters/Orid"
+    get:
+      tags: [orders]
+      summary: Print an order (ORD500 / ORD500O, cards c01, c05, c06, c07, c08)
+      description: |
+        The spooled document as text, 90 columns, pages separated by a form feed, rendered from
+        the stored rows on every call (a re-print reflects the current lines). Company block,
+        customer block (page 1 only), `Order Number yyyy/ nnn`, two-line details (delivered quantity
+        not printed), 15 details per page, `Net` / `VAT` / `Total` with VAT = Total - Net of the
+        stored totals (blank when 0), placeholder footer. Country is the 2-char code. No PDF:
+        `CVTSPLPDF` and the `Custord<id>.pdf` name are needs-SME (c04). Unknown id -> 404
+        (legacy: unmonitored exception before the first write, c08).
+      responses:
+        "200":
+          description: The document
+          content:
+            text/plain: { schema: { type: string } }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/orders/{orid}/lines/{odline}:
+    parameters:
+      - $ref: "#/components/parameters/Orid"
+      - $ref: "#/components/parameters/Odline"
+    put:
+      tags: [lines]
+      summary: Edit a line (ORD101 FMT02, cards c03, c04)
+      description: |
+        Writes `odqty`, `odqtyliv`, `odprice` and recomputes `odtot` / `odtotvat` at today's VAT
+        rate — also when nothing changed (silent re-rate, as-is). Rules compare each typed value with
+        the STORED row (as-is, needs-SME): `ERR1001` when typed delivered > stored ordered, `ERR1002`
+        when typed ordered < stored delivered; both can be returned together; the pair (6, 8) on a
+        stored (10, 5) is accepted. No closed-order test inside the line surface (c12); no article,
+        price or lower-bound check. ORD700 applies the outstanding-quantity delta.
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LineInput" }
+      responses:
+        "200":
+          description: The stored line
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LineDetail" }
+        "400": { $ref: "#/components/responses/Validation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [lines]
+      summary: Delete a line (ORD101 option 4, cards c05, c06)
+      description: |
+        Refused with `LINE_HAS_DELIVERY` when `odqtyliv > 0` (read from the table, not a screen
+        copy — CONTRACT_RISK; a negative value does not block, as-is). Otherwise the row is deleted:
+        ORD700 logs `ORD700:Order Line deleted <order> <line> article : <id> quantity : <odqty>` to
+        SAMLOG and subtracts the outstanding quantity. Line numbers are not renumbered; deleting the
+        last line leaves a header with zero lines. No confirmation.
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "204": { description: Deleted }
+        "400": { $ref: "#/components/responses/OptionRefused" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/articles:
+    get:
+      tags: [articles]
+      summary: Article reference rows (FARTICLE SltArticle stand-in)
+      description: |
+        Read-only dependency surface for the article prompt. ART is `stay_legacy`; there is no
+        article maintenance here. Soft-deleted articles are listed (no IsArtDeleted guard at entry,
+        ord-entry-ord100-c14).
+      responses:
+        "200":
+          description: All rows ordered by id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows:
+                    type: array
+                    items: { $ref: "#/components/schemas/Article" }
+
+components:
+  parameters:
+    Orid:
+      in: path
+      name: orid
+      required: true
+      description: ORID 6P 0
+      schema: { type: integer, minimum: 0, maximum: 999999 }
+    Odline:
+      in: path
+      name: odline
+      required: true
+      description: ODLINE 5P 0
+      schema: { type: integer, minimum: 0, maximum: 99999 }
+    UserId:
+      in: header
+      name: X-User-Id
+      required: false
+      description: Caller identity (pathfinder-open auth); default WEB; max 10 characters used.
+      schema: { type: string, maxLength: 10 }
+
+  responses:
+    BadRequest:
+      description: Malformed query
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code: { type: string, const: BAD_REQUEST }
+              message: { type: string }
+    Validation:
+      description: Boundary or rule errors (all rules in one pass)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, errors]
+            properties:
+              code: { type: string, const: VALIDATION }
+              errors:
+                type: array
+                items: { $ref: "#/components/schemas/OrderError" }
+    OptionRefused:
+      description: ORD200 / ORD201 / ORD101 option guard, with the as-is SFLMSG text
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message]
+            properties:
+              code:
+                type: string
+                enum: [INVALID_OPTION, CLOSED_ORDER, ORDER_HAS_DELIVERIES, LINE_HAS_DELIVERY]
+              message: { type: string }
+    NotFound:
+      description: Unknown order or line (legacy had no not-found path — needs-SME)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message, orid]
+            properties:
+              code: { type: string, const: ORDER_NOT_FOUND }
+              message: { type: string }
+              orid: { type: integer }
+              odline: { type: integer }
+
+  schemas:
+    Order:
+      type: object
+      required: [orid, oryear, orcuid, ordate, ordatdel, ordatclo]
+      properties:
+        orid: { type: integer, description: ORID 6P 0 }
+        oryear: { type: integer, description: ORYEAR 4P 0 (*year at confirm) }
+        orcuid: { type: integer, description: ORCUID 5P 0 — no FK, may not exist }
+        ordate: { type: string, format: date }
+        ordatdel: { type: [string, "null"], format: date, description: null = never delivered }
+        ordatclo: { type: [string, "null"], format: date, description: null = never closed }
+    Line:
+      type: object
+      required: [odorid, odyear, odline, odarid, odqty, odqtyliv, odprice, odtot, odtotvat]
+      properties:
+        odorid: { type: integer }
+        odyear: { type: integer, description: 0 as written by ORD100 (backfilled only by the deferred batch ORD901) }
+        odline: { type: integer }
+        odarid: { type: string, maxLength: 6 }
+        odqty: { type: integer, description: QUANTITY 5 0, signed }
+        odqtyliv: { type: integer, description: delivered quantity }
+        odprice: { type: number, description: UNITPRICE 7P 2 }
+        odtot: { type: number, description: TOTPRICE 9P 2, stored }
+        odtotvat: { type: number, description: TOTPRICE 9P 2 with VAT, stored }
+    LineDetail:
+      allOf:
+        - $ref: "#/components/schemas/Line"
+        - type: object
+          required: [ardesc]
+          properties:
+            ardesc: { type: string, maxLength: 50, description: GetArtDesc; blank when unknown }
+    OrderDetail:
+      allOf:
+        - $ref: "#/components/schemas/Order"
+        - type: object
+          required: [custnm, lines, tot, totvat]
+          properties:
+            custnm: { type: string, description: GetCusName; blank when the customer is missing }
+            lines:
+              type: array
+              items: { $ref: "#/components/schemas/LineDetail" }
+            tot: { type: number, description: sum of stored odtot }
+            totvat: { type: number, description: sum of stored odtotvat }
+    OrderListRow:
+      type: object
+      required: [orid, oryear, orcuid, custnm, ordate, ordatdel, ordatclo, totval]
+      properties:
+        orid: { type: integer }
+        oryear: { type: integer }
+        orcuid: { type: integer }
+        custnm: { type: string }
+        ordate: { type: string, format: date }
+        ordatdel: { type: [string, "null"], format: date }
+        ordatclo: { type: [string, "null"], format: date }
+        totval: { type: number, description: COALESCE(SUM(odtotvat), 0) }
+    OrderListPage:
+      type: object
+      required: [rows, more, nextOffset]
+      properties:
+        rows:
+          type: array
+          maxItems: 14
+          items: { $ref: "#/components/schemas/OrderListRow" }
+        more: { type: boolean }
+        nextOffset: { type: [integer, "null"] }
+    DraftLine:
+      type: object
+      required: [odarid]
+      properties:
+        odline: { type: integer, description: staged number from the running counter; gaps allowed }
+        odarid: { type: string, maxLength: 6 }
+        odqty: { type: integer, default: 0 }
+        odprice: { type: number, default: 0 }
+    OrderInput:
+      type: object
+      required: [orcuid, lines]
+      properties:
+        orcuid: { type: integer, minimum: 1, maximum: 99999 }
+        lines:
+          type: array
+          items: { $ref: "#/components/schemas/DraftLine" }
+    QuotedLine:
+      allOf:
+        - $ref: "#/components/schemas/DraftLine"
+        - type: object
+          required: [ardesc, odtot, vat, odtotvat, vatRate]
+          properties:
+            ardesc: { type: string }
+            odtot: { type: number }
+            vat: { type: number }
+            odtotvat: { type: number }
+            vatRate: { type: number, description: VATRATE percent; 0 when the code is unknown }
+    LineInput:
+      type: object
+      required: [odqty, odqtyliv, odprice]
+      properties:
+        odqty: { type: integer }
+        odqtyliv: { type: integer }
+        odprice: { type: number }
+    Article:
+      type: object
+      required: [arid, ardesc, arsalepr, arvatcd, ardel]
+      properties:
+        arid: { type: string }
+        ardesc: { type: string }
+        arsalepr: { type: number }
+        arvatcd: { type: string }
+        ardel: { type: string, description: "'X' = soft-deleted, still orderable (as-is)" }
+    OrderError:
+      type: object
+      required: [code, field, message]
+      properties:
+        code:
+          type: string
+          enum: [ERR1001, ERR1002, TOTAL_OVERFLOW, FIELD_TOO_LONG, FIELD_INVALID]
+        field: { type: string }
+        message: { type: string }
