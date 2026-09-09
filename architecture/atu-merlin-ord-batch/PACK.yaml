@@ -1,6 +1,6 @@
 pack_id: atu-merlin-ts-ord-batch-v1
 version: 1
-status: DRAFT
+status: BOUND
 migration_id: atu-merlin
 slice_ids:
   - ord-batch-ord900
@@ -81,7 +81,7 @@ forbidden:
   - Edit or rewrite ATU_SRC/**
   - Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1
   - Invent c07 real-vs-sample load rule
-  - Convert consuming status DRAFT
+  - Convert without a separate Convert ROOM_OK
   - Claim REPLAY_GREEN or invent fake replay_green_run_ids
   - String-concat SQL in repositories
   - Rewrite discovery cards during Convert
@@ -128,7 +128,7 @@ evidence:
   replay_green_run_ids: []
   waiver_record: architecture/atu-merlin-ord-batch/ADR/0001-ord-batch-ts-postgres.md
 
-bound_by: null
-bound_at: null
+bound_by: atuMerlin migration room (Field+CTO Architecture ROOM_OK 9/10; soft nit tip a792163; Agent Smith recorded)
+bound_at: 2026-09-09T23:28:16Z
 change_policy: BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place.
 reference_skeleton: null
