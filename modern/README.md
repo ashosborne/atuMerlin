@@ -21,7 +21,8 @@ and no `REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **
 TS_BOUNDARY_GREEN** under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
 DAT: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`);
-VAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
+VAT: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`).
+None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -397,7 +398,9 @@ Converted under Architecture pack **`atu-merlin-ts-vat-v1@1`** (`architecture/at
 `overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
 `architecture/atu-merlin-vat/ADR/0001-vat-shared-fvat-ts-postgres.md`.
 **WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
-PARITY=UNVERIFIED** (Verification station deferred by the pack).
+parity: TS_BOUNDARY_GREEN** under the waiver — `verification/vat-vertical/2026-09-09-r1/PARITY.yaml`
+(23/23 independent probe cases, 201/201 tests; CR-V1 / CR-V2 / CR-V3 accept-for-demo, CR-V4 deferred
+to the room with c07; contract observation G-V1 open). Not parity against IBM i.
 
 **Talk-track:** the VAT rule lives in TypeScript under the waiver — the repo is not fully migrated,
 and VAT is not "fully migrated" either: the ten accepted `vat-module` cards are present at the TS

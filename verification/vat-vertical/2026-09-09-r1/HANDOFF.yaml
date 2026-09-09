@@ -1,0 +1,55 @@
+run_id: 2026-09-09-r1
+slice_id: vat-module              # the pack's single slice
+station: Verification
+mode: COMPARE
+target: modern
+characterization: WAIVED_PATHFINDER
+authorisation: "Verification ROOM_OK carried in overnight/AGENT_JOB.md (Field + CTO Verify ROOM_OK batch of five 2026-09-09), separate from BIND and from the convert ROOM_OK"
+
+pack_id: atu-merlin-ts-vat-v1
+pack_version: 1
+pack_status_at_run: BOUND
+pack_path: architecture/atu-merlin-vat/PACK.yaml
+waiver_record: architecture/atu-merlin-vat/ADR/0001-vat-shared-fvat-ts-postgres.md
+
+conversion_handoff:
+  record: architecture/atu-merlin-vat/CONVERT_RECORD.md
+  parity_at_handoff: UNVERIFIED
+  branch: cursor/atu-merlin-estate-discovery
+  pr: https://github.com/ashosborne/atuMerlin/pull/1
+  commits:
+    - 02a9916   # convert VAT vertical: shared FVAT in TypeScript
+    - b6d3af0   # AGENT_JOB convert DONE
+  head_at_verification: 111be2bb6aaba290d753644c826f52b07807a426
+
+feature_ids:
+  vat-module: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10]
+
+oracle:
+  kind: discovery-cards-and-readme    # NOT IBM i goldens
+  paths:
+    - discovery/vat-module/features/
+    - modern/README.md                # VAT card coverage + CONTRACT_RISK CR-V1..CR-V4
+    - architecture/atu-merlin-vat/CONVERT_RECORD.md
+  legacy_goldens: none                # tests/characterization/** does not exist for this pathfinder
+  replay_green_run_ids: []
+  probe_oracle: "c01 RPG statements evaluated literally in BigInt (tot 11P 4 by truncation, %dech to 9P 2 half away from zero, field limits asserted); c02/c04/c05/c06 buffer rules observed through a query-counting proxy on the pool; independent of the module's one-step rounding and of test/fvat.test.ts"
+
+modern_boot:
+  runtime: "Node v22.14.0 (pack min node 20)"
+  database: "PostgreSQL 16.15 via modern/scripts/local-pg.sh; the probe builds a throw-away schema through modern/test/helpers/db.ts (schema + CUS seed + ORD seed) and drops it"
+  server: "not needed — VAT has no HTTP surface (contract_paths: [])"
+
+scope_guards:
+  sibling_packs_untouched: "git diff fda5292..HEAD -- modern/src/features modern/openapi modern/src/db modern/src/app.ts modern/src/server.ts architecture/atu-merlin architecture/atu-merlin-ord architecture/atu-merlin-cou architecture/atu-merlin-par architecture/atu-merlin-log is empty (only architecture/atu-merlin-dat/CONVERT_RECORD.md changed — the DAT pack's own convert)"
+  schema_additive: "first 242 lines of modern/db/schema.sql (CUS + ORD incl. vatdef CREATE TABLE) byte-identical to fda5292; VAT section is COMMENT ON only"
+  atu_src_untouched: "git diff origin/master..HEAD -- ATU_SRC is empty"
+  ord_consumer_shape: "getVatRate / clcVat signatures unchanged from fda5292; order.api.test.ts 47 + order.web.test.ts 9 green without edit; P18 confirms getArtVatCode -> clcVat -> getVatRate sequence read-only"
+
+open_after_this_run:
+  contract_gaps: [G-V1]
+  deferred_risks: [CR-V4]
+  needs_sme: "discovery/vat-module/SME_BRIEF.md — unsigned: c02 unknown-code policy, c04 soft-delete semantics, c06 intra-day rate changes, c07 VATDEF maintenance, c03/c08 ART scope, c05/c09 build practice"
+
+forbid_record: true
+goldens: n/a-read-only
