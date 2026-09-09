@@ -13,12 +13,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
 
 features:
   - id: sql-objects-c01
     name: ORDERCUS view - inner join to CUSTOMER with TOTVAL
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: ORDER joined to CUSTOMER on ORCUID = CUID; TOTVAL = COALESCE(SUM(ODTOTVAT), 0); orders with a missing customer row disappear from the lists.
     entrypoints:
@@ -29,7 +30,7 @@ features:
     open_questions: ["Should orders for missing customers vanish in the target?"]
   - id: sql-objects-c02
     name: TOTVAL is VAT-inclusive
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Sums ODTOTVAT, not ODTOT; order lists show gross totals.
     entrypoints:
@@ -40,7 +41,7 @@ features:
     open_questions: []
   - id: sql-objects-c03
     name: ARTLSTDAT view - last order date and total quantity per article
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: MAX(ORDATE), SUM(ODQTY) over all orders (open and closed); never-ordered articles absent.
     entrypoints:
@@ -51,7 +52,7 @@ features:
     open_questions: []
   - id: sql-objects-c04
     name: ARTLSTDAT has no consumer in ATU_SRC (QM query ARTQRY probable)
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: DDL only; menu opt 13 STRQMQRY ARTQRY "Article by Last Order Date" is the likely reader (not in tree).
     entrypoints:
@@ -62,7 +63,7 @@ features:
     open_questions: ["Obtain ARTQRY source?"]
   - id: sql-objects-c05
     name: ARTIINF table contract (ARID PK + VARCHAR(1520) text)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: article_full_description; CCSID 297; NOT NULL DEFAULT ''; written by ART200 opt 3, read by ART302.GetArtInfo.
     entrypoints:
@@ -73,7 +74,7 @@ features:
     open_questions: []
   - id: sql-objects-c06
     name: ARTIINF rows never deleted (orphans after article soft delete)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No DELETE FROM artiinf anywhere; soft-deleted articles keep their free text.
     entrypoints:
@@ -84,7 +85,7 @@ features:
     open_questions: []
   - id: sql-objects-c07
     name: CUSSEQ sequence (pointer to cus-interactive-c02)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: START WITH 1551 INCREMENT BY 1 NO MAXVALUE NO CYCLE; consumed by CUS200 F6; behaviour documented under cus-interactive.
     entrypoints:
@@ -95,7 +96,7 @@ features:
     open_questions: []
   - id: sql-objects-c08
     name: ART801 stored procedure surface (pointer to ord-trigger-ord700-c10)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: UPDATE_ON_CUS_ORD_QTY, menu opt 82; three WHERE EXISTS-guarded UPDATEs; COMMIT *NONE; behaviour documented under ord-trigger-ord700.
     entrypoints:
@@ -106,7 +107,7 @@ features:
     open_questions: []
   - id: sql-objects-c09
     name: ART801 interface facts
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: LANGUAGE SQL, DYNUSRPRF *USER, SRTSEQ *HEX, ALWCPYDTA *YES; no parameters, no result set.
     entrypoints:
@@ -117,7 +118,7 @@ features:
     open_questions: []
   - id: sql-objects-c10
     name: Naming / reserved-word port traps
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: SQL long names and labels on ARTIINF / ARTLSTDAT; "ORDER" must be delimited everywhere.
     entrypoints:
