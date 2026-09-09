@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # VERIFY — COU vertical (atuMerlin) — FIRE after Convert COU DONE + residual Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
