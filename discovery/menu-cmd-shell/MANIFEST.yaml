@@ -6,111 +6,135 @@ seed_entrypoints:
   - ATU_SRC/QMSGFSRC/SAMMSGF.MSGF
   - ATU_SRC/QCMDSRC/CVTSPLPDF.CMD
 out_of_scope_hints:
-  - behaviour of the called programs (own slices)
-  - CRTORD.CMD (ord-entry-ord100, accepted)
+  - behaviour of the called programs (own slices) - cited for existence, entry declarations, %TEXT and row-1 screen headings only (c01, c09)
+  - CRTORD.CMD (ord-entry-ord100, documented) - cited as the twin command with no CRTCMD in the tree (c07)
+  - ORD500C / CVTSPLPDF invocation (ord-print-ord500-c03, documented) - cited, not re-derived (c07)
+  - ADSPUSRSPC / SAMLOG reader (log-programs-c09, documented) - cited, not re-derived (c02)
+  - the DSPF validation rules the SAMMSGF texts voice (cus-interactive, ord-entry-ord101, art-*, pro-*) - cited for the ERRMSGID sites only (c05, c06)
   - conversion / test generation / bind
-phase: A
-updated_at: 2026-09-08T19:10:00Z
+phase: B
+updated_at: 2026-09-09T11:05:00Z
 bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
 bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 15, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-14."
+needs_sme:
+  - "c02 (inferred, carded): source owner - supply CUSQRY, ARTQRY (*QMQRY) and CUSQRYFMT (*QMFORM), and name the library that holds them and ADSPUSRSPC. Two reports and the log viewer are otherwise unscannable; their menu titles ('Customer with Open Order', 'Article by Last Order Date') are the only specification in the tree. Option 11 does not exist (removed option - inference)."
+  - "c03 (room, Phase A Q2): should the target expose any equivalent of the long command line and the F6 DSPMSG / F10 DSPJOBLOG / F14 WRKSBMJOB *USER operator keys? Recommendation: no - IBM i-isms; treat as platform observability. Security as-is: the menu adds no restriction; LMTCPB on the user profile is what governs the command line (box fact)."
+  - "c07 (ops / build owner): which product supplies CVTSPLPDF and which library; DSPCMD CVTSPLPDF on the box gives the processing program (command source never names it - that is CRTCMD PGM(), and no CRTCMD exists anywhere in ATU_SRC; CRTORD shares the blind spot, ord-entry-ord100-c09). Default STMFCODPAG(1250) not overridden by ORD500C - effect unknown."
+  - "c05 / c06 (room): carry the nine live SAMMSGF texts as a target message resource keyed by id; drop ERR0003/ERR0004/ERR0005 (dead) or keep as reserved ids? Spelling 'Familly' (ERR0001) is consistent with the tree - decide once for the target. Mandatory-field texts are DSPF literals, not in SAMMSGF (ART200D, CUS200D) - an 'all messages from the file' assumption is false."
+  - "c01 (room): which of the 20 options the target menu should have at all - 80/81/82 are unguarded destructive resets, 84 is a log dump, 90 is signoff. The option table is the navigation spec; the choice is the room's."
+  - "c04 (room): there is no help content to carry (bodies are 'Text' / 'Help not available'); three help names undefined (h, srt200, ord100), one orphan module (ART200), option 3 mis-targeted at cus200. Confirm 'no help to preserve'."
+  - "c08 (runtime-confirm): a screen capture of SAMMNU settles the ZMENU corner id (menu manager supplies the menu name - inference), the sysnam separator and the exact CPD9817 text; submsgf=sammsgf is declared but no msg reference uses it."
+  - "c09 (pro-interactive, metadata): PRO250.PGM.RPGLE:2 and PRO250D.DSPF:2 %TEXT say 'Display Article' (copy from ART250) while the screen says 'Provider by Id' - object text wrong, user text right; correction belongs to that slice (not made; ATU_SRC untouched). Target labels: use the menu titles, normalise case/plural once; option 7 'Article by id' vs screen 'Article by Code'."
 
 features:
   - id: menu-cmd-shell-c01
-    name: SAMMNU entry map (20 options, all parameterless CALLs)
-    status: accepted
+    name: SAMMNU entry map - 20 options in three groups, every action a parameterless cmd call (or STRQMQRY / ADSPUSRSPC / SIGNOFF); all 16 in-tree targets confirmed parameterless
+    status: documented
     confidence: observed-in-code
-    summary: Master files 1-9, Reports 10/12/13, Utilities 20/21/80-84, 90 signoff; every action is cmd call <pgm> or STRQMQRY / ADSPUSRSPC.
+    summary: "UIM menu panel SAMPLE: Master files 1-9 (ART200, CUS200, ORD201, PRO200, PRO201, ORD100C2, ART250, CUS250, PRO250), Reports 10/12/13 (PRO203, STRQMQRY CUSQRY+CUSQRYFMT, STRQMQRY ARTQRY), Utilities 20/21/80-84 (PAR200, COU200, ORD900, ORD901, ART801, PAR201, ADSPUSRSPC SAMLOG), 90 SIGNOFF. 16 actions are 'cmd call <pgm>' with no PARM, unqualified (*LIBL). Every in-tree target checked: none declares PI / dcl-pi / *ENTRY / PROCEDURE DIVISION USING / PGM PARM - the calls are well-formed; ORD100 (cuid options(*nopass)) is reached via the wrapper ORD100C2, whose label still says ORD100. Option 82 calls the SPECIFIC-named *PGM of SQL procedure UPDATE_ON_CUS_ORD_QTY (). Numbering gaps 11, 14-19, 22-79, 85-89. No authority checks; 80/81/82 are unguarded resets. 'Reports' group's only in-tree member PRO203 is a workstation program. Nothing in the tree invokes the menu (no GO / initial program). Adapter: this table is the navigation spec; recommend reject as conversion slice."
     entrypoints:
       - kind: screen
         locator: SAMMNU panel SAMPLE
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-167"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:71-81", "ATU_SRC/QPNLSRC/SAMMNU.MENU:82-168", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:26-28", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:2-11", "ATU_SRC/QSQLSRC/ART801.SQLPRC:4-9"]
+    behaviour_doc: features/menu-cmd-shell-c01.md
+    dependencies: [every called program (own slices), SAMHELP, SAMMSGF, QCPFMSG, key01]
+    open_questions: ["Which options should the target menu carry (80-84, 90)?", "How do users reach SAMMNU on the box (GO / initial menu / sign-on program)?"]
   - id: menu-cmd-shell-c02
-    name: Menu options reaching objects not in the tree (12, 13, 84)
-    status: accepted
+    name: Three menu options reach objects not in the tree - 12/13 (QM queries CUSQRY, ARTQRY, form CUSQRYFMT) and 84 (ADSPUSRSPC); option 11 does not exist
+    status: documented
     confidence: inferred
-    summary: QM queries CUSQRY / ARTQRY with form CUSQRYFMT and command ADSPUSRSPC are referenced but absent; option 11 does not exist.
+    summary: "STRQMQRY QMQRY(CUSQRY) QMFORM(CUSQRYFMT) 'Customer with Open Order'; STRQMQRY QMQRY(ARTQRY) 'Article by Last Order Date' (no form -> system default, inference); adspusrspc samlog 'Display Application log' (log-programs-c09). No QQMQRYSRC / QQMFORMSRC directory, no member of those names, no ADSPUSRSPC.CMD; the strings occur only in the menu. All unqualified -> *LIBL. Menu titles are the only specification of the two reports; the Reports group therefore contains zero documentable reports (PRO203 is interactive). Two absence kinds: 12/13 are data objects the room can request as source; 84 is probably a vendor command. Option 11 missing between 10 and 12."
     entrypoints:
       - kind: other
         locator: SAMMNU opts 12/13/84
         evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:125-132", "ATU_SRC/QPNLSRC/SAMMNU.MENU:159-162"]
-    dependencies: []
-    open_questions: ["Obtain CUSQRY, ARTQRY, CUSQRYFMT, ADSPUSRSPC sources?"]
+    behaviour_doc: features/menu-cmd-shell-c02.md
+    dependencies: [log-programs-c09 (documented; pointer)]
+    open_questions: ["Obtain CUSQRY, ARTQRY, CUSQRYFMT, ADSPUSRSPC sources / library?", "What was option 11?"]
   - id: menu-cmd-shell-c03
-    name: Command line and system function keys on the menu
-    status: accepted
+    name: Command line and function keys on the menu - cmdline size=long; F4 prompt, F9 retrieve, F6 DSPMSG, F10 DSPJOBLOG, F14 WRKSBMJOB *USER; F3/F12 leave; page keys, Print, Help
+    status: documented
     confidence: observed-in-code
-    summary: cmdline size=long; F4 prompt, F9 retrieve, F6 DSPMSG, F10 DSPJOBLOG, F14 WRKSBMJOB *USER.
+    summary: "':cmdline size=long.' with prompt 'Selection or command' - option number or any CL command; the menu adds no restriction (LMTCPB is the profile's). Key list key01: F1/HELP -> help, F3 'exit set', F4 PROMPT, F6 'cmd dspmsg', F9 retrieve, F10 'cmd dspjoblog', F12 'cancel set', F14 'cmd wrksbmjob *user', F24 MOREKEYS, ENTER, PAGEDOWN/PAGEUP (scroll=Yes), PRINT. Eight keys have legend text; PRIORITY 25/30/40 orders them. Every key's help is the 'help' module = 'Help not available'. Operator conveniences, not application behaviour; no F5/F13/F16/F23 of the standard GO menus."
     entrypoints:
       - kind: screen
-        locator: SAMMNU key list key01
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:11-70", "ATU_SRC/QPNLSRC/SAMMNU.MENU:169-170"]
-    dependencies: []
-    open_questions: []
+        locator: SAMMNU key list key01 + cmdline
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:11-70", "ATU_SRC/QPNLSRC/SAMMNU.MENU:73", "ATU_SRC/QPNLSRC/SAMMNU.MENU:78-80", "ATU_SRC/QPNLSRC/SAMMNU.MENU:169-170"]
+    behaviour_doc: features/menu-cmd-shell-c03.md
+    dependencies: [SAMHELP help module, DSPMSG / DSPJOBLOG / WRKSBMJOB (system)]
+    open_questions: ["Target equivalent of the command line / operator keys, or drop (recommendation: drop)?"]
   - id: menu-cmd-shell-c04
-    name: Help mapping broken / placeholder only
-    status: accepted
+    name: Help mapping broken or placeholder - three undefined names (h, srt200, ord100), one orphan module (ART200), option 3 mis-targeted (cus200); every body is 'Text' / 'Help not available'
+    status: documented
     confidence: observed-in-code
-    summary: help=srt200 undefined (typo for ART200); options 6-9 -> undefined ord100; defined topics are 'Text' / 'Help not available'.
+    summary: "SAMHELP defines five modules (ART200, CUS200, PRO200 -> 'Text'; NOHELP, help -> 'Help not available'). SAMMNU's 36 help= references (panel, key list + 14 keys, 20 options): panel help=h UNDEFINED; opt 1 help=srt200 UNDEFINED (typo for ART200, which is therefore never referenced); opts 6-9 help=ord100 UNDEFINED; opt 3 (ORD201) -> cus200 (defined, wrong topic); opts 4/5 -> pro200; opts 10-90 -> nohelp; all keys -> help. import name='*' defers resolution to run time so the undefined names compile (inference). Three words of body in total. No help content to preserve. Phase A sharpened: adds h, the orphan ART200 module and the option-3 mis-target."
     entrypoints:
       - kind: other
         locator: SAMMNU help= / SAMHELP
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:85-118", "ATU_SRC/QPNLSRC/SAMHELP.PNLGRP:5-19"]
-    dependencies: []
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:8-9", "ATU_SRC/QPNLSRC/SAMMNU.MENU:72", "ATU_SRC/QPNLSRC/SAMMNU.MENU:85-166", "ATU_SRC/QPNLSRC/SAMHELP.PNLGRP:5-19"]
+    behaviour_doc: features/menu-cmd-shell-c04.md
+    dependencies: [SAMHELP.PNLGRP]
     open_questions: []
   - id: menu-cmd-shell-c05
-    name: SAMMSGF message catalogue (12 ids)
-    status: accepted
+    name: SAMMSGF message catalogue - 12 ids, all SEV(0), texts CCSID 297 in a CCSID 65535 file; two take substitution data; nine are the screens' user-visible error strings
+    status: documented
     confidence: observed-in-code
-    summary: ERR0001-0005, ERR0103, ERR1001/1002, ERR2000-2002; file CCSID 65535, messages CCSID 297; user-visible error strings for the screens.
+    summary: "ARCAD-generated CRTMSGF + 12 ADDMSGD (extracted 2022-05-17). ERR0001-0005 '<entity> unknown. Press F4 to select.' (family, country, article, customer, provider); ERR0103 'Code &1 Unknown.' FMT(*CHAR 6); ERR1001/1002 delivered-vs-ordered quantity; ERR2000 'Customer &1 /Phone &2 Already Exist' FMT(*CHAR 30)(*CHAR 15); ERR2001 phone mandatory; ERR2002 digits only. No second-level text. Consumed ONLY by DSPF ERRMSGID(<id> *LIBL/SAMMSGF <ind> [&ERRDATA]) - 12 sites in 9 DSPFs; never by SNDPGMMSG/QMHSNDPM. ERRDATA widths match FMT (6A; 45A = 30+15). Mandatory-field messages are DSPF literals (ART200D:90, CUS200D:106), not in the file. 'Familly' spelling consistent with the tree. Nine of twelve live (c06). Resource file for the target, not behaviour."
     entrypoints:
       - kind: other
         locator: SAMMSGF
-        evidence: ["ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:8-32"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:4-32", "ATU_SRC/QDDSSRC/CUS200D.DSPF:107-117", "ATU_SRC/QDDSSRC/PRO250D.DSPF:30-32", "ATU_SRC/QDDSSRC/ORD101D.DSPF:120", "ATU_SRC/QDDSSRC/ORD101D.DSPF:138"]
+    behaviour_doc: features/menu-cmd-shell-c05.md
+    dependencies: [ART200D, CUS200D, PRO200D, PRO201D, ORD101D, ART250D, CUS250D, PRO250D (consumers; own slices), SAMMNU submsgf (declaration only)]
+    open_questions: ["Carry the nine live texts as a target resource keyed by id? Decide 'Familly' once."]
   - id: menu-cmd-shell-c06
-    name: Four messages never referenced (ERR0001/0003/0004/0005)
-    status: accepted
+    name: Three messages never referenced (ERR0003/0004/0005); ERR0001 IS live via ART200D - Phase A's four corrected to three
+    status: documented
     confidence: observed-in-code
-    summary: No DSPF or program uses them; the other 8 are live.
+    summary: "Whole-tree grep per id: ERR0001 x1 (ART200D.DSPF:98, indicator 40 on ARTIFA, raised by ART200:286-288 errFamilly when existArtFam fails), ERR0002 x3, ERR0103 x3, ERR1001/1002 x1 each, ERR2000/2001/2002 x1 each; ERR0003, ERR0004, ERR0005 x0. Phase A read ART200D's literal ERRMSG on ARDESC (:90) and missed the ERRMSGID on ARTIFA (:98). The dead three are the article/customer/provider 'unknown' texts; the by-id screens (ART250D, CUS250D, PRO250D) use the generic ERR0103 with the code echoed instead - superseded (inference). ORD100D references no SAMMSGF id; ORD101D only ERR1001/1002. No programmatic sender anywhere, so no hidden consumer. 12 ids, 12 sites, 9 live, 3 dead."
     entrypoints:
       - kind: other
         locator: grep ERR000x
-        evidence: ["ATU_SRC/QDDSSRC/PRO200D.DSPF:102", "ATU_SRC/QDDSSRC/PRO250D.DSPF:30"]
-    dependencies: []
-    open_questions: []
+        evidence: ["ATU_SRC/QMSGFSRC/SAMMSGF.MSGF:9-18", "ATU_SRC/QDDSSRC/ART200D.DSPF:90-98", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:286-288", "ATU_SRC/QDDSSRC/ART250D.DSPF:28", "ATU_SRC/QDDSSRC/CUS250D.DSPF:28", "ATU_SRC/QDDSSRC/PRO250D.DSPF:30"]
+    behaviour_doc: features/menu-cmd-shell-c06.md
+    dependencies: [c05, ART200D / ART200 (art-interactive, held; cited for the one reference)]
+    open_questions: ["Drop ERR0003-0005 in the target or keep as reserved ids (recommendation: drop)?"]
   - id: menu-cmd-shell-c07
-    name: CVTSPLPDF command parameter contract (no PGM in source)
-    status: accepted
+    name: CVTSPLPDF command parameter contract - 3 required + 11 optional, PMTCTL only (no DEP), processing program bound at CRTCMD time - outside the tree
+    status: documented
     confidence: observed-in-code
-    summary: FROMFILE/TOSTMF/TODIR required; JOB, SPLNBR, STMFOPT, STMFCODPAG, TITLE, PAGESIZE, CUSTOMPAGE, FONT, BOOKMARK (+BMARKPOS/BMARKKEY); processing program unknown.
+    summary: "CMD PROMPT('Convert Spool to PDF'); FROMFILE *NAME 10, TOSTMF *NAME 64, TODIR *PNAME 256 all MIN(1); JOB qualified dft *; SPLNBR *DEC 4 dft *ONLY (*LAST -2, *ONLY -3); STMFOPT *NONE|*REPLACE; STMFCODPAG *DEC 5 dft 1250 (*PCASCII -1, *STMF -2) PMTCTL(*PMTRQS); TITLE *CHAR 50 dft *NONE (*STMFILE); PAGESIZE LIST3 dft *SPLF (*CUSTOM; *A4 *A5 *LETTER *LEGAL *EXEC; *LANDSCAPE dft | *PORTRAIT); CUSTOMPAGE LIST4 (210 x 297 *MM) PMTCTL(CUSTOM); FONT LIST5 dft *CONVERT (14 faces; size 4-36, *CALC -1); BOOKMARK *PAGNBR|*POS|*KEY|*NONE; BMARKPOS LIST1 / BMARKKEY LIST2 (key 378 VARY *INT2) via PMTCTL(POS)/(KEY). Sharpened: command source NEVER names its processing program (CRTCMD PGM()) and no CRTCMD exists anywhere in ATU_SRC - same blind spot for CRTORD (ord-entry-ord100-c09). PMTCTL governs prompting only; no DEP -> no cross-parameter validation. TOSTMF TYPE(*NAME) restricts file names to simple-name rules ('Custord123.pdf' passes; blanks/hyphens rejected - inference). One caller ORD500C (ord-print-ord500-c03): A4 portrait, Courier 11, *REPLACE, *LAST, no bookmarks; defaults JOB(*), STMFCODPAG(1250), TITLE(*NONE). Integration edge."
     entrypoints:
       - kind: other
         locator: CVTSPLPDF.CMD
-        evidence: ["ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-96"]
-    dependencies: [ORD500C]
-    open_questions: ["Which product supplies CVTSPLPDF?"]
+        evidence: ["ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-95", "ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:11-14", "ATU_SRC/QCMDSRC/CRTORD.CMD:4-6"]
+    behaviour_doc: features/menu-cmd-shell-c07.md
+    dependencies: [ORD500C (ord-print-ord500-c03, documented), processing program (outside the tree), ORD500O]
+    open_questions: ["Which product supplies CVTSPLPDF? (DSPCMD on the box)", "Effect of default STMFCODPAG(1250) on the PDF?"]
   - id: menu-cmd-shell-c08
-    name: Shell message plumbing (QCPFMSG default, SAMMSGF substitute, CPD9817 on Enter)
-    status: accepted
+    name: Shell message plumbing - dftmsgf=qcpfmsg, submsgf=sammsgf (declared, unused), Enter with no selection -> CPD9817, SAMHELP imported wholesale, ZMENU panel id, sysnam top separator
+    status: documented
     confidence: observed-in-code
-    summary: dftmsgf=qcpfmsg submsgf=sammsgf; Enter without option -> msg cpd9817; imports SAMHELP.
+    summary: ":pnlgrp dftmsgf=qcpfmsg submsgf=sammsgf; :import name='*' pnlgrp=SAMHELP; :var name=Zmenu + panelid=zmenu (never assigned in source - menu manager supplies the menu name, inference); topsep=sysnam; Enter='msg cpd9817 qcpfmsg' for any wrong entry (11, 14-19, 22-79, 85-89, >90); :copyr '(C) Copyright Arcad Software, 2016'; :menu depth='*' scroll=Yes Botsep=none; :Topinst 'Select one of the following:'. Sharpened: submsgf=sammsgf has NO consumer - the only msg reference in QPNLSRC is cpd9817, explicitly qualified to qcpfmsg; no ERR id appears in either panel group. Both message files unqualified -> *LIBL. Panel help=h undefined (c04). No CRTMNU in the tree."
     entrypoints:
       - kind: other
-        locator: SAMMNU pnlgrp header
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:4-9", "ATU_SRC/QPNLSRC/SAMMNU.MENU:71-77"]
-    dependencies: []
-    open_questions: []
+        locator: SAMMNU pnlgrp header + panel attributes
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:1-10", "ATU_SRC/QPNLSRC/SAMMNU.MENU:71-81"]
+    behaviour_doc: features/menu-cmd-shell-c08.md
+    dependencies: [SAMHELP.PNLGRP, SAMMSGF (declaration only), QCPFMSG (system)]
+    open_questions: ["Runtime-confirm ZMENU corner id and CPD9817 text (screen capture)."]
   - id: menu-cmd-shell-c09
-    name: Menu titles vs program text mismatches
-    status: accepted
+    name: Menu titles vs program text - PRO250 'Display Article' is in %TEXT comments only (screen says 'Provider by Id'); visible differences are option 6's ORD100 label for ORD100C2, 'Article by id' vs 'Article by Code', SQLPRC:ART801 for UPDATE_ON_CUS_ORD_QTY
+    status: documented
     confidence: observed-in-code
-    summary: Option 9 'Provider by id' calls PRO250 whose %TEXT says 'Display Article'; cosmetic.
+    summary: "PRO250D.DSPF:24 row-1 heading 'Provider by Id' and screen id 'PRO250' - the user sees a consistent title; only PRO250.PGM.RPGLE:2 and PRO250D.DSPF:2 %TEXT say 'Display Article' (copy from ART250) -> wrong object text (DSPOBJD), not wrong screen text. Phase A sharpened. Full title-vs-%TEXT-vs-heading comparison for all 20 options: visible differences are opt 6 label 'ORD100' while the action calls ORD100C2 (plus a trailing full stop); opt 7 'Article by id' vs ART250D heading 'Article by Code'; opt 82 label SQLPRC:ART801 vs SQL name UPDATE_ON_CUS_ORD_QTY (ART801 = SPECIFIC); opt 10 PRO203 under 'Reports' but interactive; opt 83 'IFS output' vs PAR201.ILEPGM 'generated output'; SAMHELP 'Work with Provider' singular. Six targets have blank %TEXT (PRO201, PRO203, COU200, ORD900, ORD901, ART801). Cosmetic; register for target navigation labels."
     entrypoints:
       - kind: other
-        locator: SAMMNU opt 9 / PRO250 %TEXT
-        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:115-118", "ATU_SRC/QDDSSRC/PRO250D.DSPF:2", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:2"]
-    dependencies: []
-    open_questions: []
+        locator: SAMMNU option titles / target %TEXT / DSPF row-1 headings
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:83-167", "ATU_SRC/QDDSSRC/PRO250D.DSPF:2", "ATU_SRC/QDDSSRC/PRO250D.DSPF:24", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:2", "ATU_SRC/QDDSSRC/ART250D.DSPF:24", "ATU_SRC/QSQLSRC/ART801.SQLPRC:6-8", "ATU_SRC/QCLSRC/ORD100C2.PGM.CLLE:2"]
+    behaviour_doc: features/menu-cmd-shell-c09.md
+    dependencies: [target programs' %TEXT lines and DSPF headings (own slices; cited for text only), SAMHELP]
+    open_questions: ["Target labels: menu titles normalised once; rename option 7 to match its screen?"]
