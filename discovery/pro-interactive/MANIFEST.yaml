@@ -16,12 +16,13 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: A
 updated_at: 2026-09-08T19:10:00Z
-bind_status: unbound
+bind_status: accepted   # night residual wave 2026-09-09; document as-is; PRO planted-bug/XSS residual
+bind_record: BIND.md
 
 features:
   - id: pro-interactive-c01
     name: List providers by id with paging and options 2/5/7
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Subfile over PROVIDE1 (PRID), 14 rows per load with saved-key restore, PRDEL shown; options 2, 5, 7 allowed, others SFLMSG 35.
     entrypoints:
@@ -32,7 +33,7 @@ features:
     open_questions: []
   - id: pro-interactive-c02
     name: Edit provider (option 2) with country prompt and validation
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: FMT02 all fields input; F4 SltCountry + GetCountryName; ExistCountry (ERR0002) and name mandatory (41) checked in one pass.
     entrypoints:
@@ -43,7 +44,7 @@ features:
     open_questions: []
   - id: pro-interactive-c03
     name: Edit never saves (mode never set to upd - planted bug)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: S02act updates FPROV only when mode = upd; the only assignment is commented out ("to remove the bug uncomment"); Enter returns to list with nothing written.
     entrypoints:
@@ -54,7 +55,7 @@ features:
     open_questions: ["Preserve the defect as-is or fix it before characterization?"]
   - id: pro-interactive-c04
     name: No create / delete path for providers (absence)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No F6, no option 4, no write fprov, no writer of PRDEL anywhere in ATU_SRC; PROVIDE1 opened uf a but only update appears.
     entrypoints:
@@ -65,7 +66,7 @@ features:
     open_questions: ["How are providers created / soft-deleted on the box?"]
   - id: pro-interactive-c05
     name: Option 5 -> ART202, option 7 -> bound PRO202
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: articles(prid) is extpgm ART202; prpOrd(prid) is extproc PRO202, a module bound into *PGM PRO200.
     entrypoints:
@@ -76,7 +77,7 @@ features:
     open_questions: []
   - id: pro-interactive-c06
     name: PRO202 purchase proposal selection and proposed quantity
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Cursor over ARTICLE x ARTIPROV for the provider where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY; NEWORD = ARMINQTY + ARCUSQTY - ARPURQTY - ARSTOCK; all rows loaded at once.
     entrypoints:
@@ -87,7 +88,7 @@ features:
     open_questions: []
   - id: pro-interactive-c07
     name: F8 confirm writes XML purchase order file to PATH
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Pur_Ord_<prid>_<yymmdd>.xml in getParm2('PATH'); hard-coded Customer block; one Item per row (ID, YOUR_REF, DESC, QTY, UnitPrice); FMT03 window then end.
     entrypoints:
@@ -98,7 +99,7 @@ features:
     open_questions: ["Who consumes the XML file?"]
   - id: pro-interactive-c08
     name: Confirm does not update ARPURQTY (no writer in ATU_SRC)
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: No database write after the XML export; grep finds no writer of ARTICLE.ARPURQTY anywhere in the tree.
     entrypoints:
@@ -109,7 +110,7 @@ features:
     open_questions: ["Is ARPURQTY fed by an external purchasing process?"]
   - id: pro-interactive-c09
     name: PRO202 has no option handling; leftover order messages
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: s01chk accepts anything; Enter without F8 redisplays; SFLMSG 36/37 texts are order-screen leftovers.
     entrypoints:
@@ -120,7 +121,7 @@ features:
     open_questions: []
   - id: pro-interactive-c10
     name: XML copybook and service program not in tree
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: /copy qprotosrc,xml and XML *SRVPGM absent; element shape known only from call names.
     entrypoints:
@@ -131,7 +132,7 @@ features:
     open_questions: ["Which product provides XML/XSS? Is the file format in parity scope?"]
   - id: pro-interactive-c11
     name: PRO250 provider-by-id inquiry with prompt, not-found and F7 items
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: F4 SltProvider; chain PROVIDE1; not found -> ERR0103; no PRDEL test; FMT02 read-only with GetCountryName; F7 -> ART202(prid); F3 on detail returns to FMT01.
     entrypoints:
@@ -142,7 +143,7 @@ features:
     open_questions: []
   - id: pro-interactive-c12
     name: PRO203 goods-to-purchase spreadsheet report
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: XSS spreadsheet; ARTICLE x ARTIPROV x PROVIDER where ARSTOCK < ARMINQTY - ARCUSQTY + ARPURQTY and ARCUSQTY > 0; yellow rows when article has >1 provider; proposed qty; autofilter; Goods to purchase_<yymmdd>.xml in PATH; reuses PRO202D.FMT03.
     entrypoints:
@@ -153,7 +154,7 @@ features:
     open_questions: ["Split into its own slice at bind?"]
   - id: pro-interactive-c13
     name: PRO203 binding and XSS format not in source
-    status: candidate
+    status: accepted
     confidence: inferred
     summary: dftactgrp(*no) with no bnddir, no PRO203.ILEPGM, Xss copybook missing; spreadsheet format unknown (file named .xml).
     entrypoints:
@@ -164,7 +165,7 @@ features:
     open_questions: []
   - id: pro-interactive-c14
     name: Entry paths and activation groups
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: Menu opt 4 PRO200, opt 9 PRO250, opt 10 PRO203; PRO200+PRO202 in ACTGRP(QILE) via CRTPGM; PRO250 bnddir('SAMPLE').
     entrypoints:
@@ -175,7 +176,7 @@ features:
     open_questions: []
   - id: pro-interactive-c15
     name: F3 on edit panel returns to list; F12 on list exits
-    status: candidate
+    status: accepted
     confidence: observed-in-code
     summary: S02key exit -> panel 1; s01key cancel -> panel 0. Same key semantics as CUS200.
     entrypoints:
