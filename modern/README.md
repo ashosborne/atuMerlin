@@ -20,7 +20,8 @@ everything else stay on IBM i. Characterization is `WAIVED_PATHFINDER`: there ar
 and no `REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **parity:
 TS_BOUNDARY_GREEN** under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
-VAT and DAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
+DAT: **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`);
+VAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -510,7 +511,9 @@ Converted under Architecture pack **`atu-merlin-ts-dat-v1@1`** (`architecture/at
 `overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
 `architecture/atu-merlin-dat/ADR/0001-dat-utils-ts-postgres.md`.
 **WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
-PARITY=UNVERIFIED** (Verification station deferred by the pack).
+parity: TS_BOUNDARY_GREEN** under the waiver — `verification/dat-vertical/2026-09-09-r1/PARITY.yaml`
+(29/29 independent probe cases, 201/201 tests; CR-D1 / CR-D2 / CR-D4 accept-for-demo, CR-D3 deferred
+to the CUS pack; documentation gap G-D1 open). Not parity against IBM i.
 
 **Talk-track:** the DAT date rule lives in TypeScript under the waiver — the repo is not fully
 migrated, and DAT is not "fully migrated" either: the eight accepted `dat-utils` cards are present
