@@ -1,4 +1,16 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 (Cloud Agent, sole runner, RUN tip 1e41dc3): verify LOG vertical DONE — atu-merlin-ts-log-v1@1,
+# parity TS_BOUNDARY_GREEN under WAIVED_PATHFINDER (never IBM i GREEN). typecheck clean; 306/306 tests (24 LOG);
+# independent probe 18/18 x3 (LOG100/LOG300 byte-machine oracle, ORD700 message from source, CP037 copy).
+# c02/c03/c07/c08 TS_BOUNDARY_GREEN; c01/c04/c05/c06/c09/c10 residual explained (c04/c06/c10 deltas observed).
+# CR-L1..CR-L8 accept-for-demo. Deferred to room/SME: preserve user-space log at all (SME_BRIEF item 1);
+# line string vs Msg contract + per-event actor confirmation (item 7); ORD logging through shared/samlog (ORD version).
+# Observations G-L1 (Db = pg.Pool rejects the transaction client; runtime OK), G-L2 (characters not bytes).
+# Artefacts: verification/log-vertical/2026-09-09-r1/{PARITY.yaml,REPORT.md,HANDOFF.yaml,evidence/,narrative/}.
+# README LOG status sentences updated (COU header sentence stale from its STRICT run — follow-up, not touched).
+# Verify commit b119fa7. All seven packs now converted + verified under waiver (CUS, ORD, VAT, DAT, COU, PAR, LOG).
+# Next: none queued — conveyor idle until Ash sets a new RUN. Pack B night-residual queue still held.
 
 # VERIFY — LOG vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
