@@ -369,3 +369,35 @@ COMMENT ON TABLE parameter IS
 COMMENT ON COLUMN parameter.parm2 IS 'PARM2 100A, case kept (CHECK(LC)). For the PATH row: an IFS directory, expected to end with ''/'' by two of four legacy consumers (par-maintain-c07, known_risk).';
 COMMENT ON COLUMN parameter.parm4 IS 'PARM4 zoned 1 0; the CHECK is the DDS width. Maintained by PAR200, read by nobody (par-maintain-c11).';
 COMMENT ON COLUMN parameter.parm5 IS 'PARM5 zoned 3 0; the CHECK is the DDS width. Maintained by PAR200, read by nobody (par-maintain-c11).';
+
+-- ============================================================================================
+-- atuMerlin LOG vertical — samlog alignment (pack atu-merlin-ts-log-v1@1, data.strategy
+-- postgres-greenfield-from-pf, schema_changes additive-only, mapping rule "PF / samlog -> reuse or
+-- align with existing ORD samlog table"). Nothing above this line is touched by the LOG pack
+-- (forbidden: reshape CUS or ORD schema). No new object: the SAMLOG user space is already the
+-- `samlog` table of the ORD section, and the LOG pack REUSES it (modern/src/shared/samlog).
+-- Idempotent.
+--
+-- What SAMLOG was (log-programs-c01, c02, c03): a 5000-byte *USRSPC created by LOG100 (a hand-run
+-- install step, c06), with a 4-byte big-endian write cursor at offset 0, '***' at 4 and lines
+-- 'User: <10> * Date: <26> * Msg: <trimmed entry> ***' appended from offset 7 by LOG300.AddLogEntry
+-- (a 600-byte padded write per call). The cursor, the header, the fixed size (silent permanent
+-- stop at ~35 ORD700 lines, c04), the swallowed create errors (c05), the never-retried init (c06)
+-- and the unlocked shared cursor (c10) are properties of the user-space implementation with no
+-- table counterpart — recorded in modern/README.md (LOG section), not reproduced.
+--
+-- What is reused: one row per line; `user_id` = the actor (per event, via ord700_user(); the legacy
+-- `User` was stamped once per activation group, c03 — needs-SME); `logged_at` = the legacy in-line
+-- Date; `msg` = %trim(entry). The legacy line STRING is reproducible from a row
+-- (shared/samlog formatLegacyLine); whether that string is a contract is open (SME_BRIEF item 7).
+-- Only comments are added; the ORD pack's CREATE TABLE stands as written.
+-- ============================================================================================
+
+COMMENT ON TABLE samlog IS
+  'SAMLOG *USRSPC (LOG100 / LOG300.AddLogEntry) as a table. Written by the ORD700 delete trigger (ord-trigger-ord700-c03, the only in-tree log event, log-programs-c07) and by shared/samlog addLogEntry (pack atu-merlin-ts-log-v1). Unbounded: the legacy 5000-byte capacity and its silent stop (log-programs-c04) are not reproduced. No in-tree reader on the box (menu option 84 = ADSPUSRSPC, no source, log-programs-c09).';
+COMMENT ON COLUMN samlog.user_id IS
+  'Legacy User 10A inz(*USER), stamped once per activation group and written blank-padded (log-programs-c03). Here: the actor per event — ord700_user() (atu.user on the transaction, else the database role) or the user named by addLogEntry. Needs-SME: per-event actor confirmed as the target contract?';
+COMMENT ON COLUMN samlog.logged_at IS
+  'Legacy in-line Date = %char(%timestamp()) (26 chars, YYYY-MM-DD-HH.MM.SS.UUUUUU, log-programs-c03); shared/samlog toRpgTimestamp renders this column in that form.';
+COMMENT ON COLUMN samlog.msg IS
+  'Legacy %trim(entry) with entry 500A by value (log-programs-c03): shared/samlog normaliseLogEntry cuts to 500 then trims blanks. Stored in full; the legacy 500-byte line buffer (a message > 437 chars loses its '' ***'' terminator) is reproduced only by formatLegacyLine (CR-L3).';
