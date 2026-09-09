@@ -16,7 +16,7 @@ out_of_scope_hints:
   - conversion / test generation / bind
 phase: B
 updated_at: 2026-09-08T21:30:00Z
-bind_status: accepted   # FCOUNTRY half only (c07-c12); COU200 half (c01-c06, c13) deferred - see BIND.md
+bind_status: accepted   # night residual: COU200 half c01-c06+c13 now accepted; FCOUNTRY already documented
 bind_record: BIND.md
 documented_by: document-slices-conveyor (Pack B run 7, 2026-09-08)
 characterization: deferred-waived   # see CHARACTERIZATION.md - no RECORD/REPLAY, no goldens, no conversion unlock
@@ -31,7 +31,7 @@ needs_sme:
 features:
   - id: cou-maintain-c01
     name: COU200 lists all countries in one load; option 2 only
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "*LOVAL SETLL then read to EOF with no page limit into SFLSIZ 15/SFLPAG 14; option 2 only, others RI + SFLMSG 35. Deferred at bind (COU200 half); not deepened."
     entrypoints:
@@ -42,7 +42,7 @@ features:
     open_questions: []
   - id: cou-maintain-c02
     name: Edit country name / ISO-3 with no validation
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "FMT02 COUNTR (CHECK(LC)) and COISO input, COID output; Enter -> UPDAT FCOUN unconditionally; no audit columns. Deferred at bind (COU200 half); not deepened."
     entrypoints:
@@ -53,7 +53,7 @@ features:
     open_questions: ["Does the target need ISO-3 validation?"]
   - id: cou-maintain-c03
     name: Chain indicator 98 never tested before UPDAT
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "A concurrent delete between list and edit would UPDAT without a locked record. Deferred at bind (COU200 half); not deepened."
     entrypoints:
@@ -64,7 +64,7 @@ features:
     open_questions: []
   - id: cou-maintain-c04
     name: No create / delete path; code not editable; no delete flag (absence)
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "No F6, no option 4, no WRITE/DELET on COUNTRY; COUNTRY.PF has no DLCODE column. Deferred at bind (COU200 half); not deepened. The no-delete-flag fact is carried by c07 for the FCOUNTRY half."
     entrypoints:
@@ -75,7 +75,7 @@ features:
     open_questions: ["How are countries added on the box?"]
   - id: cou-maintain-c05
     name: Key semantics (F3 on detail ends program; F12 returns without reload)
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "List F3/F12 -> end; FMT02 F3 -> GOTO ENDPGM; FMT02 F12 -> panel 1 without reload. Deferred at bind (COU200 half); not deepened."
     entrypoints:
@@ -86,7 +86,7 @@ features:
     open_questions: []
   - id: cou-maintain-c06
     name: Consecutive option-2 rows processed; subfile row not refreshed
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "STEP01 stays 'ACT' after an update so the next changed row is picked up; the list shows stale values. Deferred at bind (COU200 half); not deepened."
     entrypoints:
@@ -169,7 +169,7 @@ features:
     open_questions: ["Build owner: activation group of CUS200 / CUS250 / PRO250; has SIGNATURE('V1') ever been bumped; target library of FCOUNTRY vs callers (*LIBL)."]
   - id: cou-maintain-c13
     name: COU200 is the only OPM RPG III member; bypasses FCOUNTRY
-    status: deferred
+    status: accepted
     confidence: observed-in-code
     summary: "Fixed-form QRPGSRC with CASEQ/GOTO; reads COUNTRY directly as UF. Deferred at bind (COU200 half); not deepened. Cited by c07 / c12 as the direct COUNTRY writer that can leave a getter cache stale."
     entrypoints:
