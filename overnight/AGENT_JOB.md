@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — night residual wave run 14
 # Prefer: log-programs (then menu-cmd-shell → srvpgm-supporting → sql-objects →
