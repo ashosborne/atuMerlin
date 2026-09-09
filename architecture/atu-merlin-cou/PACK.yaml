@@ -1,6 +1,6 @@
 pack_id: atu-merlin-ts-cou-v1
 version: 1
-status: BOUND
+status: SUPERSEDED
 migration_id: atu-merlin
 slice_ids:
   - cou-maintain

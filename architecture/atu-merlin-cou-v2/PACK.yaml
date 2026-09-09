@@ -2,12 +2,12 @@
 # v1 stays BOUND until this pack is BOUND. Do not overwrite architecture/atu-merlin-cou/PACK.yaml.
 pack_id: atu-merlin-ts-cou-v2
 version: 2
-status: DRAFT
+status: BOUND
 migration_id: atu-merlin
 slice_ids:
   - cou-maintain
 supersedes: atu-merlin-ts-cou-v1
-supersedes_note: "New pack; v1 stays BOUND until this pack is BOUND; do not overwrite v1 in place."
+supersedes_note: "v1 marked SUPERSEDED in the same bind commit. Do not overwrite v1 body. Two country packs must not both stay BOUND."
 
 target_stack:
   language: typescript
@@ -168,7 +168,7 @@ evidence:
   replay_green_run_ids: []
   waiver_record: architecture/atu-merlin-cou-v2/ADR/0001-cou-v2-supersede-cou200.md
 
-bound_by: null
-bound_at: null
+bound_by: atuMerlin migration room (Field 9/10 + CTO 9/10 Architecture ROOM_OK tip 7ac3863; soft nit v1 SUPERSEDED; Agent Smith recorded)
+bound_at: 2026-09-09T23:35:35Z
 change_policy: "BOUND is immutable. Convert requires separate ROOM_OK. v1 stays BOUND until this pack is BOUND. Do not overwrite v1 in place."
 reference_skeleton: null
