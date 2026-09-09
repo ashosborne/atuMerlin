@@ -1,4 +1,11 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 (run 2026-09-09-r1): parity TS_BOUNDARY_GREEN under WAIVED_PATHFINDER — not IBM i parity, not Merlin migrated.
+# typecheck clean; 201/201 tests (63 DAT); independent probe 29/29 (130k sweep + 200k random; SQL twins via unnest).
+# Date lock matches ORD (dat_date_to_iso_num == ORD701 inline to_char on 4384 dates; NULL inside, 0 / 1940-01-01 at boundary only).
+# CR-D1 / CR-D2 / CR-D4 accept-for-demo; CR-D3 defer (CUS pack). G-D1 doc gap: README/CONVERT_RECORD c07 identity holds on {0} U valid dates only.
+# Artefacts: verification/dat-vertical/2026-09-09-r1/{PARITY.yaml,REPORT.md,HANDOFF.yaml,evidence/,narrative/}. README status sentences updated.
+# Next: Verify VAT if still open, then Convert cou -> par -> log (each needs its own ROOM_OK in this body).
 
 # VERIFY — DAT utilities (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
