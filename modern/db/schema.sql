@@ -240,3 +240,22 @@ $$;
 DROP TRIGGER IF EXISTS ord701_insert_order ON orders;
 CREATE TRIGGER ord701_insert_order
   AFTER INSERT ON orders FOR EACH ROW EXECUTE FUNCTION ord701_insert_order();
+
+-- ============================================================================================
+-- atuMerlin VAT vertical — additive VAT objects (pack atu-merlin-ts-vat-v1@1, data.strategy
+-- postgres-greenfield-from-pf, schema_changes additive-only). Nothing above this line is touched
+-- by the VAT pack (forbidden: reshape CUS or ORD schema). Idempotent.
+--
+-- VATDEF.PF (record format FVAT, REF(SAMREF), K VATCODE) is already mapped column-for-column by
+-- the `vatdef` table in the ORD section, where it was a read-only dependency. The VAT convert
+-- takes over the semantics of that table without altering it: VATCODE 1A -> char(1) PK (the PF
+-- key; no logical file over VATDEF exists in ATU_SRC, so no further index), VATRATE 4 2 ->
+-- numeric(4,2), VATDESC 20 -> varchar(20), VATCREA L -> date, VATMOD Z -> timestamp,
+-- VATMODID 10 -> varchar(10), VATDEL (DLCODE 1A) -> char(1). Audit and delete columns have no
+-- writer in the legacy tree (vat-module-c07) and none here.
+-- ============================================================================================
+
+COMMENT ON TABLE vatdef IS
+  'VATDEF.PF — VAT code and rate. Read by shared FVAT (GetVATRate, GetVATDesc, ClcVAT, ExistVATRate); no maintenance path (vat-module-c07, needs-SME).';
+COMMENT ON COLUMN vatdef.vatrate IS 'VATRATE 4P 2 "VAT RATE %"; 0 after a miss is indistinguishable from a zero rate (vat-module-c02).';
+COMMENT ON COLUMN vatdef.vatdel IS 'DLCODE: ''X'' = soft-deleted. Only ExistVATRate reads it; ClcVAT still applies the rate (vat-module-c04).';

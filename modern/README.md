@@ -1,6 +1,6 @@
-# atuMerlin — modern CUS + ORD verticals (pathfinder)
+# atuMerlin — modern CUS + ORD + VAT verticals (pathfinder)
 
-TypeScript modular monolith holding two converted verticals, each under its own BOUND
+TypeScript modular monolith holding three converted verticals, each under its own BOUND
 Architecture pack with a separate convert `ROOM_OK`:
 
 - **CUS** (`cus-interactive` + `cus-modules`) — pack **`atu-merlin-ts-cus-v1@1`**
@@ -8,15 +8,17 @@ Architecture pack with a separate convert `ROOM_OK`:
 - **ORD** (`ord-entry-ord100`, `ord-entry-ord101`, `ord-maintain-ord200`, `ord-maintain-ord201`,
   `ord-maintain-ord202`, `ord-print-ord500`, `ord-trigger-ord700`) — pack
   **`atu-merlin-ts-ord-v1@1`** (`architecture/atu-merlin-ord/PACK.yaml`). See
-  [ORD vertical](#ord-vertical-pack-atu-merlin-ts-ord-v11) at the end of this file.
+  [ORD vertical](#ord-vertical-pack-atu-merlin-ts-ord-v11).
+- **VAT** (`vat-module`) — pack **`atu-merlin-ts-vat-v1@1`** (`architecture/atu-merlin-vat/PACK.yaml`).
+  See [VAT vertical](#vat-vertical-pack-atu-merlin-ts-vat-v11) at the end of this file.
 
-This is a **pathfinder**, not "Merlin migrated": CUS and ORD live in TypeScript under the
-waiver; ART, country / VAT / article maintenance, the ORD9xx batches and everything else stay on
-IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`;
-behaviour is compared at the TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the
-waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity: TS_BOUNDARY_GREEN**
-under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`). Neither is parity
-against IBM i.
+This is a **pathfinder**, not "Merlin migrated": CUS, ORD and the VAT rule live in TypeScript
+under the waiver; ART, country / VAT / article maintenance, the ORD9xx batches and everything else
+stay on IBM i. Characterization is `WAIVED_PATHFINDER`: there are no IBM i goldens and no
+`REPLAY_GREEN`; behaviour is compared at the TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN**
+under the waiver (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity:
+TS_BOUNDARY_GREEN** under the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`);
+VAT: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -34,7 +36,8 @@ against IBM i.
 modern/
   db/schema.sql                    PF -> table, LF -> index, CUSSEQ -> sequence, COUNTRY dependency table;
                                    ORD section appended (orders, detord, article, vatdef, samlog, lastordno,
-                                   ordercus view, ORD700 / ORD701 triggers)
+                                   ordercus view, ORD700 / ORD701 triggers); VAT section appended (vatdef
+                                   mapping note + comments, nothing altered)
   openapi/customer.yaml            HTTP contract (CUS)
   openapi/order.yaml               HTTP contract (ORD)
   src/app.ts, src/server.ts        Fastify app / entry
@@ -42,7 +45,7 @@ modern/
   src/shared/fcustomer/            FCUSTOMER (CUS300 getters, ExistCus, IsCusDeleted, CUS301 SltCustomer)
   src/shared/fcountry/             FCOUNTRY dependency surface (ExistCountry, GetCountryName, list) — read-only
   src/shared/farticle/             FARTICLE dependency surface (GetArtDesc, GetArtRefSalPrice, GetArtVatCode, list) — read-only
-  src/shared/fvat/                 FVAT dependency surface (GetVATRate, CLCVat) — read-only
+  src/shared/fvat/                 FVAT (VAT300 GetVATRate, GetVATDesc, ClcVAT, ExistVATRate) — VAT vertical, shared by ORD
   src/features/customer/           CUS200 / CUS250: types, repository, service (validation), routes, web
   src/features/order/              ORD100 / ORD101 / ORD200 / ORD201 / ORD202 / ORD500: types, repository,
                                    service, document (ORD500O), routes, web, seed (ORD fixtures)
@@ -379,3 +382,117 @@ the card id). Nothing below is a target decision.
   verdict is TS-boundary evidence only).
 - Widening or editing pack `atu-merlin-ts-cus-v1` or its code (the CUS list's `5=Orders` stays unwired).
 - Edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.
+
+---
+
+# VAT vertical (pack `atu-merlin-ts-vat-v1@1`)
+
+Converted under Architecture pack **`atu-merlin-ts-vat-v1@1`** (`architecture/atu-merlin-vat/PACK.yaml`,
+`status: BOUND`, bound 2026-09-09T11:12:14Z) with a separate convert `ROOM_OK` carried in
+`overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
+`architecture/atu-merlin-vat/ADR/0001-vat-shared-fvat-ts-postgres.md`.
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
+PARITY=UNVERIFIED** (Verification station deferred by the pack).
+
+**Talk-track:** the VAT rule lives in TypeScript under the waiver — the repo is not fully migrated,
+and VAT is not "fully migrated" either: the ten accepted `vat-module` cards are present at the TS
+boundary or listed as residual below; VATDEF maintenance (which the legacy never had), ART200's dead
+VAT fields and every needs-SME item stay open.
+
+## Edit surface honoured
+
+Written: `src/shared/fvat/index.ts` (extended in place — the `getVatRate` / `clcVat` shape ORD
+already consumes is unchanged; `getVatDesc`, `existVatRate`, `normaliseVatCode` added),
+`db/schema.sql` (VAT section **appended** — the CUS and ORD objects above it are byte-identical;
+`vatdef` is not altered), `test/fvat.test.ts` (new, pack-scoped), `package.json` (description),
+this README, `architecture/atu-merlin-vat/CONVERT_RECORD.md`. Untouched: `ATU_SRC/**`,
+`discovery/**`, `inventory/**`, `src/features/customer/**`, `src/features/order/**`,
+`openapi/customer.yaml`, `openapi/order.yaml`, `src/db/**`, `src/app.ts`, `src/server.ts`,
+`architecture/atu-merlin/**`, `architecture/atu-merlin-ord/**`, the residual sibling packs
+(`dat`, `cou`, `par`, `log`). No `features/vat/` surface and no HTTP route: the pack's
+`contract_paths` is empty and the legacy exposes VAT only through its callers, so the shared module
+is the whole surface (same stance as `cus-modules`).
+
+## Mapping rules applied
+
+| Rule | Where |
+| --- | --- |
+| RPGLE service program FVAT -> TS shared module | `src/shared/fvat/index.ts`: `createFVat(db)` returns the four binder exports `getVatRate`, `getVatDesc`, `clcVat`, `existVatRate`; `clcVatWithRate` is the pure arithmetic; `normaliseVatCode` is the `1A` by-value parameter |
+| PF VATDEF -> postgres table (additive) | `vatdef` already existed as an ORD read-only dependency, column-for-column from `VATDEF.PF`; the VAT pack takes over its semantics without altering it (`COMMENT ON` only). No logical file over `VATDEF` exists in `ATU_SRC`, so the PK on `vatcode` is the only index |
+| Callers reuse shared fvat | `features/order/order.service.ts` already calls `fvat.clcVat` / `fvat.getVatRate` (c08: `CLCVat(GetArtVatCode(odarid) : odtot)` then `GetVatRate(...)`); not rewritten. ART250 (one-hop caller) is ART scope, not converted |
+
+## Card coverage
+
+`converted` = behaviour present at the TS boundary with a test; `as-is` = converted with a known
+legacy quirk deliberately preserved; `residual` = not carried, with the reason; `needs-SME` = left
+open on purpose (no answer invented).
+
+### vat-module
+
+| Card | Behaviour | Status | Notes |
+| --- | --- | --- | --- |
+| c01 | ClcVAT = `(net * rate) / 100` truncated to `11P 4`, half-adjusted to `9P 2`; returns the VAT amount, not the gross | converted | integer-hundredths arithmetic, round half away from zero; grid incl. third-decimal ties, negative net, `9 2 x 4 2` extremes |
+| c02 | Unknown code -> cleared buffer -> rate 0 / blank description / VAT 0, no message | converted (**as-is, planted defect kept**) | `ExistVATRate` is not consulted first (no legacy caller did); needs-SME whether the target should raise |
+| c03 | GetVATRate (display only) / GetVATDesc (no caller) | converted | both exported; ART200 FMT02's dead `VATRATE`/`VATDESC`/`WITHVAT` fields are ART scope — not wired, not invented |
+| c04 | ExistVATRate = `%found and VATDEL <> 'X'`; the other exports ignore `VATDEL` | converted (**as-is**) | a soft-deleted rate is still applied by ClcVAT / GetVATRate / GetVATDesc; only uppercase `X` counts (needs-SME) |
+| c05 | Lazy open, last-key cache, blank code never reads, `closeVATDEF` not exported | converted / residual | **blank code never reads** kept (a blank-keyed row is invisible); open/close have no equivalent; cache -> c06 |
+| c06 | Rate cache stale for the activation group after a VATDEF change | **residual** (CR-V1) | stateless server, no cache: every call reads `vatdef`, a changed row is seen at once. Misses never stuck in legacy either, so that half matches. Needs-SME: do rates change intra-day? |
+| c07 | No maintenance path for VATDEF (absence) | **as-is, needs-SME** | no route, no screen, no seed of its own: rows arrive through the ORD dev fixtures (`db:seed:order`) or direct SQL, as they arrived by DFU / SQL / restore on the box. Seed-configuration vs maintenance screen is a room decision |
+| c08 | Code comes from the article via GetArtVatCode (two hops); ART250 passes `ARVATCD` directly | converted (ORD) / residual (ART) | ORD100/ORD101 paths already go `FARTICLE -> FVAT` in `order.service.ts`; unknown article -> blank code -> zero VAT without reading `vatdef`. ART250 is `stay_legacy` |
+| c09 | Export surface: four symbols under literal `'V1'`, `ACTGRP(*CALLER)`, `SAMPLE.BNDDIR` | converted / n/a | four methods on `FVat`; signature / binding directory / activation group have no TS equivalent (CR-V2) |
+| c10 | Copybook / module type drift on ClcVAT (`1` / `9 2` untyped) | converted | effective contract `ClcVAT(char(1), decimal(9,2)) -> decimal(9,2)`: `normaliseVatCode` keeps the first character, empty -> blank; comparison stays case-sensitive |
+
+## SME open questions — kept visible, not answered here
+
+From `discovery/vat-module/SME_BRIEF.md` (unsigned); preserved as-is in the code (comments cite
+the card id; residuals carry a `TODO(<card>)`). Nothing below is a target decision.
+
+- **c02** — should an unknown / blank VAT code be an error rather than silent zero VAT? As-is
+  preserved: `ODTOTVAT = ODTOT`, rate `.00`, no message. `ARTICLE.ARVATCD` is still unvalidated at
+  its only entry point (ART200, not converted).
+- **c04** — is a soft-deleted VAT code (`VATDEL = 'X'`) meant to stop being applied? As-is it is
+  not; nothing sets the flag.
+- **c06** — do rates change while jobs run? If never intra-day the missing cache has no observable
+  effect; if they do, the TS module now applies the new rate immediately where the legacy held the
+  old one for the session (CR-V1).
+- **c07** — how are `VATDEF` rows maintained on the box? Decides seed configuration vs a
+  maintenance screen the legacy never had. Nothing built either way.
+- **c03** — ART200 FMT02 dead VAT display fields: retire or wire? ART scope; `getVatDesc` exists
+  as the getter they would use.
+- **c08** — ART250 "with VAT" shows the VAT amount, not the gross: defect or label? ART scope.
+- **c05 / c09** — callers' activation group and `'V1'` bump practice: build questions with no TS
+  counterpart.
+
+## Deliberate deltas (CONTRACT_RISK — left open for Verification)
+
+| Id | Delta | Why |
+| --- | --- | --- |
+| CR-V1 | No per-activation-group state: no last-key cache, no held `VATDEF` open, nothing to close | Stateless HTTP server (same stance as CR-8 / CR-O8); every call reads the table |
+| CR-V2 | No binder signature / binding directory / activation group | TypeScript module import replaces `FVAT.BND` `'V1'`, `SAMPLE.BNDDIR`, `ACTGRP(*CALLER)`; nothing to check at activation |
+| CR-V3 | The `1A` by-value code is normalised in TypeScript (`normaliseVatCode`): first character, empty -> blank | RPG truncated a longer value at the by-value call; a JS string has no fixed length, so the cut is explicit |
+| CR-V4 | `vatdef` fixture rows come from the ORD dev seed | The VAT pack may not edit `src/db/**` or `features/order/**`; the legacy had no in-tree loader either (c07) |
+
+## known_risks (from the BOUND pack) — where each lives
+
+| Risk | Status here |
+| --- | --- |
+| Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API | `test/fvat.test.ts` expected values are derived from the cards, not recorded on the box |
+| Silent zero for unknown VAT (c02) | preserved in `createFVat` (`CLEARED` buffer), tested |
+| Soft-deleted VATDEL still applied (c04) | preserved, tested |
+| Session-buffered rates (c06) | not reproduced — CR-V1, tested as the delta |
+| VATDEF maintenance path unknown (c07) | nothing built; `TODO(vat-module-c07)` |
+| Dead ART200 VATRATE/VATDESC fields (c03) | ART scope, not touched |
+| Architecture BOUND does not authorize Convert | ROOM_OK carried in `overnight/AGENT_JOB.md` body |
+| CUS and ORD modern already exist; accidental re-scope is a fail | `features/customer/**`, `features/order/**`, both OpenAPI files and both packs untouched; ORD suites unchanged and green |
+| `modern/db/**` additive VAT tables only | VAT section appended; `vatdef` not altered (`COMMENT ON` only) |
+
+## Not done in this pack
+
+- VATDEF maintenance (create / change / delete / list) — the legacy has none (c07) and the room has
+  not decided on one.
+- ART conversion (ART200 VAT-code entry and dead display fields, ART250 one-hop caller,
+  `GetArtVatCode` beyond the existing FARTICLE dependency surface).
+- Any HTTP / OpenAPI surface for VAT (`contract_paths: []`).
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
+- Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1` or the residual DRAFT
+  packs; edits under `ATU_SRC/**`, `discovery/**`, `inventory/**`, `src/db/**`.
