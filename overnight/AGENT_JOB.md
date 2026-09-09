@@ -1,4 +1,12 @@
-RUN
+DONE
+
+# RESULT 2026-09-09 19:40Z (Cloud Agent, sole run, RUN tip ce4e68e): Verify PAR DONE — parity: TS_BOUNDARY_GREEN under WAIVED_PATHFINDER (atu-merlin-ts-par-v1@1). Not IBM i parity. Not Merlin migrated.
+# Artefacts: verification/par-vertical/2026-09-09-r1/{PARITY.yaml,REPORT.md,HANDOFF.yaml,evidence/{probe.mjs,results.json,typecheck-and-vitest.log},narrative/HOW_IT_WORKS.md}; modern/README.md PAR status sentences point at PARITY.yaml.
+# Evidence: typecheck clean; 306/306 tests (40 PAR); independent probe 22/22 x 3 runs (chainPARAMETER buffer machine, s01lod keyed read, FMT03/FMT02/opt-4 oracles, 24-way create race).
+# CR-P1..CR-P7 accept-for-demo. Deferred to room / SME: c11 PATH-as-configuration, c07 trailing-slash data fact, PAR200 web page (with c11), estate list/edit lock template (CR-8/CR-O8/CR-P2/CR-P5).
+# Observations: G-P1 README CR-P3 EBCDIC sentence wrong (= G-C1); G-P2 5250-unreachable input corners (width-before-trim, ß fold -> 500, array body -> blank/blank row); G-P3 out-of-band lower-case key unaddressable by folded keyed routes; G-P4 c09 "never reads" is a cleared-buffer property.
+# ORD interop: features/order/** makes no PATH read; documented as reuse of getPath / GET /api/parameters/path. Order not rewritten. ATU_SRC untouched.
+# Next: Verify LOG (own AGENT_JOB RUN with its own ROOM_OK in the body). Pack B night-residual queue held.
 
 # VERIFY — PAR vertical (atuMerlin) — FIRE after Field+CTO Verify ROOM_OK
 # Branch: cursor/atu-merlin-estate-discovery. Never master. Never ATU_SRC.
