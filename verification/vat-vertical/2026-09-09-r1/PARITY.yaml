@@ -1,0 +1,68 @@
+# Verification COMPARE — VAT vertical (shared fvat), pack atu-merlin-ts-vat-v1@1
+# Characterization WAIVED_PATHFINDER: no IBM i / RPG goldens exist and none were invented.
+# The verdict below is evidence at the TypeScript boundary (plus the additive vatdef mapping) only. It is NOT parity against IBM i.
+run_id: 2026-09-09-r1
+pack_id: atu-merlin-ts-vat-v1
+pack_version: 1
+characterization: WAIVED_PATHFINDER
+mode: COMPARE
+target: modern
+oracle: discovery-cards-and-readme    # vat-module cards (c01 arithmetic, c02/c04/c05 buffer rules) + README VAT section; not legacy goldens
+legacy_replay: SKIPPED                # no IBM i harness; REPLAY_GREEN not claimed
+ibm_i_parity: NOT_CLAIMED
+
+rollup:
+  parity: TS_BOUNDARY_GREEN           # never GREEN against IBM i under this waiver
+  parity_green: false                 # APP_MANIFEST flag stays false (WAIVED max = converted + parity WAIVED)
+  legacy_green: false
+  basis:
+    - "npm run typecheck: clean"
+    - "npm test: 201/201 in 7 files against live PostgreSQL 16.15 — 27 VAT (test/fvat.test.ts), 55 CUS / 56 ORD / 63 DAT unchanged (evidence/typecheck-and-vitest.log)"
+    - "independent probe with an oracle written from the cards (RPG statements evaluated literally in BigInt: truncate to 11P 4, then %dech to 9P 2 — not the module's one-step rounding): 1 800 009-pair cent sweep + 200 000 random (9P 2, 4P 2) pairs + 4 500 through vatdef; query-counting wrapper for the buffer rules: 23 PASS / 0 FAIL (evidence/results.json, evidence/probe.mjs)"
+    - "card COMPARE: every converted / as-is card has a module export, a test and a probe case; residual halves (c05 open/close, c06 cache, c07 maintenance, c08 ART250, c09 binder) carry a reason that traces to the pack (REPORT.md §4)"
+    - "planted / known-risk behaviours preserved, not fixed: silent zero for unknown code (P08, P09), soft-deleted VATDEL still applied (P13), blank code never reads (P14), no maintenance path (P17, P23), ART200 dead fields untouched (ART scope)"
+    - "CR-V1 (no last-key cache) observed as the delta it is documented to be: 7 reads for 7 non-blank calls; a changed row is seen at once (P15, P16)"
+    - "one contract observation recorded (G-V1: the net parameter is not normalised to decimal(9,2) the way the code parameter is; no modern caller reaches it) — not behaviour drift on any card (REPORT.md §4)"
+  contract_risks: "CR-V1..CR-V4 dispositioned in REPORT.md §5 — 3 accept-for-demo, 1 defer (CR-V4: VATDEF content has no path of its own until the room decides c07)"
+
+# per-feature: status is the TS-boundary outcome. codes: TS_BOUNDARY_GREEN | RESIDUAL_EXPLAINED | NEEDS_SME_OPEN | NOT_IMPLEMENTED | BLOCKED_BY_PACK
+features:
+  vat-module:
+    c01: { status: TS_BOUNDARY_GREEN, note: "ClcVAT = (net * rate) / 100 truncated to 11P 4 then half-adjusted to 9P 2; module (one-step integer rounding) == literal two-step oracle on 2 004 509 pairs incl. third-decimal ties, negatives, 9 2 x 4 2 extremes; returns the VAT amount, not the gross", evidence: [P01, P02, P03, P04, P05, P07, "fvat.test.ts c01"] }
+    c02: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "should an unknown / blank code raise instead of silent zero", note: "unknown code -> rate 0 / description blank / VAT 0 / exists false, no exception, for 94 codes; zero-rated and unknown indistinguishable by amount (planted defect kept)", evidence: [P08, P09, "fvat.test.ts c02"] }
+    c03: { status: TS_BOUNDARY_GREEN, note: "GetVATRate / GetVATDesc return the raw row fields (rate as number, 20A description intact, 21 chars rejected); rate shown after ClcVAT is the rate the amount used (600 line prepares). ART200 dead VATRATE/VATDESC/WITHVAT fields are ART scope — not wired, not invented", evidence: [P10, P11, "fvat.test.ts c03"] }
+    c04: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "is a soft-deleted code meant to stop being applied", note: "ExistVATRate = found and VATDEL <> 'X' (only the literal upper-case X; 7-flag truth table); ClcVAT / GetVATRate / GetVATDesc still apply an 'X' row (inconsistency preserved)", evidence: [P12, P13, "fvat.test.ts c04"] }
+    c05: { status: TS_BOUNDARY_GREEN, as_is: true, note: "blank / empty code never reads VATDEF: 0 SQL statements from all four exports with a blank-keyed row present (kept). Lazy open / unexported close have no equivalent (CR-V1, explained); the cache half is c06", evidence: [P14, P15, P19, "fvat.test.ts c05"], contract_risk: [CR-V1] }
+    c06: { status: RESIDUAL_EXPLAINED, needs_sme: "do rates change intra-day", note: "deliberate delta CR-V1: no last-key cache — 7 non-blank calls issue 7 reads; a changed row is seen on the next call where the legacy held the old value for the activation group. Misses never stuck in legacy either (matches)", evidence: [P15, P16, "fvat.test.ts c06"], contract_risk: [CR-V1] }
+    c07: { status: NEEDS_SME_OPEN, as_is: true, note: "absence preserved: no /vat route, no OpenAPI file, no vatdef writer in src other than the ORD dev seed (CR-V4); after reset only the three seed rows exist. Seed configuration vs maintenance screen is the room's decision; nothing invented", evidence: [P17, P23], contract_risk: [CR-V4] }
+    c08: { status: TS_BOUNDARY_GREEN, note: "ORD path: FARTICLE.getArtVatCode -> fvat.clcVat -> fvat.getVatRate (order.service.ts read-only, not rewritten); unknown article -> blank code -> VAT 0 with 0 vatdef reads; A00001 (code 2) -> 29.98 on 149.90. ART250 one-hop caller is stay_legacy (residual, explained)", evidence: [P18, "order.api.test.ts (ORD pack, unchanged)"] }
+    c09: { status: TS_BOUNDARY_GREEN, note: "exactly the four binder symbols as methods (clcVat, existVatRate, getVatDesc, getVatRate), nothing named close*; module exports clcVatWithRate / createFVat / normaliseVatCode only. 'V1' signature, SAMPLE.BNDDIR, ACTGRP(*CALLER) have no TS equivalent (CR-V2, explained)", evidence: [P19], contract_risk: [CR-V2] }
+    c10: { status: TS_BOUNDARY_GREEN, note: "effective contract ClcVAT(char(1), decimal(9,2)) -> decimal(9,2): normaliseVatCode keeps the first character, empty -> blank, case-sensitive like the keyed CHAIN ('q' != 'Q'); the decimal(9,2) side of the contract is not enforced on `net` (G-V1, observation)", evidence: [P20, P06, "fvat.test.ts c10"], contract_risk: [CR-V3] }
+
+schema:
+  vatdef_mapping: "VATCODE char(1) PK, VATRATE numeric(4,2), VATDESC varchar(20), VATCREA date, VATMOD timestamp, VATMODID varchar(10), VATDEL char(1); PK is the only index (no LF over VATDEF in ATU_SRC); COMMENT ON only — table not altered (P21)"
+  field_bounds: "numeric(4,2) rejects 100.00 (22003) and varchar(20) rejects 21 chars (22001): the 4P 2 / 20A bounds the c01 'no overflow' argument rests on are enforced by the column types (P10, P22)"
+  additive: "first 242 lines of modern/db/schema.sql (CUS + ORD objects, incl. the vatdef CREATE TABLE) byte-identical to the pre-convert tip fda5292; VAT section is COMMENT ON only"
+
+planted_or_known_risk_behaviours_preserved:
+  - { behaviour: "silent zero for unknown VAT code (c02) — no exception, rate 0, VAT 0, indistinguishable from a zero rate", evidence: [P08, P09], fixed: false }
+  - { behaviour: "soft-deleted VATDEL = 'X' still applied by ClcVAT / GetVATRate / GetVATDesc (c04)", evidence: [P13], fixed: false }
+  - { behaviour: "blank code never reads VATDEF, blank-keyed row invisible (c05)", evidence: [P14], fixed: false }
+  - { behaviour: "no VATDEF maintenance path; rows arrive through the ORD dev seed (c07, CR-V4)", evidence: [P17, P23], fixed: false }
+  - { behaviour: "session-buffered rates (c06) — NOT reproduced; recorded and observed as CR-V1, not 'fixed' in the sense of a target decision", evidence: [P15, P16], fixed: false }
+  - { behaviour: "dead ART200 VATRATE / VATDESC / WITHVAT fields (c03) — ART scope, untouched", evidence: ["§2 scope guards"], fixed: false }
+
+contract_gaps:
+  - { id: G-V1, severity: low, kind: contract-documentation, where: "modern/src/shared/fvat/index.ts clcVat / clcVatWithRate; modern/README.md VAT c10 row and CR-V3", gap: "the README states the effective contract ClcVAT(char(1), decimal(9,2)) and CR-V3 normalises the char(1) side, but nothing normalises or guards the decimal(9,2) side: a sub-cent net is rounded (Math.round(net * 100)) where RPG by-value conversion truncates — 0.075 at 20% gives 0.02 here and 0.01 from a truncated 0.07 — and |net| > 9,999,999.99 computes instead of failing. No modern caller can reach either (ORD passes round2(qty x price) and checks TOTPRICE_MAX); not a card behaviour", evidence: [P06] }
+
+evidence:
+  typecheck_and_tests: evidence/typecheck-and-vitest.log
+  probe_script: evidence/probe.mjs
+  probe_results: evidence/results.json
+  report: REPORT.md
+  narrative: narrative/HOW_IT_WORKS.md
+
+verified_by: "atuMerlin factory job runner (Cloud Agent), Verification station"
+verified_at: "2026-09-09T16:31:00Z"
+head_sha: 111be2bb6aaba290d753644c826f52b07807a426
+talk_track: "VAT residual verified at TS API under waiver — not Merlin migrated"

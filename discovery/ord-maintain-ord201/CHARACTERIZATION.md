@@ -1,0 +1,13 @@
+# CHARACTERIZATION — ord-maintain-ord201
+
+```text
+CHARACTERIZATION: deferred-waived
+Reason: IBM i runtime not available in this environment; documentation from source only.
+No RECORD/REPLAY. No goldens. No Conversion unlock claimed by this conveyor.
+```
+
+Recorded by the Pack B document-slices conveyor on 2026-09-08 (run 10). This is a **stance note**, not a `WAIVED_*` artefact:
+no Test gen pack exists for this slice, so the `waive-characterization` skill was not executed and `testexec/ord-maintain-ord201/` was not created.
+`legacy_green` and `parity_green` stay `false` in `inventory/atu-merlin/APP_MANIFEST.yaml`. ORD slices are document-only per the bind record; the ORD Architecture pack is a **new** pack to be drafted after the five ORD slices are carded (never widen `atu-merlin-ts-cus-v1`).
+
+Observable outcomes a future RECORD would need to capture (from the cards, for later stations only): the row count and order of the first page against a populated estate (7 two-line rows, `datord desc, orid desc` — `c01`), the effect of `PAGEDOWN` at the 14-row batch boundary and at end-of-data ("More..." → "Bottom"), the truncated-form page size under `F11` (`SFLDROP`), and the list when any order in the estate has an invalid `ORDATE` (inferred: empty — `c01`); the exact `SFLMSG` text for `7` on a closed and `8` on a delivered order (`Invalid Option`, `c06`/`c07`), for `4` on a closed order with deliveries (36 and 37 both raised), and the screen after a `3` is typed (stays typed, nothing happens, re-read on every Enter — `c07`); whether options typed before a `PAGEDOWN` execute on the next Enter (`c07`); the `ORDER` row and every `DETORD.ODQTYLIV` after `7` on an undelivered order and after `8` on an order with one partial line, plus the `ARTICLE.ARCUSQTY` deltas from `ORD700` — and whether an unchanged zero-quantity line invokes `ORD700` at all under `TRGUPDCND(*CHANGE)` (`c06`); the screen after `4` (order number and year blank, dates/value/customer still shown) and the outcome of `2`, `5`, `6`, `7`, `8` typed on that blanked row (`c04`, `c05`); the residue when an `ORD101` session holds the header lock during `4` (lines deleted, header left — `c04`); the `Value` column after an `ORD101` edit and return (stale until `F5` — `c03`, `c08`); the list after `F6` with a cancelled create (rebuilt from row 1 — `c02`); and the list shown by a second `call ORD201` after an abnormal end in the same job (inferred `-502` → empty — `c11`). Two facts must be settled before any RECORD: trigger attachment (`ord-trigger-ord700`) and the compile-time activation group / `CLOSQLCSR` (`c09`, `c11`).

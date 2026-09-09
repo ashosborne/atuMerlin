@@ -1,0 +1,376 @@
+{
+  "run_id": "2026-09-08-r1",
+  "pack": "atu-merlin-ts-cus-v1@1",
+  "mode": "COMPARE (TypeScript HTTP boundary only)",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "Discovery cards + modern/openapi/customer.yaml — not IBM i goldens",
+  "base_url": "http://127.0.0.1:3100",
+  "ran_at": "2026-09-08T18:31:04.828Z",
+  "totals": {
+    "pass": 31,
+    "fail": 0,
+    "observed": 0
+  },
+  "cases": [
+    {
+      "id": "P00",
+      "card": "boot",
+      "description": "GET /health -> 200 {status: ok} (not in OpenAPI; see gap G-1)",
+      "verdict": "PASS",
+      "observed": {
+        "status": "ok"
+      }
+    },
+    {
+      "id": "P01",
+      "card": "cus-interactive-c01",
+      "description": "GET /api/customers -> 200, CustomerListPage shape, SFL01 columns only, byte order (name,id)",
+      "verdict": "PASS",
+      "observed": {
+        "rows": 5,
+        "more": false,
+        "first": "Arcad Software",
+        "last": "Elektro Meyer"
+      }
+    },
+    {
+      "id": "P02",
+      "card": "cus-interactive-c01",
+      "description": "positionTo is a name prefix; longer than 10 chars is cut to 10 (POSTO 10A)",
+      "verdict": "PASS",
+      "observed": {
+        "casa": "Casa Rossi",
+        "cut10": "Delta Logistics"
+      },
+      "note": "OpenAPI says maxLength 10; implementation cuts rather than rejects (gap G-2, contract wording)"
+    },
+    {
+      "id": "P03",
+      "card": "cus-interactive-c01",
+      "description": "cursorId non-integer -> 400 BAD_REQUEST",
+      "verdict": "PASS",
+      "observed": {
+        "code": "BAD_REQUEST",
+        "message": "cursorId must be an integer"
+      }
+    },
+    {
+      "id": "P04",
+      "card": "cus-interactive-c05",
+      "description": "GET /api/countries -> 200, rows {coid,countr,coiso} ordered by code",
+      "verdict": "PASS",
+      "observed": {
+        "count": 8,
+        "codes": [
+          "BE",
+          "DE",
+          "ES",
+          "FR",
+          "GB",
+          "IT",
+          "NL",
+          "US"
+        ]
+      }
+    },
+    {
+      "id": "P05",
+      "card": "cus-interactive-c02/c08",
+      "description": "POST valid -> 201 CustomerDetail; cuid >= 1551; CUCREA today; CUMODID = X-User-Id cut to 10; CUDEL blank; CUCREDIT/CULASTORD 0",
+      "verdict": "PASS",
+      "observed": {
+        "cuid": 1551,
+        "cucrea": "2026-09-08",
+        "cumodid": "VERIFIER-X",
+        "cumod": "2026-09-08T18:31:04.707313"
+      }
+    },
+    {
+      "id": "P06",
+      "card": "cus-interactive-c02",
+      "description": "second POST draws the next CUSSEQ value (no reuse)",
+      "verdict": "PASS",
+      "observed": {
+        "cuid": 1552,
+        "cumodid": "WEB"
+      }
+    },
+    {
+      "id": "P07",
+      "card": "cus-interactive-c04",
+      "description": "POST with blank name, unknown country, letters in phone -> 400 VALIDATION with all three codes in one pass",
+      "verdict": "PASS",
+      "observed": [
+        "ERR0002",
+        "ERR2002",
+        "NAME_MANDATORY"
+      ]
+    },
+    {
+      "id": "P08",
+      "card": "cus-interactive-c04",
+      "description": "blank phone -> ERR2001 only for phone (digits + duplicate checks skipped)",
+      "verdict": "PASS",
+      "observed": [
+        "ERR2001"
+      ]
+    },
+    {
+      "id": "P09",
+      "card": "cus-interactive-c04",
+      "description": "create duplicate of fixture 1001 (UPPER(name)+phone, dup > 0) -> ERR2000; different phone passes the duplicate rule",
+      "verdict": "PASS",
+      "observed": {
+        "dupCodes": [
+          "ERR2000"
+        ],
+        "otherPhone": 201
+      }
+    },
+    {
+      "id": "P10",
+      "card": "CR-5",
+      "description": "over-long name -> 400 FIELD_TOO_LONG; non-numeric credit limit -> 400 FIELD_INVALID (modern boundary, no 5250 field lengths)",
+      "verdict": "PASS",
+      "observed": {
+        "long": [
+          "FIELD_TOO_LONG"
+        ],
+        "credit": [
+          "FIELD_INVALID"
+        ]
+      }
+    },
+    {
+      "id": "P11",
+      "card": "cus-interactive-c03/c08",
+      "description": "PUT changes typed fields; CUMOD refreshed; CUMODID, CUCREA, CUDEL, CUCREDIT, CULASTORD unchanged even with another X-User-Id (c08 as-is)",
+      "verdict": "PASS",
+      "observed": {
+        "cumodid": "VERIFIER-X",
+        "cumodBefore": "2026-09-08T18:31:04.707313",
+        "cumodAfter": "2026-09-08T18:31:04.746807"
+      }
+    },
+    {
+      "id": "P12",
+      "card": "cus-interactive-c04",
+      "description": "UPD duplicate rule dup > 1: changing a customer to collide with exactly one other passes (as-is, needs-SME); the next CRT of that pair is then refused",
+      "verdict": "PASS",
+      "observed": {
+        "collideWithOne": 200,
+        "collideWithTwo": 400,
+        "crt": 400
+      },
+      "note": "legacy quirk preserved, not fixed"
+    },
+    {
+      "id": "P13",
+      "card": "CR-4",
+      "description": "PUT unknown id -> 404 ERR0103 'Code 99999 Unknown.'",
+      "verdict": "PASS",
+      "observed": {
+        "code": "ERR0103",
+        "message": "Code 99999 Unknown.",
+        "cuid": 99999
+      }
+    },
+    {
+      "id": "P14",
+      "card": "cus-interactive-c03",
+      "description": "PUT runs the same validation as create -> 400 VALIDATION",
+      "verdict": "PASS",
+      "observed": [
+        "ERR0002",
+        "ERR2002",
+        "NAME_MANDATORY"
+      ]
+    },
+    {
+      "id": "P15",
+      "card": "cus-interactive-c09/c10/c07",
+      "description": "GET 1001 -> 200; countryName France; culastord 20240315; lastOrderDate 2024-03-15",
+      "verdict": "PASS",
+      "observed": {
+        "countryName": "France",
+        "culastord": 20240315,
+        "lastOrderDate": "2024-03-15"
+      }
+    },
+    {
+      "id": "P16",
+      "card": "cus-interactive-c07",
+      "description": "GET 1002 -> culastord 0 presents lastOrderDate null (1940-01-01 blank sentinel)",
+      "verdict": "PASS",
+      "observed": {
+        "culastord": 0,
+        "lastOrderDate": null
+      }
+    },
+    {
+      "id": "P17",
+      "card": "CR-6",
+      "description": "invalid stored CULASTORD (20231301) -> lastOrderDate null, raw kept (legacy raised an RPG exception)",
+      "verdict": "PASS",
+      "observed": {
+        "culastord": 20231301,
+        "lastOrderDate": null
+      }
+    },
+    {
+      "id": "P18",
+      "card": "cus-interactive-c10",
+      "description": "unknown country code on a stored row -> countryName blank, no error",
+      "verdict": "PASS",
+      "observed": {
+        "cucoun": "ZZ",
+        "countryName": ""
+      }
+    },
+    {
+      "id": "P19",
+      "card": "cus-interactive-c11",
+      "description": "GET soft-deleted 1005 -> 200 with cudel X (existence only, no CUDEL test)",
+      "verdict": "PASS",
+      "observed": {
+        "cuid": 1005,
+        "cudel": "X"
+      }
+    },
+    {
+      "id": "P20",
+      "card": "cus-interactive-c09",
+      "description": "GET 77 -> 404 'Code 77 Unknown.'; GET 0 -> 'Code  Unknown.' (zero-suppressed)",
+      "verdict": "PASS",
+      "observed": {
+        "m77": "Code 77 Unknown.",
+        "m0": "Code  Unknown."
+      }
+    },
+    {
+      "id": "P21",
+      "card": "OpenAPI /api/customers/{cuid}",
+      "description": "path segments outside 5P 0 (six digits, letters) -> 404 ERR0103 (observed wording recorded)",
+      "verdict": "PASS",
+      "observed": {
+        "six": {
+          "code": "ERR0103",
+          "message": "Code 100000 Unknown.",
+          "cuid": 100000
+        },
+        "letters": {
+          "code": "ERR0103",
+          "message": "Code  Unknown.",
+          "cuid": 0
+        }
+      },
+      "note": "contract declares min 0 / max 99999; the server answers 404 not 400 (gap G-3)"
+    },
+    {
+      "id": "P22",
+      "card": "cus-interactive-c11",
+      "description": "DELETE /api/customers/1001 -> 404 (no route); row still readable; CUDEL never written",
+      "verdict": "PASS",
+      "observed": {
+        "deleteStatus": 404,
+        "stillReadable": 200,
+        "deletedRows": 1
+      }
+    },
+    {
+      "id": "P23",
+      "card": "cus-interactive-c06",
+      "description": "no orders route in this pack (ORD stay_legacy, interop none)",
+      "verdict": "PASS",
+      "observed": {
+        "perCustomer": 404,
+        "orders": 404
+      }
+    },
+    {
+      "id": "P24",
+      "card": "cus-modules-c06/c11",
+      "description": "GET /api/customers/search blank -> every customer incl. soft-deleted; SltCustomerRow keys; ordered by name",
+      "verdict": "PASS",
+      "observed": {
+        "rows": 8,
+        "table": 8,
+        "more": false,
+        "nextOffset": null
+      }
+    },
+    {
+      "id": "P25",
+      "card": "cus-modules-c06",
+      "description": "contains-match, case-insensitive: name=rossi -> Casa Rossi; city=roma -> 1 row; name+city both applied",
+      "verdict": "PASS",
+      "observed": {
+        "name": 1,
+        "city": 1,
+        "both": 0
+      }
+    },
+    {
+      "id": "P26",
+      "card": "cus-modules-c09 / CR-7",
+      "description": "quote in criteria is literal text (bound parameters, no SQL failure); % stays a LIKE wildcard (as-is)",
+      "verdict": "PASS",
+      "observed": {
+        "quoteRows": 0,
+        "wildcardRows": 3
+      }
+    },
+    {
+      "id": "P27",
+      "card": "cus-modules-c06",
+      "description": "offset must be a non-negative integer -> 400 BAD_REQUEST otherwise",
+      "verdict": "PASS",
+      "observed": {
+        "negative": 400,
+        "nonNumeric": 400
+      }
+    },
+    {
+      "id": "P28",
+      "card": "cus-modules-c06",
+      "description": "14 per page with look-ahead: seed 20 rows -> page 1 has 14 + more, page 2 has the rest + Bottom",
+      "verdict": "PASS",
+      "observed": {
+        "selector": [
+          14,
+          6
+        ],
+        "listNext": {
+          "cursorName": "Paging 14",
+          "cursorId": 1114
+        },
+        "listPage2First": "Paging 14"
+      }
+    },
+    {
+      "id": "P29",
+      "card": "DSPF->web",
+      "description": "web pages answer 200 text/html: /customers, /customers/new, /customers/1001, /customers/inquiry, /customers/select",
+      "verdict": "PASS",
+      "observed": {
+        "/customers": 200,
+        "/customers/new": 200,
+        "/customers/1001": 200,
+        "/customers/1001/edit": 200,
+        "/customers/inquiry": 200,
+        "/customers/select": 200
+      }
+    },
+    {
+      "id": "P30",
+      "card": "cus-interactive-c06",
+      "description": "web list shows option 5 (orders) as a non-link muted marker citing c06; no link into ORD",
+      "verdict": "PASS",
+      "observed": {
+        "rows": 14,
+        "disabledOption5": 14,
+        "ordLinks": 0
+      }
+    }
+  ]
+}

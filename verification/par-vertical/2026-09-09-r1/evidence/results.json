@@ -1,0 +1,657 @@
+{
+  "pack": "atu-merlin-ts-par-v1@1",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "discovery/par-maintain/features c01..c13 (PAR300 chainPARAMETER replayed as a buffer machine incl. its cache to characterise CR-P1; PAR200 s01lod keyed read replayed in JS over byte order; FMT03 / FMT02 / option 4 modelled from the cards; PAR201 *TCAT pattern) + modern/README.md PAR section; NOT IBM i goldens",
+  "ran_at": "2026-09-09T19:35:30.261Z",
+  "summary": {
+    "pass": 22,
+    "fail": 0,
+    "total": 22
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "card": "c09",
+      "name": "five getters == chainPARAMETER oracle on 62 rows x 5 columns and 300 random keys x 5 (1810 calls, 1500 misses -> blanks / zeros, nothing thrown); the blank/blank row's values are never returned",
+      "pass": true,
+      "detail": {
+        "rows": 62,
+        "checks": 1810,
+        "misses": 1500,
+        "bad": []
+      }
+    },
+    {
+      "id": "P02",
+      "card": "c09",
+      "name": "10A by-value contract == fixed-length-alpha oracle on 2 000 (code, sub) pairs (right-truncation to 10, trailing blanks ignored, exact case: 'path' and 'PATH' are two different rows, 'Path' misses)",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "caseMiss": true,
+        "cut": true
+      }
+    },
+    {
+      "id": "P03",
+      "card": "c09",
+      "name": "blank/blank key: 5 key spellings x 5 getters issue 0 SQL statements and return blanks / zeros although a blank/blank row exists (unreachable, kept); a key with one blank half reads (2 calls -> 2 reads)",
+      "pass": true,
+      "detail": {
+        "blankReads": 0,
+        "halfReads": 2,
+        "half1": "HALF",
+        "half2": "OTHERHALF"
+      }
+    },
+    {
+      "id": "P04",
+      "card": "c09 CR-P1",
+      "name": "no last-key cache observed as the delta it is documented to be: 5 getPath calls = 5 SQL reads (legacy oracle: 1 read + 4 buffer hits); a PATH change / delete is seen by the module's next call while the legacy machine holds the stale buffer until a different key is requested; a miss is not cached in either (row re-appearing seen at once by both)",
+      "pass": true,
+      "detail": {
+        "fiveReads": 5,
+        "legacyReadsForFive": 1,
+        "modernAfterChange": "/new/",
+        "legacyAfterChange": "/old/",
+        "legacyAfterSwitch": "/new/",
+        "modernAfterDelete": "",
+        "legacyAfterDelete": "/new/",
+        "legacyAfterDeleteSwitch": "",
+        "modernBack": "/back/",
+        "legacyBack": "/back/"
+      }
+    },
+    {
+      "id": "P05",
+      "card": "c09 G-P4",
+      "name": "observation: legacy machine from a cleared buffer -> blank/blank does not read (matches the card and the module); after a hit on PATH the legacy's next blank/blank request chains and returns the blank/blank row's PARM1 ('HIDDEN'), the module returns '' with no read. Unreachable in the estate (no blank-key caller, c11); recorded, not fixed",
+      "pass": true,
+      "detail": {
+        "legacyFromStart": "",
+        "legacyAfterHit": "HIDDEN",
+        "legacyReads": 2,
+        "modernAfterHit": "",
+        "modernReads": 1
+      }
+    },
+    {
+      "id": "P06",
+      "card": "c08",
+      "name": "missing row and blank PARM2 are indistinguishable: getPath and GET /api/parameters/path answer '' (200) in both cases with no error; a PARM2 of three blanks written by another tool is returned as stored; wrklnkPattern('') is '*' (WRKLNK on the job's current directory)",
+      "pass": true,
+      "detail": {
+        "missing": [
+          "",
+          {
+            "path": ""
+          }
+        ],
+        "blank": [
+          "",
+          {
+            "path": ""
+          }
+        ],
+        "blanks": "   ",
+        "pattern": [
+          "*",
+          "*"
+        ]
+      }
+    },
+    {
+      "id": "P07",
+      "card": "c07",
+      "name": "wrklnkPattern == `&PATH *TCAT '*'` on a *CHAR 100 for 3 000 values: '<dir>/*' lists the directory, '<dir>*' the parent's entries starting with the last component (trailing-slash contract, known_risk — not normalised), a 100-character PATH loses the '*', a 99-character one keeps it",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "outcomes": {
+          "withSlash": "/home/sample/out/*",
+          "withoutSlash": "/home/sample/out*",
+          "full100": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "ninetyNine": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx*"
+        }
+      }
+    },
+    {
+      "id": "P08",
+      "card": "c11",
+      "name": "getPath == getParm2('PATH',' ') == GET /api/parameters/path on 7 stored values incl. no trailing slash, a leading blank and a 100-character value — verbatim, nothing normalised; PARM1/3/4/5 of the PATH row are carried (X, YZ, 1, 2) and getParm1/3/4/5 have no caller in modern/src outside shared/parm (31 files scanned); getPath is called only by the PAR route; features/order/** reads no PATH (ORD500 PDF step needs-SME under the ORD pack — interop documented as config reuse, not wired)",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "carried": [
+          "X",
+          "YZ",
+          1,
+          2
+        ],
+        "unusedGetterCallers": [],
+        "getPathCallers": [
+          "src/features/par/par.routes.ts"
+        ],
+        "orderReadsPath": [],
+        "filesScanned": 31
+      }
+    },
+    {
+      "id": "P09",
+      "card": "c10",
+      "name": "instance keys are exactly getParm1..getParm5 (the five EXPORT(*ALL) symbols, corrected run 16) + getPath (the named GetParm2('PATH':' ') call); nothing named open* / close* / chain* anywhere (ClosePARAMETER had no export behind it); module exports are createFParameter, normaliseParameterKey, wrklnkPattern, PATH_KEY, CLEARED_PARAMETER and six width constants; PATH_KEY = { PATH, '' }",
+      "pass": true,
+      "detail": {
+        "instance": [
+          "getParm1",
+          "getParm2",
+          "getParm3",
+          "getParm4",
+          "getParm5",
+          "getPath"
+        ],
+        "moduleExports": [
+          "CLEARED_PARAMETER",
+          "PACODE_LENGTH",
+          "PARM1_LENGTH",
+          "PARM2_LENGTH",
+          "PARM3_LENGTH",
+          "PARM4_DIGITS",
+          "PARM5_DIGITS",
+          "PATH_KEY",
+          "createFParameter",
+          "normaliseParameterKey",
+          "wrklnkPattern"
+        ],
+        "closeLike": []
+      }
+    },
+    {
+      "id": "P10",
+      "card": "c12 schema",
+      "name": "parameter: PACODE/PASUBCODE/PARM1 varchar(10), PARM2 varchar(100), PARM3 varchar(2), PARM4/PARM5 smallint, all NOT NULL; PK (pacode, pasubcode) is the only index; two CHECKs carry the zoned widths (±9, ±999 — sign nibble allowed); no trigger, no view; over-wide values rejected 22001, out-of-width numerics 23514, duplicate key 23505, the widest legal row accepted; comments cite c11 (one live row, disposition open) and c07 (trailing slash)",
+      "pass": true,
+      "detail": {
+        "shape": [
+          [
+            "pacode",
+            "character varying",
+            10,
+            "NO"
+          ],
+          [
+            "pasubcode",
+            "character varying",
+            10,
+            "NO"
+          ],
+          [
+            "parm1",
+            "character varying",
+            10,
+            "NO"
+          ],
+          [
+            "parm2",
+            "character varying",
+            100,
+            "NO"
+          ],
+          [
+            "parm3",
+            "character varying",
+            2,
+            "NO"
+          ],
+          [
+            "parm4",
+            "smallint",
+            null,
+            "NO"
+          ],
+          [
+            "parm5",
+            "smallint",
+            null,
+            "NO"
+          ]
+        ],
+        "idx": [
+          "parameter_pkey"
+        ],
+        "cons": [
+          {
+            "conname": "parameter_parm4_check",
+            "contype": "c",
+            "def": "CHECK (((parm4 >= '-9'::integer) AND (parm4 <= 9)))"
+          },
+          {
+            "conname": "parameter_parm5_check",
+            "contype": "c",
+            "def": "CHECK (((parm5 >= '-999'::integer) AND (parm5 <= 999)))"
+          },
+          {
+            "conname": "parameter_pkey",
+            "contype": "p",
+            "def": "PRIMARY KEY (pacode, pasubcode)"
+          }
+        ],
+        "trg": [],
+        "views": [],
+        "bounds": {
+          "code11": "22001",
+          "sub11": "22001",
+          "parm1_11": "22001",
+          "parm2_101": "22001",
+          "parm3_3": "22001",
+          "parm4_10": "23514",
+          "parm4_m10": "23514",
+          "parm5_1000": "23514",
+          "parm5_m1000": "23514",
+          "dup": "23505"
+        },
+        "ok": "accepted",
+        "comments": {
+          "tbl": "PARAMETER.PF — two-key key/value store. Written only by PAR200 (features/par); read by shared FPARAMETER (GetPARM1..5). The one live row is (PATH, blank) read by GetParm2 (par-maintain-c11); PATH-as-configuration is an open room decision.",
+          "parm2": "PARM2 100A, case kept (CHECK(LC)). For the PATH row: an IFS directory, expected to end with '/' by two of four legacy consumers (par-maintain-c07, known_risk)."
+        }
+      }
+    },
+    {
+      "id": "P11",
+      "card": "c01",
+      "name": "GET /api/parameters == s01lod oracle (byte-order keyed read, 14 per load, one-row look-ahead) on 21 pages over 10 table sizes; exactly 14 / 28 rows show Bottom on the last full page (no empty trailing page); blank/blank row first; rows carry parm2s (32) and never parm2",
+      "pass": true,
+      "detail": {
+        "shapes": [
+          "0: [0B]",
+          "1: [1B]",
+          "13: [13B]",
+          "14: [14B]",
+          "15: [14M 1B]",
+          "27: [14M 13B]",
+          "28: [14M 14B]",
+          "29: [14M 14M 1B]",
+          "42: [14M 14M 14B]",
+          "57: [14M 14M 14M 14M 1B]"
+        ],
+        "bad": []
+      }
+    },
+    {
+      "id": "P12",
+      "card": "c01",
+      "name": "empty file -> { rows: [], more: false, nextOffset: null } with no message; an offset beyond the end -> empty page, nothing thrown; -1 / x / 1.5 / 1e400 / NaN -> 400 BAD_REQUEST; two consecutive GETs are identical (every GET is an F5 — no subfile state). Observation: '?offset=' and '?offset=1e1' are accepted as 0 and 10 (Number() coercion) — harmless",
+      "pass": true,
+      "detail": {
+        "empty": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        },
+        "beyond": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        },
+        "badOffsets": {
+          "-1": 400,
+          "x": 400,
+          "1.5": 400,
+          "1e400": 400,
+          "NaN": 400
+        },
+        "zeroish": {
+          "": 200,
+          "1e1": 0
+        }
+      }
+    },
+    {
+      "id": "P13",
+      "card": "c01 CR-P3",
+      "name": "module order == byte order on 14 codes (blank, digit-led, upper, lower, 1-char, PATH / path); blank first and the relative order of upper-case-only keys agree with EBCDIC; digits-before-upper and upper-before-lower hold in byte order only (EBCDIC CP037: lower < upper < digits). Observation G-P1: the README CR-P3 rationale claims both hold \"in both\"",
+      "pass": true,
+      "detail": {
+        "byModule": [
+          "",
+          "1A",
+          "9Z",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "PATH",
+          "ZZ",
+          "a",
+          "aa",
+          "az",
+          "path",
+          "zz"
+        ],
+        "byteOrder": [
+          "",
+          "1A",
+          "9Z",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "PATH",
+          "ZZ",
+          "a",
+          "aa",
+          "az",
+          "path",
+          "zz"
+        ],
+        "ebcdicOrder": [
+          "",
+          "a",
+          "aa",
+          "az",
+          "path",
+          "zz",
+          "A",
+          "AA",
+          "AZ",
+          "BE",
+          "PATH",
+          "ZZ",
+          "1A",
+          "9Z"
+        ],
+        "agree": {
+          "blankFirst_byte": true,
+          "blankFirst_ebcdic": true,
+          "upperOnly": true,
+          "digitsBeforeUpper_byte": true,
+          "digitsBeforeUpper_ebcdic": false,
+          "upperBeforeLower_byte": true,
+          "upperBeforeLower_ebcdic": false,
+          "shortKeyFirst_byte": true,
+          "shortKeyFirst_ebcdic": true
+        }
+      }
+    },
+    {
+      "id": "P14",
+      "card": "c02",
+      "name": "POST /api/parameters == FMT03 oracle on 400 bodies: 269 creates (201, answer == stored row: keys / PARM1 / PARM3 upper-cased and right-trimmed like the display, PARM2 as typed (CHECK(LC)), absent field -> blank / zero) and 131 duplicates (400 VALIDATION / DUPLICATE_KEY on pacode with the DDS text, existing row untouched); blank/blank row creatable; no success message",
+      "pass": true,
+      "detail": {
+        "creates": 269,
+        "duplicates": 131,
+        "count": 269,
+        "bad": []
+      }
+    },
+    {
+      "id": "P15",
+      "card": "c02 CR-P6",
+      "name": "over-long / non-numeric fields -> 400 VALIDATION with one FIELD_TOO_LONG / FIELD_INVALID per offending field and nothing written; wrong JSON types -> 400; negative zoned values accepted (-9 / -999, sign nibble); ' 7 ' and '007' accepted as 7; null == absent == blank / zero (`clear fmt03`). Observations (G-P2, 5250-unreachable corners): 'A' + ten blanks is refused as too long although it would store as 'A'; ten 'ß' pass the 10-char check, fold to 20 characters and fail in the column (500 INTERNAL); a JSON array body is read as an empty form and creates the blank/blank row (201)",
+      "pass": true,
+      "detail": {
+        "tooLong": 400,
+        "codes": [
+          "pacode:FIELD_TOO_LONG",
+          "parm1:FIELD_TOO_LONG",
+          "parm2:FIELD_TOO_LONG",
+          "parm3:FIELD_TOO_LONG",
+          "parm4:FIELD_INVALID",
+          "parm5:FIELD_INVALID",
+          "pasubcode:FIELD_TOO_LONG"
+        ],
+        "wrongTypes": {
+          "numKey": 400,
+          "boolParm4": 400,
+          "floatParm4": 400,
+          "strFloat": 400
+        },
+        "negative": {
+          "pacode": "NEG",
+          "pasubcode": "",
+          "parm1": "",
+          "parm2": "",
+          "parm3": "",
+          "parm4": -9,
+          "parm5": -999
+        },
+        "spaced": {
+          "pacode": "SP",
+          "pasubcode": "",
+          "parm1": "",
+          "parm2": "",
+          "parm3": "",
+          "parm4": 7,
+          "parm5": 7
+        },
+        "nullField": {
+          "pacode": "NUL",
+          "pasubcode": "",
+          "parm1": "",
+          "parm2": "",
+          "parm3": "",
+          "parm4": 0,
+          "parm5": 0
+        },
+        "afterErrors": [
+          "NEG",
+          "NUL",
+          "SP"
+        ],
+        "trailingBlanks": 400,
+        "eszett": 500,
+        "eszettBody": {
+          "code": "INTERNAL",
+          "message": "internal error"
+        },
+        "arrayBody": 201
+      }
+    },
+    {
+      "id": "P16",
+      "card": "c04",
+      "name": "GET + PUT == FMT02 oracle on 200 random edits over 31 rows: entry returns the full row (PARM2 at 100), update is unconditional and partial bodies blank / zero the absent fields, the key is output-only (a body key is ignored, no OTHER row appears), URL key folded to upper case; unchanged values still 200; vanished row -> 404 PARAMETER_NOT_FOUND with the key on PUT and GET (CR-P5)",
+      "pass": true,
+      "detail": {
+        "edits": 200,
+        "bad": [],
+        "folded": {
+          "pacode": "EDIT",
+          "pasubcode": "ME",
+          "parm1": "NEW",
+          "parm2": "",
+          "parm3": "",
+          "parm4": 0,
+          "parm5": 0
+        },
+        "gonePut": {
+          "code": "PARAMETER_NOT_FOUND",
+          "message": "Parameter (GONE, 1) not found",
+          "pacode": "GONE",
+          "pasubcode": "1"
+        },
+        "full100": 100,
+        "slashKey": {
+          "encoded": 200,
+          "raw": 404
+        }
+      }
+    },
+    {
+      "id": "P17",
+      "card": "c05",
+      "name": "DELETE answers 204 with an empty body for an existing row, for the same key again, and for a key that never existed (not-found silent, no confirmation); PATH is deletable with no in-use check — getPath and GET /api/parameters/path then answer '' (c08); a blank/blank key deletes the blank/blank row only; the other 19 rows are byte-identical afterwards",
+      "pass": true,
+      "detail": {
+        "before": 22,
+        "after": 19,
+        "statuses": [
+          204,
+          204,
+          204,
+          204,
+          204
+        ],
+        "pathBefore": "/out/",
+        "pathAfter": [
+          "",
+          {
+            "path": ""
+          }
+        ],
+        "untouched": true
+      }
+    },
+    {
+      "id": "P18",
+      "card": "c03 / c06 CR-P2",
+      "name": "stateless HTTP observed as the documented delta: after a create at Bottom the next two pages hold 15 distinct keys incl. the new one (no duplicate row, c03); an edited row shows its new values and a deleted row is gone with no blank-key ghost (c04 / c05); the PAR surface is exactly six routes (GET list, GET path, GET / PUT / DELETE key, POST) — PATCH, POST on a key, PUT / DELETE on the collection, a refresh route, a /parameters web page and any deeper path are 404: F3 / F5 / F6 / F12 / Page Down exist only as GET and ?offset (c06)",
+      "pass": true,
+      "detail": {
+        "atBottomLen": 14,
+        "all": [
+          "K00",
+          "K01",
+          "K02",
+          "K03",
+          "K04",
+          "K05",
+          "K06",
+          "K07",
+          "K08",
+          "K09",
+          "K10",
+          "K11",
+          "K12",
+          "K13",
+          "K99"
+        ],
+        "editedShown": true,
+        "deletedGone": true,
+        "surface": {
+          "GET /api/parameters": 200,
+          "GET /api/parameters/path": 200,
+          "GET /api/parameters/K02/%20": 200,
+          "PUT /api/parameters/K02/%20": 200,
+          "DELETE /api/parameters/K02/%20": 204,
+          "POST /api/parameters": 400,
+          "PATCH /api/parameters/K03/%20": 404,
+          "POST /api/parameters/K03/%20": 404,
+          "PUT /api/parameters": 404,
+          "DELETE /api/parameters": 404,
+          "POST /api/parameters/refresh": 404,
+          "GET /parameters": 404,
+          "GET /api/parameters/K03/%20/edit": 404
+        },
+        "tree": [
+          "├── api/parameters (GET, HEAD, POST)",
+          "│   ├── /path (GET, HEAD)",
+          "│   └── /:pacode/:pasubcode (GET, HEAD, PUT, DELETE)"
+        ]
+      }
+    },
+    {
+      "id": "P19",
+      "card": "c02 / c09 CR-P4",
+      "name": "a key typed 'path' through the API is stored 'PATH' and found by getPath and GET /api/parameters/path (the display folding reproduced at the writer, CR-P4); a lower-case 'path' row written by another tool is listed (c01) but missed by the case-sensitive getters (c09, as on the box). Observation G-P3: that row is also unaddressable by the keyed routes — GET / PUT answer 404 for the folded key and DELETE is a silent 204 that removes nothing; PAR200 option 2 / 4 took the key from the subfile row and could edit or delete it",
+      "pass": true,
+      "detail": {
+        "viaGetter": "/typed-lower/",
+        "viaHttp": {
+          "path": "/typed-lower/"
+        },
+        "getterMiss": "",
+        "listed": [
+          "path"
+        ],
+        "keyedGet": 404,
+        "keyedPut": 404,
+        "keyedDel": 204,
+        "stillThere": true
+      }
+    },
+    {
+      "id": "P20",
+      "card": "c02 CR-P5",
+      "name": "24 concurrent creates of one key: exactly one 201, the other 23 answer the same 400 DUPLICATE_KEY (a lost chain/write race answers as a duplicate — legacy raised unmonitored 01021); exactly one RACE row, and its values are the winner's",
+      "pass": true,
+      "detail": {
+        "created": 1,
+        "dup": 23,
+        "rows": 1,
+        "other": []
+      }
+    },
+    {
+      "id": "P21",
+      "card": "c02 / c05 / c11",
+      "name": "the blank/blank row is addressed as /api/parameters/%20/%20 for GET (200), PUT (200, PARM1 folded to 'B') and DELETE (204) while getParm1('', '') stays '' (never reads); GET /api/parameters/path answers '' when only (PATH, X) exists and /api/parameters/path/x returns that row; a one-segment /api/parameters/PATH is not a route (404)",
+      "pass": true,
+      "detail": {
+        "blankGet": {
+          "pacode": "",
+          "pasubcode": "",
+          "parm1": "",
+          "parm2": "",
+          "parm3": "",
+          "parm4": 0,
+          "parm5": 0
+        },
+        "blankPut": {
+          "pacode": "",
+          "pasubcode": "",
+          "parm1": "B",
+          "parm2": "",
+          "parm3": "",
+          "parm4": 0,
+          "parm5": 0
+        },
+        "getterBlank": "",
+        "readerNoPath": {
+          "path": ""
+        },
+        "keyedPathX": {
+          "pacode": "PATH",
+          "pasubcode": "X",
+          "parm1": "",
+          "parm2": "/sub/",
+          "parm3": "",
+          "parm4": 0,
+          "parm5": 0
+        },
+        "oneSegment": 404,
+        "left": [
+          "PATH/X"
+        ]
+      }
+    },
+    {
+      "id": "P22",
+      "card": "scope",
+      "name": "no PAR OpenAPI (openapi/ = customer.yaml, order.yaml), no par.web.ts; features/par = index.ts, par.repository.ts, par.routes.ts, par.service.ts; shared/parm = index.ts; the PAR section of db/schema.sql starts at line 335, creates one table and alters / drops nothing (the LOG section follows at line 374)",
+      "pass": true,
+      "detail": {
+        "openapi": [
+          "customer.yaml",
+          "order.yaml"
+        ],
+        "parFiles": [
+          "index.ts",
+          "par.repository.ts",
+          "par.routes.ts",
+          "par.service.ts"
+        ],
+        "parmFiles": [
+          "index.ts"
+        ],
+        "webPage": false,
+        "parStart": 335,
+        "createCount": 1,
+        "altersOthers": false,
+        "logSectionStart": 374
+      }
+    }
+  ]
+}

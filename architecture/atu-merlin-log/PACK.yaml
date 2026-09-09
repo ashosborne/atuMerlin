@@ -1,0 +1,149 @@
+pack_id: atu-merlin-ts-log-v1
+version: 1
+status: BOUND
+migration_id: atu-merlin
+slice_ids:
+  - log-programs
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: shared/samlog or shared/logging
+  preferred_paths:
+    - modern/src/shared/samlog/**
+    - modern/src/shared/logging/**
+
+boundaries:
+  in_scope:
+    - Log programs slice only (log-programs)
+    - Shared logging helpers / samlog alignment as documented
+  stay_legacy:
+    - ATU_SRC
+    - CUS (stays under pack atu-merlin-ts-cus-v1; do not re-convert CUS)
+    - ORD (stays under pack atu-merlin-ts-ord-v1; do not re-convert ORD)
+    - unbound residuals and other non-LOG domains
+  anti_corruption: "Prefer aligning with existing ORD samlog table without widening atu-merlin-ts-ord-v1; extend shared logging or document residual vs reuse; do not rewrite modern/src/features/order/**"
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths: []
+  sourced_vs_inferred: inferred
+  notes: "Prefer shared logging module; HTTP only if Convert needs it. Not preserve-wire against IBM i 5250"
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: additive-only
+  migration_tool: null
+  notes: "ORD already has samlog table — prefer align/reuse via shared logging without widening atu-merlin-ts-ord-v1; document residual vs reuse; do not reshape ORD schema non-additively; modern/db/** and modern/test/** are additive and pack-scoped only — tests only for this pack's surface"
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM"
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+  notes: "Prefer shared logging alignment with existing ORD samlog; do not widen ORD pack; do not rewrite order feature"
+
+mapping_rules:
+  - from: RPGLE log programs
+    to: TS shared logging module
+  - from: PF / samlog
+    to: "reuse or align with existing ORD samlog table; additive shared helpers; document residual vs reuse"
+
+non_goals:
+  - "No widening pack atu-merlin-ts-ord-v1 or atu-merlin-ts-cus-v1"
+  - "No rewrite of modern/src/features/order/** to re-own samlog"
+  - "No CUS or ORD conversion in this pack"
+  - "No edits under ATU_SRC/**"
+  - "No rewrite of modern/src/features/customer/**"
+  - "No IBM i characterisation goldens / REPLAY_GREEN required for pathfinder"
+  - "No microservice split; modular monolith only"
+  - "Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required"
+  - "Do not claim fully migrated"
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TS API only"
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1"
+  - "Edit architecture/atu-merlin/** or architecture/atu-merlin-ord/**"
+  - "Rewrite modern/src/features/customer/** or modern/src/features/order/**"
+  - "Reshape CUS or ORD schema under modern/db/** — LOG changes additive and pack-scoped only / shared reuse; modern/test/** only for this pack's surface"
+  - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
+  - "Convert consuming status DRAFT"
+  - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
+  - "Invent SME answers for known_risks below"
+  - "String-concat SQL in repositories"
+  - "Rewrite discovery cards during Convert"
+  - "Claim fully migrated"
+
+edit_surface:
+  allow:
+    - modern/src/shared/samlog/**
+    - modern/src/shared/logging/**
+    - modern/db/**   # additive and pack-scoped only — do not reshape CUS/ORD schema
+    - modern/test/**   # pack-scoped only — tests for this pack's surface (log/samlog)
+    - modern/src/app.ts   # additive
+    - modern/src/server.ts   # additive
+    - modern/package.json
+    - modern/package-lock.json
+    - modern/tsconfig.json
+    - modern/vitest.config.ts
+    - modern/README.md
+    - modern/.gitignore
+    - modern/scripts/**
+    - architecture/atu-merlin-log/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**
+    - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-par/**
+    - modern/src/features/customer/**
+    - modern/src/features/order/**
+    - modern/openapi/customer.yaml
+    - modern/openapi/order.yaml
+
+known_risks:
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
+  - "Whole-slice may be non-functional side effect — do not invent business value claims"
+  - "Capacity silent fail (c04)"
+  - "ORD already has samlog table — prefer align without widening atu-merlin-ts-ord-v1; extend shared logging or document residual vs reuse"
+  - "Never widen ORD pack"
+  - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
+  - "CUS and ORD modern already exist; accidental re-scope of those packs is a fail"
+  - "modern/db/** additive / shared reuse only — do not reshape CUS or ORD schema non-additively"
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/log-programs/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-log/ADR/0001-log-programs-ts-postgres.md
+
+bound_by: "atuMerlin migration room (Field Engineer 9/10 + CTO skim; soft notes tip 4f42dcf; Agent Smith recorded)"
+bound_at: "2026-09-09T11:12:14Z"
+change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture after BOUND, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+reference_skeleton: null

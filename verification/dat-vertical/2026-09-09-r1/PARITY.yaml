@@ -1,0 +1,70 @@
+# Verification COMPARE — DAT utilities, pack atu-merlin-ts-dat-v1@1
+# Characterization WAIVED_PATHFINDER: no IBM i / RPG goldens exist and none were invented.
+# The verdict below is evidence at the TypeScript (and additive SQL) boundary only. It is NOT parity against IBM i.
+run_id: 2026-09-09-r1
+pack_id: atu-merlin-ts-dat-v1
+pack_version: 1
+characterization: WAIVED_PATHFINDER
+mode: COMPARE
+target: modern
+oracle: discovery-cards-and-readme    # dat-utils cards (c01 validation rules) + README DAT section; not legacy goldens
+legacy_replay: SKIPPED                # no IBM i harness; REPLAY_GREEN not claimed
+ibm_i_parity: NOT_CLAIMED
+
+rollup:
+  parity: TS_BOUNDARY_GREEN           # never GREEN against IBM i under this waiver
+  parity_green: false                 # APP_MANIFEST flag stays false (WAIVED max = converted + parity WAIVED)
+  legacy_green: false
+  basis:
+    - "npm run typecheck: clean"
+    - "npm test: 201/201 in 7 files against live PostgreSQL 16.15 — 63 DAT, 55 CUS / 56 ORD / 27 VAT unchanged (evidence/typecheck-and-vitest.log)"
+    - "independent probe with an oracle written from the cards (JS Date engine, not the module): 130 000-value calendar sweep + 200 000 random DECIMAL(8,0) values, SQL twins probed through unnest in a throw-away schema: 29 PASS / 0 FAIL (evidence/results.json, evidence/probe.mjs)"
+    - "card COMPARE: every converted / as-is card has a module export, a test and a probe case; the one residual card (c03) is explained (REPORT.md §4)"
+    - "date lock matches ORD: NULL inside, 0 / 1940-01-01 only at the boundary; dat_date_to_iso_num == ORD701's inline to_char expression on 4 384 dates; no 1940 / 2039 literal in DAT SQL code; ORD date columns nullable date (P22, P25, P26, P29)"
+    - "planted / known-risk behaviours preserved, not fixed: 99999999 -> 2039-12-31 as-is, no MAPVAL for it, ISO_Num_To_Date carried though possibly dead (P01, P18)"
+    - "one documentation gap found (G-D1: the c07 composition identity is over-claimed in README / CONVERT_RECORD); behaviour of each function matches its own documentation — not behaviour drift (REPORT.md §4)"
+  contract_risks: "CR-D1..CR-D4 dispositioned in REPORT.md §5 — 3 accept-for-demo, 1 defer (CR-D3, CUS pack)"
+
+# per-feature: status is the TS-boundary outcome. codes: TS_BOUNDARY_GREEN | RESIDUAL_EXPLAINED | NEEDS_SME_OPEN | NOT_IMPLEMENTED | BLOCKED_BY_PACK
+features:
+  dat-utils:
+    c01: { status: TS_BOUNDARY_GREEN, as_is: true, note: "isoToDate40: 0 -> 1940-01-01, 99999999 -> 2039-12-31 by exact equality, valid yyyymmdd -> date (years 0001-9999, leap rule), else null; 2039 branch kept, not blanked (known_risk, needs-SME)", evidence: [P01, P02, P03, P04, P05, P18, "dat.test.ts c01"] }
+    c02: { status: TS_BOUNDARY_GREEN, needs_sme: "dead-or-not (QM queries CUSQRY / ARTQRY, no source)", note: "isoNumToDate: test(de) only, 0 and 99999999 -> null; differs from DAT002 on exactly those two inputs", evidence: [P06, P07, P08, "dat.test.ts c02"] }
+    c03: { status: RESIDUAL_EXPLAINED, note: "no caller carried: modern ORD lists read date NULL columns, no UDF in the query; the un-indicated-fetch truncation has no path (CR-D2); QM queries have no source; no legacy-named SQL function created (CR-D1)", evidence: [P22, P28, P29], contract_risk: [CR-D1, CR-D2] }
+    c04: { status: TS_BOUNDARY_GREEN, note: "RETURNS NULL ON NULL INPUT -> null in / null out without evaluating; DETERMINISTIC / NO SQL -> pure; SQL twins IMMUTABLE, dat_iso_num_to_date STRICT; indicators, function / specific names, *LIBL, FENCED have no equivalent (CR-D1)", evidence: [P09, P10, P27, "dat.test.ts c04"], contract_risk: [CR-D1] }
+    c05: { status: TS_BOUNDARY_GREEN, as_is: true, note: "DatArgumentError { sqlstate 38I02, message <= 70 } for an argument a DECIMAL(8,0) cannot hold (the only TS analogue of the *PSSR decimal-data path); an invalid date is a null, never an exception — 0 exceptions across 330 002 in-range values", evidence: [P12, P13, P14, "dat.test.ts c05"], contract_risk: [CR-D4] }
+    c06: { status: TS_BOUNDARY_GREEN, note: "stateless: 1 341 values evaluated in order, shuffled and again give identical results", evidence: [P10, "dat.test.ts c04/c06"] }
+    c07: { status: TS_BOUNDARY_GREEN, note: "one sentinel definition (LEGACY_LOVAL_DATE, toLegacySentinelDate / fromLegacySentinelDate); presentation value never stored; CUS200 / ORD202 copies not rewritten (deny). Composition identity holds on {0} U valid dates only — README states it unqualified (G-D1)", evidence: [P18, P19, P20, "dat.test.ts c07"] }
+    c08: { status: TS_BOUNDARY_GREEN, note: "IsoDate | null: invalid -> null, never a stale value; 5 000 valid/invalid alternations clean", evidence: [P11, "dat.test.ts c04 (c08 line)"] }
+
+date_lock:
+  rule: "NULL inside the modern boundary for blank/never; IBM i 0 / 1940-01-01 only at the boundary; no other sentinel"
+  matches_ord: true
+  evidence:
+    - "P15/P16: fromLegacyIsoNum == DAT001 semantics (0 -> null, 99999999 -> null); toLegacyIsoNum round-trips 4 384 dates, null -> 0"
+    - "P22: ORD701 keeps to_char(NEW.ordate,'YYYYMMDD')::integer inline; ORD ordate / ordatdel / ordatclo are `date`; DAT section creates no table and no legacy-named function; no 1940 / 2039 literal in DAT SQL code"
+    - "P23/P24/P25: dat_iso_num_to_date == fromLegacyIsoNum on 180 000 values incl. negatives; NULL / 0 / 99999999 -> NULL"
+    - "P26: dat_date_to_iso_num == ORD701 inline expression == toLegacyIsoNum on every valid sweep date, and round-trips"
+    - "P29: ordatdel / ordatclo nullable date with no sentinel default"
+    - "P21: CUS lastOrderDateOf agrees with the lock except years 0001-0099 (CR-D3, CUS pack, deferred)"
+
+planted_or_known_risk_behaviours_preserved:
+  - { behaviour: "99999999 -> 2039-12-31 in isoToDate40, not blanked by fromLegacySentinelDate (c01)", evidence: [P01, P18], fixed: false }
+  - { behaviour: "ISO_Num_To_Date carried as isoNumToDate although possibly dead (c02 / c03)", evidence: [P06, P08], fixed: false }
+  - { behaviour: "*PSSR path is an error (38I02), not a NULL row (c05)", evidence: [P12, P13], fixed: false }
+  - { behaviour: "CUS lastOrderDateOf years 0001-0099 -> null (CR-D3) left as-is in the CUS pack", evidence: [P21], fixed: false }
+
+contract_gaps:
+  - { id: G-D1, severity: low, kind: documentation, where: "modern/README.md DAT c07 row; architecture/atu-merlin-dat/CONVERT_RECORD.md c07 row", gap: "isoToDate40(n) === toLegacySentinelDate(fromLegacyIsoNum(n)) is stated unqualified; it holds on exactly {0} U valid dates (4 385 sweep values) and fails for every invalid n (125 616 sweep values incl. 99999999) because the lock folds invalid into never", evidence: [P19] }
+
+evidence:
+  typecheck_and_tests: evidence/typecheck-and-vitest.log
+  probe_script: evidence/probe.mjs
+  probe_results: evidence/results.json
+  report: REPORT.md
+  narrative: narrative/HOW_IT_WORKS.md
+
+verified_by: "atuMerlin factory job runner (Cloud Agent), Verification station"
+verified_at: "2026-09-09T15:27:00Z"
+head_sha: 1b9049c5aa64d1ccf614d9bad8fd6b51036b905e
+talk_track: "DAT residual verified at TS API under waiver — not Merlin migrated"

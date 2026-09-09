@@ -1,0 +1,163 @@
+slice_id: cus-modules
+seed: "Customer ILE modules CUS300 (getters/exists) + CUS301 (SltCustomer) forming FCUSTOMER"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/CUS300.RPGLE
+  - ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE
+  - ATU_SRC/QDDSSRC/CUS301D.DSPF
+out_of_scope_hints:
+  - CUS200 screens (cus-interactive)
+  - conversion / test generation / bind
+phase: B
+updated_at: 2026-09-08T15:40:00Z
+bind_status: accepted
+bind_record: BIND.md
+bind_notes: "srvpgm-fcustomer folded into this slice at bind (FCUSTOMER.BND / .ILESRVPGM are deps; export facts documented in c01 and c05, no separate feature)."
+documented_by: document-slices-conveyor (Pack B run 2, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as cus-interactive."
+
+features:
+  - id: cus-modules-c01
+    name: Customer getter family (GetCus*)
+    status: documented
+    confidence: observed-in-code
+    summary: "Eleven exported nomain procedures each call chainCUSTOME1 by CUID (5P 0 by value) and return one CUSTOMER column from the module-global buffer; no found/not-found signal (unknown id -> blanks/0). Country returned as code. Export surface = 15 symbols, SIGNATURE('V1'). Only GetCusName has callers in ATU_SRC (ORD100, ORD101)."
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER GetCusName..GetCusCredit
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:19-137", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:7-63", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:4-20", "ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM:8-9"]
+    behaviour_doc: features/cus-modules-c01.md
+    dependencies: [CUSTOME1.LF, CUSTOMER.PF, SAMREF.PF, CUSTOMER.RPGLEINC, FCUSTOMER.BND, FCUSTOMER.ILESRVPGM, SAMPLE.BNDDIR]
+    open_questions: ["needs-SME: are the getters other than GetCusName (and ExistCus/IsCusDeleted) called from anything outside ATU_SRC? None found in the tree."]
+  - id: cus-modules-c02
+    name: ExistCus (found and not deleted)
+    status: documented
+    confidence: observed-in-code
+    summary: "Returns %found(CUSTOME1) and CUDEL <> 'X' after the cached chain; only uppercase X counts as deleted; unknown id -> false. No caller in ATU_SRC. ExistCus(0) as the very first FCUSTOMER call never chains, so %found has no prior operation (result not documented by IBM; unknown)."
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER ExistCus
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:152-160", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:71-72", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:5"]
+    behaviour_doc: features/cus-modules-c02.md
+    dependencies: [CUSTOME1.LF, CUSTOMER.PF, SAMREF.PF]
+    open_questions: ["needs-SME: no ATU_SRC program calls ExistCus — is the soft-delete rule enforced anywhere outside the tree, or is it dead API?"]
+  - id: cus-modules-c03
+    name: IsCusDeleted
+    status: documented
+    confidence: observed-in-code
+    summary: "Returns CUDEL = 'X' after the cached chain; unknown id -> false (buffer cleared), so not-deleted and missing are indistinguishable from this call alone. No caller in ATU_SRC; no writer of CUDEL for customers in ATU_SRC either."
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER IsCusDeleted
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:163-171", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:76-77", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:18"]
+    behaviour_doc: features/cus-modules-c03.md
+    dependencies: [CUSTOME1.LF, CUSTOMER.PF]
+    open_questions: []
+  - id: cus-modules-c04
+    name: Lazy open and last-key cache in chainCUSTOME1
+    status: documented
+    confidence: observed-in-code
+    summary: "Opens CUSTOME1 (USROPN, input-only) on first use, never closed by exported code; skips the CHAIN when the requested id equals the buffer CUID; otherwise clear *all FCUST then chain. Hits cached for the activation-group lifetime (stale after updates by other programs); misses return blanks/zeros and are not cached (buffer CUID = 0). Unmonitored open/chain."
+    entrypoints:
+      - kind: other
+        locator: CUS300 chainCUSTOME1
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:6", "ATU_SRC/QRPGLESRC/CUS300.RPGLE:10-16", "ATU_SRC/QRPGLESRC/CUS300.RPGLE:173-186", "ATU_SRC/QILESRVSRC/FCUSTOMER.ILESRVPGM:8"]
+    behaviour_doc: features/cus-modules-c04.md
+    dependencies: [CUSTOME1.LF, CUSTOMER.PF]
+    open_questions:
+      - "needs-SME: getters on a missing id return blank/zero silently — preserve as the target contract or surface not-found?"
+      - "needs-SME: is any caller relying on (or hurt by) the stale-read behaviour of the last-key cache within one activation group?"
+  - id: cus-modules-c05
+    name: CloseCUSTOME1 prototyped but not exported
+    status: documented
+    confidence: observed-in-code
+    summary: "closeCUSTOME1 has no export keyword on its P-spec and no symbol in FCUSTOMER.BND, yet CUSTOMER.RPGLEINC prototypes it; nothing calls it (dead code). CUSTOME1 stays open for the activation group. Closing would not reset the cache anyway (buffer CUID untouched). A caller compiled against the include would fail at bind time."
+    entrypoints:
+      - kind: api
+        locator: FCUSTOMER (missing export CLOSECUSTOME1)
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:188-195", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:82-84", "ATU_SRC/QSRVSRC/FCUSTOMER.BND:4-20"]
+    behaviour_doc: features/cus-modules-c05.md
+    dependencies: [FCUSTOMER.BND, FCUSTOMER.ILESRVPGM, CUSTOMER.RPGLEINC]
+    open_questions: ["needs-SME: intentional (file lifetime = activation group) or oversight?"]
+  - id: cus-modules-c06
+    name: SltCustomer selection window
+    status: documented
+    confidence: observed-in-code
+    summary: "Dynamic SQL SELECT over CUSTOMER with contains-LIKE on UPPER(name) and/or UPPER(city), ORDER BY CUSTNM; extendable subfile (SFLSIZ 15 / SFLPAG 14) loaded 14 rows per Page Down with one-row look-ahead; option 1 returns the row CUID, F3/F12 return pcod. SQL errors silent (empty list); criteria fields persist across calls (display file never closed); F8 acts as Enter; country shown as code; soft-deleted rows listed."
+    entrypoints:
+      - kind: screen
+        locator: CUS301D CTL01/SFL01 via SltCustomer(pcod)
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:54-93", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:96-166", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:211-227", "ATU_SRC/QDDSSRC/CUS301D.DSPF:6-66", "ATU_SRC/QRPGLESRC/CUS250.PGM.RPGLE:86", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:320-324"]
+    behaviour_doc: features/cus-modules-c06.md
+    dependencies: [CUSTOMER.PF, CUS301D.DSPF, SAMREF.PF, CUSTOMER.RPGLEINC, FCUSTOMER.BND]
+    open_questions: ["Is SltCustomer ever called with a non-zero default that callers expect back on cancel? Only CUS250 (current id) in ATU_SRC; ORD100 passes 0 and treats 0 as abort."]
+  - id: cus-modules-c07
+    name: Selection rules (option 1 only, single selection)
+    status: documented
+    confidence: observed-in-code
+    summary: "S01chk reads changed rows: 0 ignored; <>1 -> INVALID OPTION (35); second 1 -> ONLY ONE SELECTION (36); error rows DSPATR(RI)+(PC); page to first error; every changed row re-marked SFLNXTCHG (which is what lets S01act find the selection); act only when clean. OPT01 <> 1 tested before the duplicate test."
+    entrypoints:
+      - kind: screen
+        locator: CUS301 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:168-209", "ATU_SRC/QDDSSRC/CUS301D.DSPF:15-19", "ATU_SRC/QDDSSRC/CUS301D.DSPF:35-37"]
+    behaviour_doc: features/cus-modules-c07.md
+    dependencies: [CUS301D.DSPF]
+    open_questions: []
+  - id: cus-modules-c08
+    name: Criteria change re-prepares; F3/F12 return default
+    status: documented
+    confidence: observed-in-code
+    summary: "S01act tests savName/savCity vs screen first: any change closes C1 and restarts prp, discarding an option 1 typed on the old list; otherwise the first OPT01 = 1 row is returned. F3 and F12 (CA keys, identical) exit the loop and return pcod unchanged. Page Down with changed criteria pages the old result; option errors block a new search until fixed."
+    entrypoints:
+      - kind: screen
+        locator: CUS301 S01act / S01key
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:211-227", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:157-162", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:75-76", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:92-93", "ATU_SRC/QDDSSRC/CUS301D.DSPF:11-12"]
+    behaviour_doc: features/cus-modules-c08.md
+    dependencies: [CUS301D.DSPF]
+    open_questions: []
+  - id: cus-modules-c09
+    name: Dynamic SQL string concatenation of user input
+    status: documented
+    confidence: observed-in-code
+    summary: "Search text (<=10 chars per field, uppercased by the 5250 session) is trimmed and concatenated inside LIKE '%...%' literals; no escaping, no parameter markers; ' breaks/alters the statement, %/_ are wildcards; no SQLCODE check so failures show an empty list with Bottom. Statement is SELECT-only into a 4-column DS."
+    entrypoints:
+      - kind: other
+        locator: CUS301 s01prp stm build
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:103-122", "ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:133-140", "ATU_SRC/QDDSSRC/CUS301D.DSPF:56-57"]
+    behaviour_doc: features/cus-modules-c09.md
+    dependencies: [CUSTOMER.PF, CUS301D.DSPF]
+    open_questions: ["needs-SME/architecture: preserve as-is quirk (wildcards, quote behaviour, silent failure) or treat as defect to fix during conversion? Not a Discovery decision."]
+  - id: cus-modules-c10
+    name: Dormant GetCusLastOrdDate scaffold
+    status: needs-SME
+    confidence: inferred
+    summary: "Commented-out procedure and prototype left as a training exercise; not compiled, not exported. No card written (bind: needs-SME, inferred stays inferred)."
+    entrypoints:
+      - kind: other
+        locator: CUS300 comment block
+        evidence: ["ATU_SRC/QRPGLESRC/CUS300.RPGLE:139-150", "ATU_SRC/QPROTOSRC/CUSTOMER.RPGLEINC:64-67"]
+    dependencies: []
+    open_questions: ["Recommend reject at a later bind; not deepened by Pack B."]
+  - id: cus-modules-c11
+    name: Blank criteria list-all semantics
+    status: documented
+    confidence: observed-in-code
+    summary: "No both-blank branch in s01prp: both fields blank -> else (city) branch with LIKE '%%'; CUCITY is DDS CHAR(30) without ALWNULL so every customer (incl. CUDEL = 'X') is listed by name, 14 per page. First SltCustomer call in an activation group (ORD100 without parm) therefore shows the whole customer list."
+    entrypoints:
+      - kind: screen
+        locator: CUS301 s01prp else-branch
+        evidence: ["ATU_SRC/QRPGLESRC/CUS301.SQLRPGLE:104-115", "ATU_SRC/QDDSSRC/CUSTOMER.PF:15", "ATU_SRC/QDDSSRC/SAMREF.PF:22-23", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:320-321"]
+    behaviour_doc: features/cus-modules-c11.md
+    dependencies: [CUSTOMER.PF, SAMREF.PF]
+    open_questions: ["Should the modern seam keep 'list all when criteria blank'? (SME_BRIEF open question 2)"]
+
+needs_sme:
+  - cus-modules-c10  # inferred scaffold — no card; reject/accept at a later bind
+  - cus-modules-c01  # callers of the other getters outside ATU_SRC?
+  - cus-modules-c02  # ExistCus has no caller in ATU_SRC — dead API or enforced elsewhere?
+  - cus-modules-c04  # blank/zero on missing id; stale-read cache
+  - cus-modules-c05  # CloseCUSTOME1 not exported — intentional?
+  - cus-modules-c09  # preserve or fix dynamic-SQL concatenation (architecture decision)
+blocked: []
+
+unknown_surfaces: []

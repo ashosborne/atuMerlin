@@ -1,0 +1,127 @@
+slice_id: ord-print-ord500
+seed: "Print a customer order - ORD500(orid) spool + ORD500C PDF conversion"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE
+  - ATU_SRC/QCLSRC/ORD500C.PGM.CLLE
+  - ATU_SRC/QDDSSRC/ORD500O.PRTF
+out_of_scope_hints:
+  - order creation/maintain screens (ORD100 / ORD200 / ORD201 call sites cited only - c05)
+  - PDF rendering internals (CVTSPLPDF processing program not in tree - c04 needs-SME, no card)
+  - FPARAMETER / PAR300 body (par-maintain, srvpgm-supporting unbound; cited for c02 / c06 only)
+  - FARTICLE / FCUSTOMER service programs (contrast only - c06)
+  - conversion / test generation / bind
+phase: B
+updated_at: 2026-09-09T00:20:00Z
+bind_status: accepted
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 12, 2026-09-08)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-11."
+needs_sme:
+  - "c04 (inferred, no card): CVTSPLPDF's processing program is not in ATU_SRC - which product supplies it, and is the PDF (rendering, code page 1250, A4 portrait Courier 11) in parity scope, or is 'a PDF named Custord<orid>.pdf exists under PATH' the contract? Blocks any RECORD of the PDF step."
+  - "c08 / c05: a not-found order id (ghost row after a delete in ORD200/ORD201 option 6, or a concurrent delete) raises an unmonitored date exception at %date(ORDATE:*iso) before anything is written - no document, no PDF (Phase A 'prints blank document' corrected). Same room question as ord-maintain-ord202-c01/c04: what does the target do for an id that no longer exists? One answer covers option 5 and option 6."
+  - "c02 / c03: %char(orid) is passed to a 5-byte const parameter and &ORD is LEN(5) - a six-digit order id loses its last digit in Custord<orid>.pdf and replaces another order's PDF (STMFOPT(*REPLACE)). Latent (ids from LASTORDNO are far below 100000). Carry the 5-char name into the target, or fix the width there?"
+  - "c02: a missing PATH row yields a blank directory passed unchecked to CVTSPLPDF; PATH is read once per activation group and cached (ClosePARAMETER is called by nobody). Is PATH target configuration rather than data (par-maintain-c11 asks the same)?"
+  - "c03 / c05: every failure in ORD500C (no MONMSG) or ORD500 (no monitor) propagates to the interactive caller as an unmonitored exception; in ORD100 it fires after the order is written and before the 'The order is printed.' window. Keep print as a mandatory synchronous side effect of confirm (Phase A question 3), or make it optional / asynchronous in the target?"
+  - "c01: VAT on the print is TOTTOT - TOTNET of the STORED line totals (never recomputed); with the vat-module-c02 silent-zero case the VAT line prints blank. Carry forward as stored sums (same line as ord-maintain-ord202-c02)?"
+  - "c01 / c07: layout facts to confirm as-is or redesign later - 15 detail lines per page (Phase A said 14); customer block only on page 1; country printed as the 2-char code; delivered quantity not printed; delivered/closed orders print like open ones; 'This is the footer' / 'Company Sample' literals; order date in the job's date format (*JOB), ORD202 uses *DMY."
+  - "c06: a missing article repeats the previous line's ARDESC (bare chain, buffer not cleared); FARTICLE.GetArtDesc returns blank for the same miss; ARDEL / CUDEL never tested. One lookup rule for the target (same line as ord-maintain-ord202-c06); recorded as-is."
+  - "c01 / c02 / c06 / c07: build owner - ORD500 has dftactgrp(*no) with no bnddir and no .ILEPGM (srvpgm-supporting-c05 blind spot): how is FPARAMETER bound, which activation group (inferred QILE), does the compile listing show the implicitly defined 'overflow' indicator? Exception surfaces (status 00112 / 00202 -> inquiry in the caller's session) are ILE inferences, runtime-confirmable."
+  - "c01: page geometry (lines 5 / 8 / 19 / 21 / 22.. / 52 / 58-60; 15 details per page) is read from SKIPB / SPACEB - DDS contract, runtime-confirmable on the box; only the count of 15 is a source fact."
+
+features:
+  - id: ord-print-ord500-c01
+    name: Print order document to spool
+    status: documented
+    confidence: observed-in-code
+    summary: "Externally described printer file ORD500O (*SCS, width 90), positional layout via SKIPB/SPACEB: HEADER (hard-coded company block, skip 5), HEADER2 (customer id/name, three address lines, country code + zip + city), HEADER3 (skip 18: 'Order Number' ORYEAR/ORID, 'Order Date' DATORD DATFMT(*JOB), column headings Line/Article/Quantity/U.Price - no heading over the amount column), one two-line DETAIL per DETORD1 line (line 1 ODLINE ODQTY ODPRICE ODTOT; line 2 ODARID ARDESC ODTOTVAT HIGHLIGHT; ODQTYLIV not printed), TOTAL (skip 52: Net / VAT / Total, 9P 2 EDTCDE(2) HIGHLIGHT), FOOTER (skip 58: 'This is the footer' + '.' at col 90). Manual page break at count > 14 -> 15 details per page (Phase A said 14): footer, header, header3 re-written, HEADER2 NOT (customer block only on page 1); the eject is HEADER's SKIPB(005) behind the current line. TOTNET = sum of stored ODTOT, TOTTOT = sum of stored ODTOTVAT, TOTVAT = TOTTOT - TOTNET (derived, never recomputed; vat-module-c02 silent zero -> blank VAT line). Empty order -> headings + blank totals. Delivered/closed orders print identically. close ord500o before the PDF step completes the spooled file. Every call fresh (*inlr)."
+    entrypoints:
+      - kind: job
+        locator: ORD500(orid) -> ORD500O
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:6", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:30-57", "ATU_SRC/QDDSSRC/ORD500O.PRTF:4-112"]
+    behaviour_doc: features/ord-print-ord500-c01.md
+    dependencies: [ORDER1.LF, DETORD1.LF, CUSTOME1.LF, ARTICLE1.LF, ORD500O.PRTF]
+    open_questions: ["needs-SME: is the spool document the behaviour to preserve, or only the PDF's existence (c03/c04)?", "needs-SME: layout facts (15/page, no customer block on continuation pages, country code, no delivered qty, placeholder footer) - carry or redesign later.", "Runtime-confirmable: line positions from SKIPB/SPACEB; accumulator overflow response beyond 9,999,999.99."]
+  - id: ord-print-ord500-c02
+    name: Resolve IFS path from PATH parameter and hand off to PDF step
+    status: documented
+    confidence: observed-in-code
+    summary: "After close ord500o: path = getParm2('PATH':' ') via FPARAMETER (PAR300: lazy open of PARAMETER usropn, last-key cache, clear *all FPARAM then chain; ClosePARAMETER called by nobody; ACTGRP(*CALLER) -> PATH cached for the life of the activation group, a PAR200 change is not seen until then). Missing PATH row -> blank 100-byte path passed unchecked. pdfOrd(%trim(%char(orid)):path) -> extpgm ORD500C with id 5 const / path 100 const: a six-digit orid is right-truncated to 5 (Custord12345.pdf collision, *REPLACE). Synchronous CALL, no return value, no monitor/(e)/*PSSR - any escape from ORD500C -> status 00202 unmonitored -> caller. orid is the ORDER1 record field, not the id parameter (equal when found). Not reached on a not-found id (c08)."
+    entrypoints:
+      - kind: other
+        locator: ORD500 -> FPARAMETER.GetParm2 -> extpgm ORD500C
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:13", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:21-23", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:57-59", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:34-44", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:82-98"]
+    behaviour_doc: features/ord-print-ord500-c02.md
+    dependencies: [FPARAMETER.ILESRVPGM, PARAMETER.RPGLEINC, PARAMETER.PF, ORD500C.PGM.CLLE]
+    open_questions: ["Phase A 'what if PATH is missing' answered from source: blank path passed through; outcome belongs to CVTSPLPDF (c04).", "needs-SME: PATH as target configuration (par-maintain-c11).", "needs-SME: 5-char order id in the PDF name - carry or widen in the target."]
+  - id: ord-print-ord500-c03
+    name: Spool to PDF via CVTSPLPDF
+    status: documented
+    confidence: observed-in-code
+    summary: "ORD500C(&ORD 5, &PATH 100): &FILENAME = 'Custord' *CAT &ORD *TCAT '.pdf' (blanks trimmed, no zero padding); CVTSPLPDF FROMFILE(ORD500O) TOSTMF(&FILENAME) TODIR(&PATH) SPLNBR(*LAST) STMFOPT(*REPLACE) PAGESIZE(*A4 *PORTRAIT) FONT(*COURIER 11) BOOKMARK(*NONE); defaults left: JOB(*) current job, STMFCODPAG 1250, TITLE *NONE. Converts the newest ORD500O spooled file of the job (correct because ORD500 closed it immediately before); replaces an existing Custord<orid>.pdf (a re-print from ORD200/ORD201 overwrites - the PDF is always the latest print); the spooled file stays in the output queue (no delete/hold parameter). No MONMSG, no CHKOBJ, no ENDPGM: any escape (blank/missing directory, command or processing program not found, conversion error) ends ORD500C in error and propagates to ORD500 and the interactive caller. TOSTMF is TYPE(*NAME) LEN(64) (case handling of 'Custord' from a CL variable not decidable from source); TODIR is *PNAME LEN(256). Only caller: ORD500. Rendering is entirely the converter's (c04 blind spot)."
+    entrypoints:
+      - kind: job
+        locator: ORD500C -> CVTSPLPDF
+        evidence: ["ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:4-14", "ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-69"]
+    behaviour_doc: features/ord-print-ord500-c03.md
+    dependencies: [CVTSPLPDF.CMD]
+    open_questions: ["needs-SME (c04): provider of CVTSPLPDF; PDF in parity scope or 'file exists' contract.", "Runtime-confirmable: actual IFS file-name case; behaviour on blank &PATH; escape-propagation path."]
+  - id: ord-print-ord500-c04
+    name: CVTSPLPDF implementation not in tree
+    status: needs-SME
+    confidence: inferred
+    summary: Command definition present; processing program absent from ATU_SRC. Not deepened (inferred stays needs-SME); the invoked parameters are recorded under c03.
+    entrypoints:
+      - kind: other
+        locator: CVTSPLPDF.CMD
+        evidence: ["ATU_SRC/QCMDSRC/CVTSPLPDF.CMD:4-26"]
+    dependencies: []
+    open_questions: ["Which product provides it? Is PDF output in parity scope?"]
+  - id: ord-print-ord500-c05
+    name: Callers of ORD500
+    status: documented
+    confidence: observed-in-code
+    summary: "Exactly three call sites under ATU_SRC, all RPG, synchronous, orid by reference through Prtord extpgm('ORD500'), none monitored, no result read: ORD100 prints EVERY confirmed order right after writing header + lines and before the FMT03 window 'The order is printed.' (unconditional - no print? prompt; user waits for spool + PDF); ORD200 / ORD201 option 6 with no state or existence guard, then opt01 = 0, update sfl01, no reload (screen unchanged). ORD101 declares the prototype and never calls it (ord-entry-ord101-c08) - line changes reach the document only on a re-print. No menu, CMD, CL or scheduler entry; ORD500C called only by ORD500. Ghost row / concurrent delete + option 6 -> the c08 exception in the list program's session (twin of ord-maintain-ord202-c04). Delivered/closed orders re-print identically and replace the PDF. A failure in the print path leaves the ORD100 order written and the confirmation window unshown."
+    entrypoints:
+      - kind: other
+        locator: extpgm ORD500 from ORD100 / ORD200 / ORD201
+        evidence: ["ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:30-31", "ATU_SRC/QRPGLESRC/ORD100.PGM.RPGLE:190-212", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:27", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:240-243", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:24", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:246-249", "ATU_SRC/QRPGLESRC/ORD101.PGM.RPGLE:27-28"]
+    behaviour_doc: features/ord-print-ord500-c05.md
+    dependencies: [ORD100.PGM.RPGLE, ORD200.PGM.SQLRPGLE, ORD201.PGM.SQLRPGLE]
+    open_questions: ["needs-SME: print mandatory and synchronous on every confirm in the target, or optional / asynchronous?", "needs-SME / room: not-found answer for option 6 (same as option 5 / ORD202)."]
+  - id: ord-print-ord500-c06
+    name: Direct file access instead of service programs
+    status: documented
+    confidence: observed-in-code
+    summary: "farticle1 / fcustome1 if e k disk chained directly (chain odarid article1 per line, chain orcuid custome1 once; no %found, no clear) where ORD100:117,266 / ORD101:114,223 call FARTICLE.GetArtDesc and ORD100:328 / ORD101:283 call FCUSTOMER.GetCusName. Miss semantics differ: FARTICLE.chainARTICLE1 clears *all FARTI first -> blank; ORD500 leaves the buffer -> previous line's ARDESC repeated (blank on the first line). Missing customer -> ORCUID printed, six blank address lines. ARDEL / CUDEL never tested (deleted rows print normally). Only service dependency: FPARAMETER via /COPY PARAMETER.RPGLEINC; H spec has dftactgrp(*no) and NO bnddir, no .ILEPGM under QILESRC (srvpgm-supporting-c05 blind spot: binding is ARCAD/elias build metadata); FPARAMETER listed in SAMPLE.BNDDIR which ORD500 does not name. Four LFs open/close per call (*inlr); PARAMETER stays open inside FPARAMETER (c02). Same seams as the list twins (ORDER1/DETORD1), no ORDERCUS view - an order with no customer row prints with a blank block."
+    entrypoints:
+      - kind: other
+        locator: ORD500 F-specs / chain custome1 / chain article1
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:4", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:8-13", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:33", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:46", "ATU_SRC/QRPGLESRC/ART300.RPGLE:114-127", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:8-14"]
+    behaviour_doc: features/ord-print-ord500-c06.md
+    dependencies: [ORDER1.LF, DETORD1.LF, CUSTOME1.LF, ARTICLE1.LF, FPARAMETER.ILESRVPGM]
+    open_questions: ["Build owner: how FPARAMETER is bound (no bnddir / .ILEPGM); activation group.", "needs-SME / room: one article / customer lookup rule for the target (legacy: FARTICLE blank vs ORD500/ORD202 stale carry-over)."]
+  - id: ord-print-ord500-c07
+    name: Code quirks (datord overwrite, unused oflind, early *inlr)
+    status: documented
+    confidence: observed-in-code
+    summary: "Nine as-is oddities, none changing the document for a found order: (1) datord = %date() dead - overwritten unconditionally, not a guard (the missing guard is c08); (2) oflind(overflow) declared with no D-spec (compiler-implicit indicator - inference) and never tested -> the program owns overflow and ejects only via count > 14 + HEADER SKIPB(005); (3) *inlr = *on before total/footer/close/getParm2/pdfOrd - harmless, and the reason every call is fresh; (4) id parameter used once, record field orid thereafter (equal when found; never written back); (5) %trim(%char(orid)) redundant - the real issue is the 5-byte const target (c02); (6) page break re-writes header + header3, not header2 (customer block page 1 only); (7) totnet/tottot/totvat/datord have no D-spec - they are the printer-file output fields (9P 2 EDTCDE(2); L); (8) placeholder literals 'This is the footer' / 'Company Sample' address hard-coded in the DDS; (9) count 3u 0 never above 15. NOT a quirk: close ord500o before ORD500C is load-bearing - it completes the spooled file that SPLNBR(*LAST) converts. Recorded as-is; carry-or-normalise is a room decision for the ORD pack."
+    entrypoints:
+      - kind: other
+        locator: ORD500 main
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:6", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:22-26", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:30-32", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:40-43", "ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:53-59"]
+    behaviour_doc: features/ord-print-ord500-c07.md
+    dependencies: []
+    open_questions: ["Build owner: compile listing for the implicit 'overflow' indicator.", "Room (ORD pack): carry or normalise (customer block on page 1 only; placeholder footer)."]
+  - id: ord-print-ord500-c08
+    name: "Unknown order id: unmonitored date exception, not a blank document (Phase A corrected)"
+    status: documented
+    confidence: observed-in-code
+    summary: "chain id order1 untested, then datord = %date(ORDATE:*iso) unguarded: a miss leaves ORDATE = 0 (fresh call, c07) -> %date(0) invalid -> RPG status 00112, no monitor/(e)/*PSSR -> unmonitored exception BEFORE the first write. No document (blank or otherwise), no PDF, PATH not read; failure surfaces in the caller's interactive session (inference: RNQ0112 inquiry). The printer file was opened at program start, so a spooled file was created - its disposition after the abnormal end is runtime-confirmable. Phase A 'prints with blank header fields' corrected - that path is unreachable as written. Producers: ORD200 / ORD201 option 6 on a ghost row (ORD201 blanks to orid 0, ORD200 leaves the deleted id) or after a concurrent delete; direct CALL; not ORD100. Zero/invalid stored ORDATE fails the same way (no in-tree writer stores 0). Missing customer is the different, non-fatal case (blank block, c06). After the exception the list program's option 6 is still on the row (opt01 = 0 follows the call). Twin of ord-maintain-ord202-c01 (same two statements)."
+    entrypoints:
+      - kind: other
+        locator: ORD500 chain order1 / %date(ORDATE)
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:30-33", "ATU_SRC/QRPGLESRC/ORD202.PGM.RPGLE:83-85", "ATU_SRC/QRPGLESRC/ORD200.PGM.SQLRPGLE:240-243", "ATU_SRC/QRPGLESRC/ORD201.PGM.SQLRPGLE:246-249"]
+    behaviour_doc: features/ord-print-ord500-c08.md
+    dependencies: [ORDER1.LF]
+    open_questions: ["needs-SME / room: target behaviour for a not-found order id on print (legacy: unhandled exception) - one answer with ORD202 option 5.", "Runtime-confirmable: exception surface, reply options, fate of the empty spooled file, module re-initialisation after abnormal end."]

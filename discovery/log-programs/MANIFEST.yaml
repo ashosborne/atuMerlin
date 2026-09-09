@@ -1,0 +1,154 @@
+slice_id: log-programs
+seed: "Application log - LOG100 creates the SAMLOG user space; LOG service program (LOG300 AddLogEntry) appends User/Date/Msg lines; only writer ORD700 on line delete"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
+  - ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
+  - ATU_SRC/QRPGLESRC/LOG300.RPGLE
+  - ATU_SRC/QPROTOSRC/LOG.RPGLEINC
+  - ATU_SRC/QPROTOSRC/APICALL.RPGLEINC
+out_of_scope_hints:
+  - ORD700 trigger behaviour (documented ord-trigger-ord700-c03) - cited for the one call site and the message content only (c07)
+  - PARAMETER library anchor (documented par-maintain-c13) - cited, not re-derived (c01)
+  - SAMMNU inventory (menu-cmd-shell, accepted) - cited for option 84 only (c09); SAMPLE.BNDDIR / .BND / .ILEPGM inventory (srvpgm-supporting, accepted) - cited for the LOG binding facts only (c08)
+  - ADSPUSRSPC command (no source) - what it displays is its blind spot (c09)
+  - the ORD vertical's samlog table (modern/db/schema.sql) - cited as the existing target counterpart of the log line; not widened
+  - conversion / test generation / bind
+phase: B
+updated_at: 2026-09-09T09:40:00Z
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 14, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-13."
+needs_sme:
+  - "room (whole slice): is the SAMLOG user-space log behaviour to preserve at all? Recommendation unchanged from Phase A - non-functional side effect; the ORD vertical already writes the same Msg text plus a 10-char user and a timestamp to a samlog table on every line delete (modern/db/schema.sql:132-140,187-199; verification/ord-vertical PARITY c03 as_is). Nothing in c01/c02/c04/c05/c06/c08/c09/c10 has a target counterpart; c03's line string (User:/Date:/Msg: prefixes, ' ***' terminator) is the only thing a reader could depend on. Never widen atu-merlin-ts-ord-v1 from this slice."
+  - "c04 (inferred, carded): capacity. 5000-byte initial size, no auto-extend (QUSCUSAT never called), 600-byte fixed write per call -> first failure when pos + 600 > allocated size, i.e. from pos ~4400 if the allocation is exactly 5000 = ~35 ORD700 lines of ~125 bytes (Phase A said 40-60); page-rounded allocation would move it to ~7600 / ~60 lines. The failing assignment leaves pos unchanged, so every later call in every job fails at the same offset - permanent and silent (callp(e), %error unread). Box: actual allocated size (DSPOBJD *FULL / QUSRUSAT); has it ever filled; what did operators see?"
+  - "c06 (inferred, carded): LOG100 has no caller / menu entry / CL / .ILEPGM - install step run by hand. If never run (or SAMLOG not on the writer's *LIBL), init sets inz=*on BEFORE the failing QUSPTRUS, so the failure is never retried in the activation group: every AddLogEntry in the job fails (null p1 -> MCH3601, inference), all swallowed by ORD700. Ops: who runs LOG100, when, in which library list; is it in an ARCAD deployment script outside the tree?"
+  - "c08 (build owner / ARCAD): LOG not in SAMPLE.BNDDIR, ORD700 has no bnddir and no .ILEPGM - how AddLogEntry is bound into ORD700 is outside the tree (same line as ord-trigger-ord700-c03 and srvpgm-supporting). EXPORT(*ALL) exports exactly one procedure (only AddLogEntry carries export on its P-spec; init does not) - no .BND, generated signature, no *PRV."
+  - "c09 (inferred, carded): ADSPUSRSPC (menu opt 84) has no source in the tree; what it renders is unknown; no other reader of SAMLOG exists. Ops: which product supplies it; does anyone use option 84; is SAMLOG content ever needed after the fact (audit / support)?"
+  - "c10 (inferred, carded): read pos / write 600 bytes / pos += len with no lock - two jobs deleting lines at the same instant overwrite one another's line (lost line, blank run, cursor over-advanced). Rare in-tree (one delete per Enter); realistic for a two-job cleanup. Acceptable loss for a diagnostic log? Target insert is transactional - no counterpart."
+  - "c03 (target semantics): User is a module static inz(*USER) stamped when the LOG service program is activated in the caller's activation group (ACTGRP(*CALLER); ORD700 dftactgrp(*no) -> QILE, inference) - a profile-swapping job would log the first user for every later line. Also: 500-varying build buffer truncates a trimmed message > 437 chars and drops the ' ***' terminator (not reachable from ORD700); %trim strips leading blanks; User written blank-padded to 10. Target already records the actor per event (ord700_user()); confirm that is the intended contract."
+  - "c05 (Phase A sharpened): only the QUSCRTUS error is swallowed (errcod DS never inspected). QUSPTRUS is prototyped without an error code, so a create failure with no existing SAMLOG surfaces one line later as an unmonitored escape (CPF9801 -> RNQ0202 inquiry, inference); a create failure with an OLD SAMLOG present succeeds silently on the old object and resets its header (pos=7, '***') - the old log is logically emptied. Runtime-confirmable."
+  - "c01 / c02 (format facts): replace *YES means re-running LOG100 resets the log; a job that already resolved p1 keeps writing to the replaced copy (inference). Header = 4-byte big-endian pos at offset 0 + '***' at 4, entries from 7, no separator but ' ***', layout defined twice (LOG100 DS, LOG300 standalone based fields) with no shared copybook. Migration of existing SAMLOG content wanted? (Recommendation: no.)"
+
+features:
+  - id: log-programs-c01
+    name: LOG100 creates the SAMLOG user space (5000 bytes, replace *YES) in PARAMETER's library
+    status: documented
+    confidence: observed-in-code
+    summary: "LOG100 (27 lines, dftactgrp(*no), no parameters, no screen, no message) opens PARAMETER only to take the opened file's library from INFDS 93-102 (par-maintain-c13), builds 'SAMLOG    ' + Lib and calls QUSCRTUS: attribute LOG, initial size 5000, X'00', *ALL, text 'Sample Application Log', replace *YES; then QUSPTRUS and the 7-byte header (pos = 7, '***'). No auto-extend (QUSCUSAT never called anywhere) - the size is a hard capacity (c04). Re-running LOG100 replaces the space: the log is reset, and a job that already holds p1 keeps writing to the replaced copy (inference). Created beside PARAMETER (INFDS at install), found later via *LIBL (LOG300:41) - two resolution rules. No caller (c06); errors not inspected (c05)."
+    entrypoints:
+      - kind: job
+        locator: LOG100 (no menu entry; CALL LOG100 by hand)
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:5-7", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:11-12", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:18-26", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:4-16"]
+    behaviour_doc: features/log-programs-c01.md
+    dependencies: [PARAMETER.PF (object / library only), QUSCRTUS, QUSPTRUS]
+    open_questions: ["Who runs LOG100 and when (c06)?", "Actual allocated size of SAMLOG on the box (c04)?"]
+  - id: log-programs-c02
+    name: SAMLOG layout - binary write cursor at offset 0, '***' at offset 4, entries from offset 7
+    status: documented
+    confidence: observed-in-code
+    summary: "Bytes 0-3 = 10i 0 pos (the next-write offset, big-endian), bytes 4-6 = '***', first entry at 7. LOG100 writes the header once; LOG300 reads pos from offset 0 on every call, writes at p1 + pos and adds the logical line length back into offset 0 - the cursor lives inside the space, so it is persistent across jobs and shared by every writer (c10). No record separator: ' ***' at the end of each line is the only delimiter (c03); after the last line up to 600 - len bytes of blanks (padded write), then X'00'. The layout is defined twice (LOG100 based DS; LOG300 standalone based fields) with no shared copybook - byte-compatible by construction. No lower/upper bound on pos, '***' never read back."
+    entrypoints:
+      - kind: other
+        locator: LOG100 / LOG300 based fields
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:14-16", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:23-25", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:12-13", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32"]
+    behaviour_doc: features/log-programs-c02.md
+    dependencies: [SAMLOG *USRSPC (runtime object), QUSPTRUS]
+    open_questions: ["Is a migration of existing SAMLOG content wanted (this card is the decoding rule)? Recommendation: no."]
+  - id: log-programs-c03
+    name: "AddLogEntry - resolve SAMLOG *LIBL once per activation group, append 'User: … * Date: … * Msg: … ***' (600-byte padded write)"
+    status: documented
+    confidence: observed-in-code
+    summary: "Only export of LOG (LOG300 nomain). First call per activation group runs init (inz = *on, then QUSPTRUS 'SAMLOG    *LIBL'). Each call builds 'User: ' + User(10, blank-padded, not trimmed) + ' * Date: ' + %char(%timestamp()) (26 chars) + ' * Msg: ' + %trim(entry) + ' ***' in a 500-varying field, assigns it to the 600-byte fixed field at p1 + pos (600 bytes written, blank-padded), then pos += logical length. Fixed part 63 bytes; ORD700 lines ~122-131 bytes. User is a module static inz(*USER) - stamped at service-program activation in the caller's AG (ACTGRP(*CALLER); QILE for ORD700, inference), not per call. A trimmed message > 437 chars truncates at 500 and loses ' ***' (not reachable in-tree). No monitor, no %error, QUSPTRUS without error code -> failures escape to the caller, who swallows them (callp(e)). A failed init is never retried in the AG (inz set first): later calls fail on the null p1 (c06)."
+    entrypoints:
+      - kind: api
+        locator: LOG AddLogEntry (LOG300)
+        evidence: ["ATU_SRC/QPROTOSRC/LOG.RPGLEINC:4-5", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:12-16", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:18-35", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:37-46", "ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8"]
+    behaviour_doc: features/log-programs-c03.md
+    dependencies: [SAMLOG *USRSPC, QUSPTRUS, LOG.RPGLEINC, ORD700 (only caller)]
+    open_questions: ["Target: is the legacy line string (prefixes, terminator) a contract, or only the Msg text (as the ORD vertical assumed)?", "User stamped at activation vs per call - confirm the target's per-event actor is the intended semantics."]
+  - id: log-programs-c04
+    name: No capacity check - logging stops silently, permanently, once the 600-byte write crosses the end of SAMLOG (~35 ORD700 lines at 5000 bytes)
+    status: documented
+    confidence: inferred
+    summary: "5000-byte initial size, no auto-extend (QUSCUSAT never called), 600-byte fixed write per call, pos never compared with the size -> space-addressing exception (MCH0601, inference) as soon as pos + 600 > allocated size: from pos ~4400 if the allocation is exactly 5000 = ~35 ORD700 lines of ~125 bytes (Phase A said 40-60); a page-rounded allocation (e.g. 8192) would move it to ~60 lines - runtime fact. The failing assignment (line 31) raises before pos is advanced (line 32), so pos stays put and every later call in every job fails at the same offset: permanent and silent (ORD700 callp(e), %error unread; the log writes nothing to any queue). Deletes keep working. Only reset: re-run LOG100 (c01). Recorded as-is; target has an unbounded samlog table."
+    entrypoints:
+      - kind: other
+        locator: LOG300 data / pos
+        evidence: ["ATU_SRC/QRPGLESRC/LOG300.RPGLE:13", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:21", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:78", "ATU_SRC/QDDSSRC/SAMREF.PF:11,34,37,47"]
+    behaviour_doc: features/log-programs-c04.md
+    dependencies: [c01, c02, c03, c07]
+    open_questions: ["Confirm the failure mode and the actual allocated size on the box.", "Has the log ever filled? What did operators see?"]
+  - id: log-programs-c05
+    name: LOG100 QUSCRTUS errors swallowed; QUSPTRUS (no error code) surfaces them one line later - or silently resets an old log
+    status: documented
+    confidence: observed-in-code
+    summary: "errcod DS passed to QUSCRTUS with bytes-provided = 256 -> failures returned in the DS, never inspected. The next call, QUSPTRUS, is prototyped without an error code: create failed + no SAMLOG -> escape (CPF9801, inference) unmonitored in LOG100 -> RNQ0202 inquiry; create failed + an OLD SAMLOG present -> QUSPTRUS succeeds on the old object and lines 24-25 reset its header (pos = 7, '***') - the old log is logically emptied although create failed (inference). Phase A 'errors swallowed' sharpened: swallowed at the API, reported indirectly by the next one, fully silent only in the old-object case. Mirror image in LOG300: the same QUSPTRUS prototype escapes into ORD700's callp(e) (c06)."
+    entrypoints:
+      - kind: other
+        locator: LOG100 crtusrspc / rtvusrspcptr calls
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:21-25", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:4-16", "ATU_SRC/QPROTOSRC/APICALL.RPGLEINC:25-33"]
+    behaviour_doc: features/log-programs-c05.md
+    dependencies: [APICALL.RPGLEINC (shared errcod DS), QUSCRTUS, QUSPTRUS]
+    open_questions: ["Runtime-confirm: inquiry on QUSPTRUS after a failed create; header reset when an old SAMLOG exists."]
+  - id: log-programs-c06
+    name: LOG100 has no caller and no menu entry (install step); if never run, every AddLogEntry in the job fails silently and is never retried
+    status: documented
+    confidence: inferred
+    summary: "grep LOG100 = self only; SAMMNU options 1-90 name every other utility; no CL, no .ILEPGM. One-off install step run by hand (inference). If SAMLOG does not exist on the writer's *LIBL: first AddLogEntry -> init sets inz = *on BEFORE rtvusrspcptr, which escapes (CPF9801, inference) into ORD700's callp(e); p1 stays *null and init is never retried in the activation group, so every later call fails at p2 = p1 + pos (MCH3601, inference) - also swallowed. The application works, nothing is logged, nobody is told, until the job ends. SAMLOG in a library not on *LIBL behaves identically. A rebuild from ATU_SRC alone does not recreate SAMLOG - LOG100 belongs in the install runbook."
+    entrypoints:
+      - kind: other
+        locator: grep LOG100; LOG300 init order
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-167", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:24-27", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:41-43", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:78-82"]
+    behaviour_doc: features/log-programs-c06.md
+    dependencies: [c01, c03, c07, c08]
+    open_questions: ["Who runs LOG100 and when? Is it in an ARCAD deployment script outside the tree?"]
+  - id: log-programs-c07
+    name: Only log event in the tree is ORD700 on order-line delete (pointer to ord-trigger-ord700-c03)
+    status: documented
+    confidence: observed-in-code
+    summary: "grep AddLogEntry (i) = prototype, procedure and ONE call: ORD700 event '2' (DETORD *AFTER *DELETE), callp(e), %error never tested. Message 'ORD700:Order Line deleted <ODORID> <ODLINE> article : <ODARID 6, untrimmed> quantity : <ODQTY>' - the ORDERED quantity, not the outstanding quantity subtracted next. No other program, CL, trigger or SQL logs anything (inserts/updates of DETORD, ORD701, screens, batch). In-tree deleter: ORD101 option 4 (undelivered lines only). Mass external deletes log one line per row -> ~35 rows fill the space (c04). Trigger behaviour documented at ord-trigger-ord700-c03; not re-derived. Target: the ORD vertical writes the same Msg text to samlog per delete (as-is, PARITY c03)."
+    entrypoints:
+      - kind: other
+        locator: ORD700 callp(e) addlogEntry
+        evidence: ["ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:8", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:76-82", "ATU_SRC/QTRGSRC/ORD700D.SYSTRG:4-7", "ATU_SRC/QDDSSRC/DETORD.PF:6-12"]
+    behaviour_doc: features/log-programs-c07.md
+    dependencies: [ORD700 (ord-trigger-ord700-c03), ORD101 (ord-entry-ord101-c06), c03, c08]
+    open_questions: []
+  - id: log-programs-c08
+    name: LOG srvpgm - EXPORT(*ALL) exports one procedure (AddLogEntry); ORD700's binding to it is not in source
+    status: documented
+    confidence: observed-in-code
+    summary: "LOG.ILESRVPGM = CRTSRVPGM MODULE(LOG300) ACTGRP(*CALLER) EXPORT(*ALL); no LOG.BND in QSRVSRC (six .BND members, none for LOG or FPARAMETER) -> generated signature, no *PRV. Only AddLogEntry has export on its P-spec (init does not; no exported D-spec), so EXPORT(*ALL) exports exactly one symbol - module statics stay private. Consumer side: LOG absent from SAMPLE.BNDDIR (11 srvpgms), ORD700 H-spec dftactgrp(*no) with no bnddir, no ORD700.ILEPGM in QILESRC -> the only caller cannot be bound from the tree; the BNDDIR/BNDSRVPGM lives in ARCAD build metadata. ACTGRP(*CALLER) is what makes init once-per-job and User stamped-at-activation (c03). Same blind spot as ord-trigger-ord700-c03 and srvpgm-supporting."
+    entrypoints:
+      - kind: other
+        locator: LOG.ILESRVPGM / SAMPLE.BNDDIR / QSRVSRC / QILESRC
+        evidence: ["ATU_SRC/QILESRVSRC/LOG.ILESRVPGM:8", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:18", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:37", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:8-14", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:4"]
+    behaviour_doc: features/log-programs-c08.md
+    dependencies: [srvpgm-supporting (binding inventory), ord-trigger-ord700-c03]
+    open_questions: ["Build owner: how is LOG bound into ORD700; which library's LOG; should LOG be added to SAMPLE.BNDDIR for a from-source rebuild?"]
+  - id: log-programs-c09
+    name: Log reader - menu option 84 runs ADSPUSRSPC (not in tree); no in-tree reader of SAMLOG
+    status: documented
+    confidence: inferred
+    summary: "SAMMNU option 84 'Display Application log' = cmd adspusrspc samlog (unqualified, *LIBL, help=nohelp). ADSPUSRSPC has no source in ATU_SRC (grep = the menu line only; QCMDSRC has no member) - probably an ARCAD utility (inference); what it renders is unknown. No other reader: SAMLOG is referenced only by LOG100, LOG300 and the menu. The log is write-only from the application's point of view. A reader written from these cards would decode offset 0 as bytes used, take bytes 7..pos-1 and split on ' ***' (c02, c03). A stopped (c04) or never-started (c06) log is indistinguishable from 'nothing happened'. menu-cmd-shell lists option 84 among the options reaching absent objects (with 12/13)."
+    entrypoints:
+      - kind: other
+        locator: SAMMNU opt 84
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:159-162", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:4", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:41"]
+    behaviour_doc: features/log-programs-c09.md
+    dependencies: [menu-cmd-shell (SAMMNU owner), ADSPUSRSPC (no source), c02, c03]
+    open_questions: ["Which product supplies ADSPUSRSPC; does anyone use option 84; is SAMLOG content ever needed after the fact?"]
+  - id: log-programs-c10
+    name: Unsynchronised shared append - concurrent writers read the same cursor and overwrite one another's line
+    status: documented
+    confidence: inferred
+    summary: "pos lives in the shared object; AddLogEntry does read pos (27) / write 600 bytes at pos (31) / pos += len (32, re-reads the shared pos) with no ALCOBJ, LOCK, CMPSWP or data-area indirection; a user space has no implicit lock. Two jobs deleting lines at the same instant (ORD700 runs in the deleting job) both read pos = P and both write at P: the second write overwrites the first line entirely (600-byte pad); the += increments are relative so the cursor over-advances by the lost line's length, leaving a blank run. Lost lines leave no trace. Cursor corruption possible if two load/add/store sequences interleave (narrower window). Window microseconds, in-tree rate a few deletes a day; realistic for a two-job cleanup. Disappears once the space is full (c04). Recorded as-is; target insert is transactional."
+    entrypoints:
+      - kind: other
+        locator: LOG300 AddLogEntry
+        evidence: ["ATU_SRC/QRPGLESRC/LOG300.RPGLE:12", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:27-32", "ATU_SRC/QRPGLESRC/ORD700.PGM.RPGLE:76-82"]
+    behaviour_doc: features/log-programs-c10.md
+    dependencies: [c02, c03, c07]
+    open_questions: ["Acceptable data loss for a diagnostic log? (room)"]

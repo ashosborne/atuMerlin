@@ -1,0 +1,19 @@
+# cd modern && npm run typecheck && npm test  (DATABASE_URL=postgres://ubuntu@127.0.0.1:54329/atu_merlin, PostgreSQL 16.15, Node v22.14.0)
+# typecheck: tsc -p tsconfig.json --noEmit -> exit 0, no output
+
+
+> atu-merlin-modern@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/modern
+
+ ✓ test/customer.web.test.ts (10 tests) 399ms
+ ✓ test/fcustomer.test.ts (16 tests) 509ms
+ ✓ test/customer.api.test.ts (29 tests) 817ms
+
+ Test Files  3 passed (3)
+      Tests  55 passed (55)
+   Start at  18:25:31
+   Duration  1.12s (transform 134ms, setup 0ms, collect 475ms, tests 1.73s, environment 0ms, prepare 138ms)
+

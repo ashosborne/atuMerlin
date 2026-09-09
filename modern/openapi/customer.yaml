@@ -1,0 +1,334 @@
+openapi: 3.1.0
+info:
+  title: atuMerlin — Customer (CUS vertical)
+  version: 0.1.0
+  description: |
+    New HTTP JSON API for the CUS vertical (pack `atu-merlin-ts-cus-v1@1`,
+    `api_contract_policy.mode: new-http-json`, `sourced_vs_inferred: inferred`).
+    Not preserve-wire against IBM i 5250. Behaviour follows the Discovery cards under
+    `discovery/cus-interactive/features/` and `discovery/cus-modules/features/`.
+
+    Screen mapping (DSPF -> web / HTTP):
+    - CUS200 CTL01/SFL01 (work-with list)  -> GET /api/customers
+    - CUS200 FMT02 mode CRT                -> POST /api/customers
+    - CUS200 FMT02 mode UPD                -> PUT /api/customers/{cuid}
+    - CUS250 FMT01/FMT02 (inquiry)         -> GET /api/customers/{cuid}
+    - CUS301D SltCustomer (selector)       -> GET /api/customers/search
+    - FCOUNTRY SltCountry list             -> GET /api/countries
+
+    There is intentionally no DELETE (cus-interactive-c11: no delete path) and no orders
+    endpoint (cus-interactive-c06: ORD200 stays legacy in this pack).
+
+    Auth is pathfinder-open: the caller identifies itself with `X-User-Id` (max 10 chars,
+    default `WEB`); the value lands in CUMODID on create only (cus-interactive-c08).
+servers:
+  - url: http://127.0.0.1:3000
+tags:
+  - name: customers
+  - name: countries
+
+paths:
+  /api/customers:
+    get:
+      tags: [customers]
+      summary: List customers by name (CUS200 list, card c01)
+      description: |
+        Ordered by (CUSTNM, CUID) in byte order (CUSTOME2). Returns at most 14 rows.
+        Either `positionTo` (name prefix, at most 10 characters are used, key id = 0) or a
+        continuation cursor (`cursorName` + `cursorId`, the key of the first unseen row as
+        returned in `next`). Soft-deleted customers (`cudel = 'X'`) are listed unfiltered (c11).
+      parameters:
+        - in: query
+          name: positionTo
+          schema: { type: string, maxLength: 10 }
+        - in: query
+          name: cursorName
+          schema: { type: string }
+        - in: query
+          name: cursorId
+          schema: { type: integer }
+      responses:
+        "200":
+          description: One page of the list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerListPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+    post:
+      tags: [customers]
+      summary: Create a customer (CUS200 F6 + Enter, cards c02, c04, c08)
+      description: |
+        Id is drawn from sequence CUSSEQ (START WITH 1551, NO CYCLE) at save time; gaps are
+        possible. CUCREA = today, CUMOD = now, CUMODID = X-User-Id. CUCREDIT, CULASTORD and
+        CUDEL are not inputs and start at 0 / 0 / blank. Validation per c04 (all rules in one
+        pass): country must exist (ERR0002), name mandatory, phone mandatory (ERR2001) and
+        digits only after trim (ERR2002), no duplicate UPPER(name)+phone (ERR2000, dup > 0).
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerDetail" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+
+  /api/customers/search:
+    get:
+      tags: [customers]
+      summary: Selection list (FCUSTOMER.SltCustomer, cards cus-modules-c06, c09, c11)
+      description: |
+        Contains-match on UPPER(CUSTNM) and/or UPPER(CUCITY); each criterion is cut to 10
+        characters then trimmed and uppercased. Both blank lists every customer, including
+        soft-deleted rows. `%` and `_` in the criteria are LIKE wildcards (as-is). Criteria are
+        bound parameters (pack forbids string-concatenated SQL), so quotes are literal text.
+        Ordered by name (byte order), 14 rows per page with a look-ahead row for `more`.
+      parameters:
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: city
+          schema: { type: string }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        "200":
+          description: One page of the selection list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SltCustomerPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/customers/{cuid}:
+    parameters:
+      - in: path
+        name: cuid
+        required: true
+        description: CUID 5P 0 — one to five digits
+        schema: { type: integer, minimum: 0, maximum: 99999 }
+    get:
+      tags: [customers]
+      summary: Customer by id with country name (CUS250, cards c09, c10, c07)
+      description: |
+        Existence only — soft-deleted customers are returned (c11). `countryName` is blank when
+        the country code is unknown. `culastord` is the raw yyyymmdd number (CUS250 view) and
+        `lastOrderDate` its CUS200 presentation (null when 0, i.e. the 1940-01-01 blank sentinel).
+      responses:
+        "200":
+          description: Customer detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerDetail" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [customers]
+      summary: Update a customer (CUS200 option 2 + Enter, cards c03, c04, c08)
+      description: |
+        Replaces the FMT02 fields. CUID, CUCREDIT, CULASTORD, CUDEL and CUCREA are never
+        changed. **As-is (needs-SME c08):** CUMODID is not refreshed on update; only CUMOD is.
+        **As-is (needs-SME c04):** the update duplicate rule is `dup > 1` on rows holding the
+        new name+phone, so a change colliding with exactly one other customer passes.
+        `X-User-Id` is accepted but has no effect on update (CUMODID is create-only).
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerDetail" }
+        "400": { $ref: "#/components/responses/ValidationFailed" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/countries:
+    get:
+      tags: [countries]
+      summary: Countries behind the F4 prompt (FCOUNTRY dependency, card c05)
+      description: Read-only reference data; the country slice is not converted in this pack.
+      responses:
+        "200":
+          description: All countries ordered by code
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rows]
+                properties:
+                  rows:
+                    type: array
+                    items: { $ref: "#/components/schemas/Country" }
+
+components:
+  parameters:
+    UserId:
+      in: header
+      name: X-User-Id
+      required: false
+      description: Caller identity for CUMODID (pathfinder-open auth). Truncated to 10 characters; default WEB.
+      schema: { type: string, maxLength: 10 }
+
+  responses:
+    BadRequest:
+      description: Malformed query
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message]
+            properties:
+              code: { type: string, const: BAD_REQUEST }
+              message: { type: string }
+    ValidationFailed:
+      description: S02chk failed — every failing rule is reported
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, errors]
+            properties:
+              code: { type: string, const: VALIDATION }
+              errors:
+                type: array
+                items: { $ref: "#/components/schemas/ValidationError" }
+    NotFound:
+      description: ERR0103 "Code &1 Unknown." — id is zero-suppressed, so id 0 reads "Code  Unknown."
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message, cuid]
+            properties:
+              code: { type: string, const: ERR0103 }
+              message: { type: string, examples: ["Code 77 Unknown."] }
+              cuid: { type: integer }
+
+  schemas:
+    CustomerInput:
+      type: object
+      description: Fields typeable on CUS200 FMT02. Strings are right-trimmed; the phone is trimmed on both sides. Lengths are the legacy fixed-length sizes.
+      required: [custnm, cuphone, cucoun]
+      properties:
+        custnm: { type: string, maxLength: 30 }
+        cuphone: { type: string, maxLength: 15, description: Digits only after trim }
+        cuvat: { type: string, maxLength: 12, default: "" }
+        cumail: { type: string, maxLength: 50, default: "" }
+        culine1: { type: string, maxLength: 50, default: "" }
+        culine2: { type: string, maxLength: 50, default: "" }
+        culine3: { type: string, maxLength: 50, default: "" }
+        cuzip: { type: string, maxLength: 10, default: "" }
+        cucity: { type: string, maxLength: 30, default: "" }
+        cucoun: { type: string, maxLength: 2, description: Must exist in COUNTRY }
+        culimcre:
+          oneOf: [{ type: number }, { type: string }]
+          description: CULIMCRE 9,2 — sign and range otherwise unvalidated (c04)
+          default: 0
+
+    CustomerDetail:
+      type: object
+      required:
+        [cuid, custnm, cuphone, cuvat, cumail, culine1, culine2, culine3, cuzip, cucity, cucoun, countryName,
+         culimcre, cucredit, culastord, lastOrderDate, cucrea, cumod, cumodid, cudel]
+      properties:
+        cuid: { type: integer }
+        custnm: { type: string }
+        cuphone: { type: string }
+        cuvat: { type: string }
+        cumail: { type: string }
+        culine1: { type: string }
+        culine2: { type: string }
+        culine3: { type: string }
+        cuzip: { type: string }
+        cucity: { type: string }
+        cucoun: { type: string, description: Country code }
+        countryName: { type: string, description: FCOUNTRY.GetCountryName; blank when unknown }
+        culimcre: { type: number }
+        cucredit: { type: number, description: Never written by CUS }
+        culastord: { type: integer, description: yyyymmdd; 0 = never ordered. Written only by ORD701 / ORD901 / ART801 (legacy) }
+        lastOrderDate: { type: [string, "null"], format: date, description: CUS200 presentation — null when culastord is 0 or not a valid date }
+        cucrea: { type: string, format: date }
+        cumod: { type: string, description: Local timestamp without zone, e.g. 2026-09-08T17:34:22.281 }
+        cumodid: { type: string, description: Set on create only (c08 as-is) }
+        cudel: { type: string, description: "'X' = soft-deleted, otherwise a single blank" }
+
+    CustomerListRow:
+      type: object
+      description: CUS200 SFL01 columns (first line plus the folded CUCITY line)
+      required: [cuid, custnm, culimcre, cuzip, cudel, cucity]
+      properties:
+        cuid: { type: integer }
+        custnm: { type: string }
+        culimcre: { type: number }
+        cuzip: { type: string }
+        cudel: { type: string }
+        cucity: { type: string }
+
+    CustomerListPage:
+      type: object
+      required: [rows, more, next]
+      properties:
+        rows:
+          type: array
+          maxItems: 14
+          items: { $ref: "#/components/schemas/CustomerListRow" }
+        more: { type: boolean, description: "true = More... (a 15th row exists), false = Bottom" }
+        next:
+          type: [object, "null"]
+          description: Key of the first unseen row; pass back as cursorName / cursorId
+          required: [cursorName, cursorId]
+          properties:
+            cursorName: { type: string }
+            cursorId: { type: integer }
+
+    SltCustomerRow:
+      type: object
+      required: [cuid, custnm, cucity, cucoun]
+      properties:
+        cuid: { type: integer }
+        custnm: { type: string }
+        cucity: { type: string }
+        cucoun: { type: string, description: Code only; no country-name lookup in the selector }
+
+    SltCustomerPage:
+      type: object
+      required: [rows, more, nextOffset]
+      properties:
+        rows:
+          type: array
+          maxItems: 14
+          items: { $ref: "#/components/schemas/SltCustomerRow" }
+        more: { type: boolean }
+        nextOffset: { type: [integer, "null"] }
+
+    Country:
+      type: object
+      required: [coid, countr, coiso]
+      properties:
+        coid: { type: string, maxLength: 2 }
+        countr: { type: string, maxLength: 30 }
+        coiso: { type: string, maxLength: 3 }
+
+    ValidationError:
+      type: object
+      required: [code, field, message]
+      properties:
+        code:
+          type: string
+          enum: [ERR0002, NAME_MANDATORY, ERR2001, ERR2002, ERR2000, FIELD_TOO_LONG, FIELD_INVALID]
+          description: |
+            ERR0002 Country code unknown · NAME_MANDATORY (DDS literal) · ERR2001 phone mandatory ·
+            ERR2002 phone digits only · ERR2000 duplicate name+phone · FIELD_TOO_LONG / FIELD_INVALID
+            are modern boundary checks the 5250 screen made impossible to hit.
+        field: { type: string }
+        message: { type: string }

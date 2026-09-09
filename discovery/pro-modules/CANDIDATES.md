@@ -1,0 +1,26 @@
+# CANDIDATES — pro-modules (Phase A, unbound)
+
+Seed: `FPROVIDER` service program = `PRO300` + `PRO301`; folds `srvpgm-fprovider`. All rows `candidate`.
+
+| id | provisional name | evidence | confidence | why it belongs |
+| --- | --- | --- | --- | --- |
+| pro-modules-c01 | Provider getter family: 11 exported `GetPro*` procedures (`Name`, `Cont`, `Phone`, `Vat`, `Mail`, `Adr1/2/3`, `Zip`, `City`, `Country`) each chain `PROVIDE1` by `PRID` (5P 0 by value) and return one column from the module buffer; unknown id → blanks (no found signal) | `QRPGLESRC/PRO300.RPGLE:19-127`; `QPROTOSRC/PROVIDER.RPGLEINC:7-58` | observed-in-code | Same shape as CUS300 / ART300 |
+| pro-modules-c02 | `ExistProvider` = `%found(PROVIDE1) and PRDEL <> 'X'`; `IsProDeleted` = `PRDEL = 'X'` (unknown id → false for both) | `PRO300.RPGLE:129-148` | observed-in-code | Predicate semantics |
+| pro-modules-c03 | Lazy open + last-key cache in `chainPROVIDE1`: opens `PROVIDE1` (USROPN, input-only) on first use, skips the chain when the requested id equals the buffered `PRID`, otherwise `clear *all FPROV` then chain; misses leave `PRID` = 0 so they are not cached | `PRO300.RPGLE:6`, `:150-163` | observed-in-code | Same pattern as CUS300 (stale after external updates) |
+| pro-modules-c04 | `ClosePROVIDE1` prototyped in the copybook but not exported (no `export` on the P-spec, not in `FPROVIDER.BND`); no caller | `PRO300.RPGLE:165-172`; `PROVIDER.RPGLEINC:72-75`; `QSRVSRC/FPROVIDER.BND:8-22` | observed-in-code | Dead code; a caller compiled against the include would fail to bind |
+| pro-modules-c05 | `SltProvider(pcod)` selection window: dynamic SQL over `PROVIDER` with contains-`LIKE` on `UPPER(provnm)` and/or `UPPER(prcity)`, `ORDER BY provnm`; 14 rows per Page Down with one-row look-ahead; option 1 returns the row `PRID`; F3/F12 return `pcod` unchanged; cursor `c1` closed on every exit | `QRPGLESRC/PRO301.SQLRPGLE:54-93`, `:96-124`, `:126-144`, `:211-227`; `QDDSSRC/PRO301D.DSPF:26-29`, `:56-57` | observed-in-code | Twin of `SltCustomer` (cus-modules-c06) |
+| pro-modules-c06 | Selection rules: option 1 only (35 `INVALID OPTION`), single selection (36 `ONLY ONE SELECTION`), error rows RI/PC, every changed row re-marked `SFLNXTCHG`, act only when clean | `PRO301.SQLRPGLE:168-209`; `PRO301D.DSPF:35-36` | observed-in-code | Same as cus-modules-c07 |
+| pro-modules-c07 | Criteria change re-prepares: if `srchName`/`srchCity` differ from the saved values, the cursor is closed and the statement re-prepared, discarding any option 1 typed on the old list | `PRO301.SQLRPGLE:116-117`, `:211-217` | observed-in-code | Same as cus-modules-c08 |
+| pro-modules-c08 | Dynamic SQL string concatenation of user input (10-char search fields inside `LIKE '%…%'` literals, no escaping, no parameter markers, no `SQLCODE` check → empty list on error) | `PRO301.SQLRPGLE:103-115`, `:119-123` | observed-in-code | Same as cus-modules-c09 |
+| pro-modules-c09 | Both criteria blank → `else` branch runs `UPPER(prcity) LIKE '%%'` → every provider listed, soft-deleted included (no `PRDEL` predicate) | `PRO301.SQLRPGLE:111-114` | observed-in-code | Same as cus-modules-c11 |
+| pro-modules-c10 | F8 is dead in `PRO301`: `in08` is declared but never assigned, `s01key` has no `cf08` branch so F8 falls through to `chk` (acts as Enter); the `F8=By code` label is conditioned on indicator 40 (`bydesc`) which nothing sets | `PRO301.SQLRPGLE:62`, `:155-165`; `PRO301D.DSPF:28`, `:63-64` | observed-in-code | Leftover from the FAM301/COU301 template |
+| pro-modules-c11 | **Versioned binder source**: `FPROVIDER.BND` uses `SIGNATURE(*GEN) LVLCHK(*YES)` with a `PGMLVL(*PRV)` block listing the 13 original exports and `SLTPROVIDER` added as a "new exported symbol" — the only service program in the tree with a previous-signature block (all others hard-code `SIGNATURE('V1')`) | `QSRVSRC/FPROVIDER.BND:5-23`, `:26-45`; compare `FCUSTOMER.BND:4`, `FARTICLE.BND:4` | observed-in-code | Build/compat fact (ARCAD-generated) |
+| pro-modules-c12 | Export surface = 14 symbols; `FPROVIDER` = `MODULE(PRO300 PRO301) ACTGRP(*CALLER) EXPORT(*SRCFILE)`; listed in `SAMPLE.BNDDIR` | `FPROVIDER.ILESRVPGM:8-9`; `FPROVIDER.BND:8-22`; `QBNDSRC/SAMPLE.BNDDIR:13` | observed-in-code | Binding facts (folded `srvpgm-fprovider`) |
+| pro-modules-c13 | Callers in `ATU_SRC`: `GetProName` from `ART201` and `ART202`; `SltProvider` from `PRO250`; the other 12 exports have **no caller** in the tree | `QRPGLESRC/ART201.PGM.RPGLE:107`, `ART202.PGM.RPGLE:97`, `PRO250.PGM.RPGLE:91` | observed-in-code | Call graph |
+| pro-modules-c14 | Search input is not uppercased by the module: the statement compares `UPPER(column)` to the raw `%trim(srchName)`; lowercase input (5250 session permitting) matches nothing | `PRO301.SQLRPGLE:105-113`; `PRO301D.DSPF:56-57` (no `CHECK(LC)`) | observed-in-code | Edge behaviour (same as CUS301) |
+
+## Deferred recommendations (prose only)
+
+- c11: the `*PRV` signature block is ARCAD build output; recommend the bind treat it as **build metadata**, not behaviour.
+- c13: 12 of 14 exports have no in-tree caller. Recommend binding the getter family as **one card** (as cus-modules did) rather than 11.
+- Fold: `srvpgm-fprovider` is intentionally not scanned as a separate slice; its content is c11/c12 here.

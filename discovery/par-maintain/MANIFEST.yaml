@@ -1,0 +1,191 @@
+slice_id: par-maintain
+seed: "Parameters - PAR200 Work with Parameters (menu opt 20), PAR201 Work with IFS output (menu opt 83, CL), FPARAMETER service program (PAR300 GetPARM1..5)"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE
+  - ATU_SRC/QCLSRC/PAR201.CLLE
+  - ATU_SRC/QILESRC/PAR201.ILEPGM
+  - ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM
+  - ATU_SRC/QRPGLESRC/PAR300.RPGLE
+  - ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC
+  - ATU_SRC/QDDSSRC/PAR200D.DSPF
+out_of_scope_hints:
+  - programs that consume PATH (ORD500, PRO202, PRO203) - own slices; cited for the PATH contract only (c07, c08, c11)
+  - LOG100 body / SAMLOG (log-programs) - cited for the library-anchor fact only (c13)
+  - XML / XSS service programs and CVTSPLPDF (no source) - what they do with a blank or relative PATH is their blind spot (c08)
+  - conversion / test generation / bind
+phase: B
+updated_at: 2026-09-09T09:05:00Z
+bind_status: accepted   # night residual wave 2026-09-09; Pack B deepen from source
+bind_record: BIND.md
+documented_by: document-slices-conveyor (Pack B run 13, 2026-09-09)
+characterization: deferred-waived   # see CHARACTERIZATION.md — no RECORD/REPLAY, no goldens, no conversion unlock
+feature_id_note: "Stable ids kept as cNN (Phase A / bind / APP_MANIFEST reference them); not renumbered to <SLICE_ID>-NNN. Same decision as runs 1-12."
+needs_sme:
+  - "c11 (room): treat PATH as target configuration, not a maintained table row - one key, one column, four literal readers (ORD500, PRO202, PRO203, PAR201), GetPARM1/3/4/5 and ClosePARAMETER have no caller. If yes, PAR200 (c01-c06) and PAR201 (c07) have nothing left to maintain or browse and PARAMETER (c12) has no purpose in the target; LOG100 loses its library anchor (c13)."
+  - "c07 / c11 (data): does the PATH value on the box end with '/'? PRO202 / PRO203 concatenate %trim(path) + fileName with no separator, ORD500C uses TODIR (separator-tolerant), PAR201 lists <PATH>* - without the slash the XML / spreadsheet files are written beside the directory, not in it. Also: which file system (root is case-insensitive, QOpenSys is not); do any other PARAMETER rows exist (nothing in source reads them)."
+  - "c08 (inferred, carded): a missing or blank PATH is silent in this slice - GetPARM2 returns 100 blanks, PAR201 runs WRKLNK '*' (current directory), PRO202 / PRO203 open relative file names, ORD500C passes a blank TODIR. Where the files end up and whether the XML / XSS service programs or CVTSPLPDF reject a blank/relative name is outside the tree. Target: required setting (fail fast) or default location?"
+  - "c09 (target): getter cache keyed on the record buffer's own PACODE/PASUBCODE - a hit is served stale until a different key is requested (never, in-tree), so the first PATH read in a job is the value for the job (QILE shared by all four consumers); a miss is never cached; a blank key never reads. Read-once-per-job acceptable for a single setting, or read-through / configuration? Same question as cou-maintain-c07."
+  - "c05 (Phase A corrected): option 4 deletes immediately with no confirmation, and the '*** Deleted ****' marker never reaches the screen - PARM2 is not a subfile field (the list shows PARM2S). The ghost row shows blank Code / Sub-Code / 1 and the old 2-5 values; option 4 on the ghost deletes the blank/blank row if one exists. Acceptable as-is if the screen survives?"
+  - "c03 (Phase A sharpened): after F6 (create or cancel) the list runs the Page Down path from the saved key; at Bottom the saved key is the last displayed row, so that row is appended a second time. c04: edited rows keep their pre-edit values in the list until F5. As-is display quirks; preserve only if the screen is kept."
+  - "c02 / c04: create validates the duplicate key only (blank code / sub-code allowed, values unvalidated, no audit); the duplicate check chains the update-capable file and leaves the existing row locked while the error shows; edit chains with a lock held across the screen and updates unconditionally; option 2 on a ghost row (or a row deleted by another job) -> chain miss -> update without prior read -> unmonitored RPG 01221. Record as-is; one lock/ghost-row answer for the estate's list/edit template (CUS200 is the same shape)."
+  - "c10 (build owner / ME): EXPORT(*ALL), no binder source - chainPARAMETER and closePARAMETER exported, signature generated, no *PRV; closePARAMETER would not reset the cache key. Target exposes the getters only. Also: activation group of ORD500 / PRO203 (dftactgrp(*no), no ACTGRP -> QILE inferred) decides the cache scope; how ORD500 / PRO203 bind FPARAMETER is build metadata (srvpgm-supporting-c05)."
+  - "c13 (deployment): SAMLOG is created in whatever library resolves PARAMETER on *LIBL at LOG100 time and found later via *LIBL - two resolution rules; if PARAMETER disappears in the target, log-programs needs a new location rule (their card)."
+  - "c01 / c06: page geometry (14 rows, lines 7-20), leading zeros on un-edited numeric output (PARM4 / PARM5), options typed before Page Down / F6 surviving to the next Enter, F3 = F12 on the list, F3 on detail panels returning to the list - DDS / platform contract, runtime-confirmable."
+
+features:
+  - id: par-maintain-c01
+    name: List parameters with paging, F5 refresh, options 2/4
+    status: documented
+    confidence: observed-in-code
+    summary: "PAR200 (menu opt 20, no parameters, no H spec, cycle-driven panel/step machine) reads PARAMETER directly (uf a) in key order (PACODE, PASUBCODE): 14 rows per load with a look-ahead read so Bottom is exact (no empty trailing page); saved key = the unread 15th record (at EOF: the last displayed row); Page Down appends 14 from the saved key (SFLSIZ 15 != SFLPAG 14 auto-extend, PAGEDOWN N80 - display-handled after Bottom); F5 clears and reloads from the top; RRB01 = LRRN keeps the page. Columns Opt / Code / Sub-Code / 1 / 2 (PARM2S = first 32 of PARM2; PARM2 itself is not a subfile field) / 3 / 4 / 5 (numeric, no EDTCDE -> leading zeros). Options 0/2/4 only; others RI + SFLMSG 'Invalid Option', first bad row paged to, all changed rows kept with SFLNXTCHG. s01act processes ONE changed row per cycle pass, so several 2s / 4s run in RRN order. No filter, position-to, search or help. The subfile is a snapshot: created (c03), edited (c04) and deleted (c05) rows are not re-read until F5. Empty file -> headings, no message. Options typed before Page Down / F6 survive to the next Enter; F3/F5/F12 discard them."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 CTL01/SFL01 (menu opt 20)
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:5-9", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:81-196", "ATU_SRC/QDDSSRC/PAR200D.DSPF:13-81", "ATU_SRC/QPNLSRC/SAMMNU.MENU:135-138"]
+    behaviour_doc: features/par-maintain-c01.md
+    dependencies: [PARAMETER.PF, PAR200D.DSPF]
+    open_questions: ["needs-SME: keep the generic list at all, or PATH as configuration (c11)?", "Runtime-confirmable: page geometry, leading zeros, MDT survival across CF06/PAGEDOWN, default activation group (no H spec)."]
+  - id: par-maintain-c02
+    name: F6 create with duplicate-key check only
+    status: documented
+    confidence: observed-in-code
+    summary: "FMT03 (PAR200-3): clear fmt03, all seven fields input (PARM2 CHECK(LC) keeps case; the other character fields are upper-cased by the display, which is why keys are stored upper-case); Enter -> chain (pacode:pasubcode) on the uf a file -> found: indicator 40 ERRMSG 'This code/sub-code already exist.' on PACODE, redisplay (fields not rewritten under ERRMSG, typed values stay on screen) - and the existing row is LOCKED and loaded into the buffer while the error shows; not found -> write fparam, panel 1 (list re-entered in lod - c03). No other validation: blank code and/or sub-code accepted (one blank/blank row possible - unreachable by the getters, c09), values unvalidated, no audit, no message on success. chain/write not atomic (UNIQUE 01021 race, unmonitored). F3 = F12 = back to list, input discarded, lock kept."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 FMT03
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:145-147", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:252-305", "ATU_SRC/QDDSSRC/PAR200D.DSPF:116-151"]
+    behaviour_doc: features/par-maintain-c02.md
+    dependencies: [PARAMETER.PF]
+    open_questions: ["needs-SME: unvalidated create acceptable if the screen survives; moot if PATH is configuration (c11).", "Runtime-confirmable: ERRMSG not rewriting fields, lock lifetime after F3/F12, 01021 surface."]
+  - id: par-maintain-c03
+    name: List not refreshed after create (appends the next page; duplicates the last row after Bottom)
+    status: documented
+    confidence: observed-in-code
+    summary: "F6 sets step01 = lod; on return from FMT03 (write, F3 or F12 alike) the list runs the Page Down path: setll on the saved key, append 14 rows, display jumps to them; the new row is visible only if its key sorts inside that page, otherwise F5. Phase A sharpened: when the list was at Bottom the saved key is the LAST DISPLAYED row (READ at EOF leaves the buffer unchanged), so that row is appended a second time - one duplicate per F6 round-trip; option 4 on the second copy is the silent not-found case (c05). Empty file: no duplicate. Only F5 shows the file as it is. The edit path (c04) does not page (step01 stays act); its stale-row problem is the values."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 s01key create / s01lod
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:145-147", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:92-119", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:278-305"]
+    behaviour_doc: features/par-maintain-c03.md
+    dependencies: []
+    open_questions: ["needs-SME: as-is quirk; preserve only if the screen is kept.", "Runtime-confirmable: duplicate row after creating while Bottom is displayed."]
+  - id: par-maintain-c04
+    name: Option 2 edit values without validation
+    status: documented
+    confidence: observed-in-code
+    summary: "s01act: opt01 = 0, update sfl01 (row rewritten with the OLD values, MDT cleared) then panel 2. S02prp chain (pacode:pasubcode) with a lock, %found not tested; FMT02 (PAR200-2) key output-only, PARM1-5 input (PARM2 CHECK(LC)), lock held while the user types; S02chk empty; Enter -> update fparam unconditionally (an unchanged panel still updates), no audit; F3 = F12 = back to the list without update or unlock. The list keeps the pre-edit values (and the load-time PARM2S) until F5. Ghost row (blank key after c05) or a row deleted by another job -> chain miss -> FMT02 shows the stale buffer -> Enter -> update without prior read -> RPG 01221 unmonitored (inference). Editing PATH is not seen by running jobs (c09 cache). Getters (if open) read through the lock; other PAR200 sessions wait WAITRCD."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:180-184", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:200-248", "ATU_SRC/QDDSSRC/PAR200D.DSPF:82-115"]
+    behaviour_doc: features/par-maintain-c04.md
+    dependencies: []
+    open_questions: ["needs-SME: unvalidated in-place edit, no audit, lock across screen - as-is if kept.", "Runtime-confirmable: 01221 on ghost-row edit, lock lifetime after F3/F12."]
+  - id: par-maintain-c05
+    name: Option 4 immediate delete, no confirmation (the '*** Deleted ****' marker never reaches the screen)
+    status: documented
+    confidence: observed-in-code
+    summary: "delete (pacode:pasubcode) parameter by key, no prior chain, no confirmation, no message; not found -> %found off, silent (a row already deleted by another job). Then clear pacode / pasubcode / parm1, parm2 = '*** Deleted ****', opt01 = 0, update sfl01. Phase A corrected: PARM2 is NOT a field of SFL01 (the list shows PARM2S), so the marker is never displayed - the ghost row shows blank Code / Sub-Code / 1 and the OLD 2 / 3 / 4 / 5 values, and stays selectable: 2 -> chain miss -> 01221 (c04); 4 -> delete (' ':' ') -> silent no-op, OR deletes the blank/blank row if one exists (c02). Consecutive 4s one per cycle pass. No in-use check: PATH can be deleted while ORD500 / PRO202 / PRO203 / PAR201 depend on it - running jobs keep the cached value, new jobs get blanks (c08, c09). Lock held by another session -> WAITRCD -> 01218 unmonitored (inference)."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 s01act opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:185-192", "ATU_SRC/QDDSSRC/PAR200D.DSPF:13-28"]
+    behaviour_doc: features/par-maintain-c05.md
+    dependencies: []
+    open_questions: ["needs-SME: unconfirmed physical delete of the one live setting acceptable as-is?", "Phase A corrected: marker text never displayed (CANDIDATES.md row c05 left as the Phase A record)."]
+  - id: par-maintain-c06
+    name: F3 on detail panels returns to list; F12 on list exits
+    status: documented
+    confidence: observed-in-code
+    summary: "List: F3 -> panel 0 (end), F12 -> panel - 1 = 0 (end) - F3 = F12; F5 refresh (clear, reload from top, typed options lost); F6 create; Page Down live only while More... (N80); Enter options. FMT02 / FMT03: F3 -> panel 1, F12 -> panel 1 - both 'cancel' without writing, lock kept; leaving the program from a detail panel takes two presses. CA03/CA05/CA12 are attention keys (no data returned), CF06 / PAGEDOWN return data (typed options survive to the next Enter). No F4, no HELP keyword (menu help=nohelp), no PAGEUP (display-side), PRINT allowed. Dead indicators help 01 / prompt 04 / morekeys 24. Same template as CUS200 (cus-interactive)."
+    entrypoints:
+      - kind: screen
+        locator: PAR200 key subroutines
+        evidence: ["ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:133-151", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:226-237", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:278-289", "ATU_SRC/QDDSSRC/PAR200D.DSPF:9-11", "ATU_SRC/QDDSSRC/PAR200D.DSPF:31-33"]
+    behaviour_doc: features/par-maintain-c06.md
+    dependencies: []
+    open_questions: ["Runtime-confirmable: undefined-key behaviour on FMT02/FMT03; CA vs CF data return."]
+  - id: par-maintain-c07
+    name: PAR201 Work with IFS output (GetParm2 PATH -> WRKLNK)
+    status: documented
+    confidence: observed-in-code
+    summary: "CL, menu opt 83, seven statements, no MONMSG: CALLPRC GETPARM2 ((&CODE 'PATH' *BYVAL) (&SUBCODE ' ' *BYVAL)) RTNVAL(&PATH 100) -> &PATH *TCAT '*' (trailing blanks trimmed) -> WRKLNK OBJ(&PATH), interactive; ends when WRKLNK returns. Bound by PAR201.ILEPGM CRTPGM BNDSRVPGM(FPARAMETER) ACTGRP(QILE) - the only CL in the tree calling a service-program procedure. Pattern semantics: '<dir>/*' lists the directory's entries only if PATH ends with '/'; '<dir>*' lists the parent's entries starting with the last component - which is exactly where PRO202 / PRO203 (%trim(path) + fileName) would have written without the slash; ORD500C (TODIR) is separator-tolerant. Blank PATH -> '*' (c08). 100-char PATH -> '*' truncated away. WRKLNK gives the operator display / edit / rename / remove over the matched files. First GetPARM2 in the job primes the shared QILE cache (c09)."
+    entrypoints:
+      - kind: job
+        locator: PAR201 (menu opt 83)
+        evidence: ["ATU_SRC/QCLSRC/PAR201.CLLE:4-10", "ATU_SRC/QILESRC/PAR201.ILEPGM:8-9", "ATU_SRC/QPNLSRC/SAMMNU.MENU:155-158", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:151-152", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:32-33"]
+    behaviour_doc: features/par-maintain-c07.md
+    dependencies: [FPARAMETER.ILESRVPGM, PARAMETER.RPGLEINC]
+    open_questions: ["needs-SME: preserve, or fold into a runbook / file browser (Phase A: reject or runbook)?", "needs-SME (data): does PATH on the box end with '/'?", "Runtime-confirmable: *TCAT / WRKLNK pattern semantics, CL RTNVAL of a 100A return, unmonitored escape surface."]
+  - id: par-maintain-c08
+    name: Blank PATH degrades to WRKLNK '*' / relative file names
+    status: documented
+    confidence: inferred
+    summary: "Source half: a missing ('PATH',' ') row or a blank PARM2 makes GetPARM2 return 100 blanks silently (clear *all FPARAM + chain miss; no %found exposed; the miss is re-tried every call); none of the four consumers tests the value. PAR201 -> WRKLNK OBJ('*') (job's current directory); PRO202 -> xmlopen('' + 'Pur_Ord_...xml'), PRO203 -> xssopenfile('' + 'Goods to purchase_...xml') - relative names handed to the sourceless XML / XSS service programs; ORD500C -> CVTSPLPDF TODIR(blank) (ord-print-ord500-c02/c04). Inferred half: where relative names resolve (HOMEDIR / '/') and whether the writers or the converter fail is runtime / outside the tree. Blank value and missing row are indistinguishable; a job that read PATH before a delete keeps the old value (c09), so the incident appears per job. No seed / insert of PATH exists in ATU_SRC - presence is installation data (Phase A question 1 stays open)."
+    entrypoints:
+      - kind: other
+        locator: PAR201 / PAR300 miss path; PRO202 / PRO203 / ORD500C consumers
+        evidence: ["ATU_SRC/QCLSRC/PAR201.CLLE:9-10", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:34-44", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:90-96", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:151-152", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:32-33", "ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:11-12"]
+    behaviour_doc: features/par-maintain-c08.md
+    dependencies: [XML srvpgm (no source), XSS srvpgm (no source), CVTSPLPDF (no source)]
+    open_questions: ["Is PATH guaranteed present on the box? (data)", "needs-SME: target - required setting (fail fast) or default location?", "Runtime-confirmable: current-directory resolution; writers' handling of relative names."]
+  - id: par-maintain-c09
+    name: GetPARM1..5 getter family with two-part cached chain
+    status: documented
+    confidence: observed-in-code
+    summary: "PAR300 nomain: five exports (GetPARM1 10A, GetPARM2 100A, GetPARM3 2A, GetPARM4 1P 0, GetPARM5 3P 0; each (PACODE 10A value, PASUBCODE 10A value)) over one private chainPARAMETER: open guard on the USROPN input file (opened on first call, never closed - closePARAMETER has no caller); cache test P_PACODE <> PACODE or P_PASUBCODE <> PASUBCODE against the RECORD BUFFER's own key fields: hit -> no I/O, served until a different key is requested (never, in-tree - so the first PATH read in a job is the value for the job); miss -> clear *all FPARAM then chain -> blanks / zeros returned, %found not exposed, miss never cached; blank key never reads (the blank/blank row PAR200 can create is unreachable). Case-sensitive 10A compare (PAR200 upper-cases keys on entry). No (e) / monitor: open or chain failure propagates to the caller. ACTGRP(*CALLER): PAR201 / PRO200 explicit QILE, ORD500 / PRO203 dftactgrp(*no) -> QILE by default (inference) -> one buffer and one ODP per interactive job across all four consumers. Reads through PAR200's locks (if open). Same idiom as cou-maintain-c07 / FCUSTOMER."
+    entrypoints:
+      - kind: api
+        locator: FPARAMETER GetPARM1..GetPARM5 (PAR300)
+        evidence: ["ATU_SRC/QRPGLESRC/PAR300.RPGLE:22-80", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:82-107", "ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC:7-37", "ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM:8"]
+    behaviour_doc: features/par-maintain-c09.md
+    dependencies: [PARAMETER.PF, FPARAMETER.ILESRVPGM]
+    open_questions: ["needs-SME (target): read-once-per-job cache acceptable for a single setting, or read-through / configuration (c11)?", "Build owner: activation group of ORD500 / PRO203; how they bind FPARAMETER (srvpgm-supporting-c05)."]
+  - id: par-maintain-c10
+    name: EXPORT(*ALL) exports the five getters only; chainPARAMETER / closePARAMETER are module-local (corrected run 16 - srvpgm-supporting-c06)
+    status: documented
+    confidence: observed-in-code
+    summary: "CORRECTED (Pack B run 16, srvpgm-supporting-c06): EXPORT(*ALL) exports module exports only - PAR300 puts export on GetPARM1-5 (:22,34,46,58,70) and not on chainPARAMETER (:82) / closePARAMETER (:100), so FPARAMETER exports FIVE procedures; ClosePARAMETER in the copybook has no export behind it (a call would fail to bind); chainPARAMETER is unreachable from outside. Original text: CRTSRVPGM SRVPGM(&O/&N) MODULE(PAR300) ACTGRP(*CALLER) EXPORT(*ALL); no QSRVSRC/FPARAMETER.BND -> [all seven procedures exported - wrong, see above] in source order, signature generated, no *PRV (any export change -> MCH4431 in bound programs until re-bound). Copybook publishes GetPARM1-5 + ClosePARAMETER but not chainPARAMETER. Contrast FCOUNTRY (EXPORT(*SRCFILE) hides closeCOUNTRY - cou-maintain-c11), FPROVIDER (only versioned binder). Latent: ClosePARAMETER would close the ODP but not clear the buffer, so the cache key survives a close - a caller adding ClosePARAMETER() to 'refresh' PATH would not get a refresh for the same key. Callers bound: PAR201 / PRO200 explicit BNDSRVPGM; SAMPLE.BNDDIR entry for bnddir('SAMPLE') programs; ORD500 / PRO203 by build metadata only. Build note; target exports the getters only."
+    entrypoints:
+      - kind: other
+        locator: FPARAMETER.ILESRVPGM
+        evidence: ["ATU_SRC/QILESRVSRC/FPARAMETER.ILESRVPGM:8", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:82-107", "ATU_SRC/QPROTOSRC/PARAMETER.RPGLEINC:37", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:13"]
+    behaviour_doc: features/par-maintain-c10.md
+    dependencies: [SAMPLE.BNDDIR, PAR201.ILEPGM, PRO200.ILEPGM]
+    open_questions: ["Build owner: has the generated signature ever changed (not visible from source)?"]
+  - id: par-maintain-c11
+    name: Only PATH is a live parameter; GetPARM1/3/4/5 unused
+    status: documented
+    confidence: observed-in-code
+    summary: "Exactly four callers, all GetParm2('PATH':' ') with the literal key: ORD500:58 (-> ORD500C TODIR(&PATH), separator-tolerant), PRO202:151 (xmlopen(%trim(path) + 'Pur_Ord_<prid>_<yymmdd>.xml')), PRO203:32 (xssopenfile(%trim(path) + 'Goods to purchase_<yymmdd>.xml')), PAR201:7 (WRKLNK <PATH>*). GetPARM1 / GetPARM3 / GetPARM4 / GetPARM5 / ClosePARAMETER: prototype and body only, no caller; PARM1 / PARM3 / PARM4 / PARM5 maintained by PAR200, read by nobody. Implicit PATH contract: <= 100 chars, IFS directory, ENDING WITH '/' (two of four consumers need it), case as typed, read once per job (c09), blank tolerated silently (c08). PAR200 is the only writer; no seed / install of the PATH row in the tree. Recommendation unchanged and sharpened: PATH is configuration in the target."
+    entrypoints:
+      - kind: other
+        locator: grep GetParm
+        evidence: ["ATU_SRC/QRPGLESRC/ORD500.PGM.RPGLE:58-59", "ATU_SRC/QCLSRC/ORD500C.PGM.CLLE:11-12", "ATU_SRC/QRPGLESRC/PRO202.SQLRPGLE:151-152", "ATU_SRC/QRPGLESRC/PRO203.PGM.SQLRPGLE:32-33", "ATU_SRC/QCLSRC/PAR201.CLLE:7-10"]
+    behaviour_doc: features/par-maintain-c11.md
+    dependencies: []
+    open_questions: ["needs-SME / room: treat PATH as target configuration instead of converting the key/value screen?", "needs-SME (data): PATH value on the box - trailing slash, file system; any other rows?"]
+  - id: par-maintain-c12
+    name: PARAMETER is a plain two-key key/value table
+    status: documented
+    confidence: observed-in-code
+    summary: "DDS PF, record FPARAM, UNIQUE (PACODE 10A, PASUBCODE 10A); PARM1 10A, PARM2 100A, PARM3 2A, PARM4 zoned 1,0, PARM5 zoned 3,0 (getters return packed); 136-byte record. No delete flag (physical delete - unlike CUSTOMER / ARTICLE soft-deletes), no audit columns (PAR200's User inz(*user) is never used), no TEXT on the file, no SAMREF fields, no LF / view / index / trigger / constraint beyond UNIQUE; no SQL touches it. Openers: PAR200 (uf a), PAR300 (if usropn), LOG100 (if, library only - c13). Blank/blank key legal (one row). *LIBL resolution everywhere. Object attributes (WAITRCD, REUSEDLT, journaling, CCSID) not in DDS."
+    entrypoints:
+      - kind: other
+        locator: PARAMETER.PF
+        evidence: ["ATU_SRC/QDDSSRC/PARAMETER.PF:4-14", "ATU_SRC/QRPGLESRC/PAR200.PGM.RPGLE:5", "ATU_SRC/QRPGLESRC/PAR300.RPGLE:6", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:6-7"]
+    behaviour_doc: features/par-maintain-c12.md
+    dependencies: []
+    open_questions: ["Build owner: WAITRCD / journaling / CCSID of the object (decides lock-wait surfaces on c02 / c04 / c05)."]
+  - id: par-maintain-c13
+    name: LOG100 uses PARAMETER's library as the application library
+    status: documented
+    confidence: observed-in-code
+    summary: "LOG100 opens PARAMETER (if e k disk, implicit open, no read) only to take the opened file's library from INFDS bytes 93-102 and build the qualified name 'SAMLOG    ' + Lib for QUSCRTUS (LOG, 5000 bytes, X'00', *ALL, replace *YES); LOG300 later finds the space with 'SAMLOG    *LIBL'. So the library that resolves PARAMETER on *LIBL at install time is 'the application library' for the log - a dependency on the object, not on any row; two resolution rules (INFDS at create, *LIBL at run). errcod never inspected; PARAMETER missing -> unmonitored open failure before anything is created (inference). If PARAMETER disappears in the target (c11), log-programs needs a new location rule. Log behaviour itself: log-programs-c01 (accepted, not deepened here)."
+    entrypoints:
+      - kind: other
+        locator: LOG100 INFDS
+        evidence: ["ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:6-7", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:11-12", "ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE:20-22", "ATU_SRC/QRPGLESRC/LOG300.RPGLE:41"]
+    behaviour_doc: features/par-maintain-c13.md
+    dependencies: [LOG100, QUSCRTUS, SAMLOG (runtime object)]
+    open_questions: ["Deployment: is PARAMETER's library on *LIBL when LOG300 runs (log-programs' question)?"]

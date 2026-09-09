@@ -1,0 +1,163 @@
+pack_id: atu-merlin-ts-ord-v1
+version: 1
+status: BOUND
+migration_id: atu-merlin
+slice_ids:
+  - ord-entry-ord100
+  - ord-entry-ord101
+  - ord-maintain-ord200
+  - ord-maintain-ord201
+  - ord-maintain-ord202
+  - ord-print-ord500
+  - ord-trigger-ord700
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: features/order/
+
+boundaries:
+  in_scope:
+    - ORD only (ord-entry-ord100, ord-entry-ord101, ord-maintain-ord200, ord-maintain-ord201, ord-maintain-ord202, ord-print-ord500, ord-trigger-ord700)
+    - Pack-B wave five slices plus already-documented ord-entry-ord100 and ord-trigger-ord700
+  stay_legacy:
+    - ART
+    - ATU_SRC
+    - unbound residuals
+    - other non-ORD domains
+    - CUS (stays under pack atu-merlin-ts-cus-v1; do not re-convert CUS in this pack)
+  anti_corruption: "ORD modern vertical only; do not bridge ART into this pack; may reuse shared modern modules (e.g. fcustomer/fcountry) already under modern/"
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths:
+    - modern/openapi/order.yaml
+  sourced_vs_inferred: inferred
+  notes: "New HTTP JSON APIs for ORD; OpenAPI will live at modern/openapi/order.yaml (may be authored at convert). Not preserve-wire against IBM i 5250"
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: greenfield-from-pf
+  migration_tool: null
+  notes: "Map ORDER/DETORD and related PFs into Postgres tables; no shared IBM i DB"
+
+authn_authz:
+  mode: pathfinder-open
+  notes: "Pathfinder: open/dev auth; not production IAM"
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+
+mapping_rules:
+  - from: DSPF
+    to: web
+  - from: RPGLE
+    to: TS service
+  - from: PRTF/spool
+    to: printable artifact / PDF endpoint (scope TBD — see known_risks)
+  - from: PF
+    to: postgres table
+  - from: LF
+    to: index/query
+  - from: "IBM i blank/never date (1940-01-01 / zero-date)"
+    to: "store NULL in Postgres; map sentinel only at the boundary (do NOT store 1940-01-01 as a real date)"
+  - from: triggers ORD700/ORD701
+    to: application-level side effects or DB triggers in Postgres (choose at convert; document choice)
+
+non_goals:
+  - "No ART conversion in this pack"
+  - "No edits under ATU_SRC/**"
+  - "No widening or editing pack atu-merlin-ts-cus-v1"
+  - "No IBM i characterization goldens / REPLAY_GREEN required for pathfinder"
+  - "No microservice split; modular monolith only"
+  - "Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required"
+  - "Do not “fix” planted defects in discovery/architecture"
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: "No IBM i goldens; COMPARE at TS API only"
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - "Edit or rewrite ATU_SRC/**"
+  - "Pull ART into modern ORD scope"
+  - "Widen or overwrite atu-merlin-ts-cus-v1"
+  - "Rewrite or re-convert CUS under modern/src/features/customer/** or modern/openapi/customer.yaml"
+- "Reshape existing CUS schema under modern/db/** — ORD tables additive only"
+  - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
+  - "Convert consuming status DRAFT"
+  - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
+  - "Invent SME answers for known_risks below"
+  - "“Fix” planted defects (ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero) during Architecture — preserve as-is/residual"
+  - "String-concat SQL in repositories"
+  - "Rewrite discovery cards during Convert"
+
+edit_surface:
+  allow:
+    - modern/src/features/order/**
+    - modern/src/shared/**
+    - modern/openapi/order.yaml
+    - modern/db/**
+    - modern/test/**
+    - modern/src/app.ts
+    - modern/src/server.ts
+    - modern/package.json
+    - modern/package-lock.json
+    - modern/tsconfig.json
+    - modern/vitest.config.ts
+    - modern/README.md
+    - modern/.gitignore
+    - modern/scripts/**
+    - architecture/atu-merlin-ord/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**   # CUS pack — do not edit from ORD convert
+    - modern/src/features/customer/**
+    - modern/openapi/customer.yaml
+
+known_risks:
+  - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
+  - "Date lock: store NULL in Postgres for blank/never; map IBM i 1940-01-01 / zero-date only at the boundary"
+  - "Do not invent ORD200/ORD201 SoT twin; sticky option 3 and c03/c04 stay needs-SME until SME names the parity reference"
+  - "option-5 not-found unguarded %date and description-hidden-until-F11 stay known_risks/needs-SME; do not invent presentation"
+  - "Print side (ord-print-ord500): not-found on option 6 (same %date class), PDF name truncates at 5 chars, sync print on confirm, whether PDF is in scope via c04 (CVTSPLPDF) — needs-SME"
+  - "Planted defects stay as-is/residual: ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero — do not “fix” in Architecture"
+  - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
+  - "CUS modern already exists under atu-merlin-ts-cus-v1; accidental re-scope of CUS is a fail"
+- "modern/db/** additive ORD tables only — do not reshape CUS schema"
+  - "ORD700/ORD701 side-effect shape (application-level vs Postgres DB trigger) undecided until Convert; document the choice at convert time"
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/ord-entry-ord100/features/
+    - discovery/ord-entry-ord101/features/
+    - discovery/ord-maintain-ord200/features/
+    - discovery/ord-maintain-ord201/features/
+    - discovery/ord-maintain-ord202/features/
+    - discovery/ord-print-ord500/features/
+    - discovery/ord-trigger-ord700/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-ord/ADR/0001-ord-vertical-ts-postgres.md
+
+bound_by: "atuMerlin migration room (Field Engineer 9.5/10 + CTO skim; Agent Smith recorded)"
+bound_at: "2026-09-09T00:46:59Z"
+change_policy: "BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place."
+reference_skeleton: null

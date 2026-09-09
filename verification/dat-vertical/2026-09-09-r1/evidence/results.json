@@ -1,0 +1,435 @@
+{
+  "pack": "atu-merlin-ts-dat-v1@1",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "discovery/dat-utils/features (c01 validation rules) + modern/README.md DAT section; NOT IBM i goldens",
+  "sweep": {
+    "years": [
+      0,
+      1,
+      99,
+      100,
+      400,
+      1900,
+      1940,
+      1999,
+      2000,
+      2024,
+      2039,
+      2100,
+      9999
+    ],
+    "values": 130000,
+    "random": 200000
+  },
+  "ran_at": "2026-09-09T15:32:12.298Z",
+  "summary": {
+    "pass": 29,
+    "fail": 0,
+    "total": 29
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "card": "c01",
+      "name": "DAT002 sentinels by exact equality: 0 -> 1940-01-01, 99999999 -> 2039-12-31, 99999998 / 1 / -99999999 -> null",
+      "pass": true,
+      "detail": {
+        "zero": "1940-01-01",
+        "negZero": "1940-01-01",
+        "hival": "2039-12-31",
+        "hivalMinusOne": null,
+        "one": null,
+        "minHival": null
+      }
+    },
+    {
+      "id": "P02",
+      "card": "c01",
+      "name": "isoToDate40 == DAT002 oracle on the calendar sweep (130000 values, years 0/1/99/100/400/1900/1940/1999/2000/2024/2039/2100/9999)",
+      "pass": true,
+      "detail": {
+        "checked": 130000,
+        "mismatches": 0,
+        "threw": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P03",
+      "card": "c01",
+      "name": "isoToDate40 == DAT002 oracle on 200000 random DECIMAL(8,0) values (negatives included)",
+      "pass": true,
+      "detail": {
+        "checked": 200000,
+        "mismatches": 0,
+        "threw": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P04",
+      "card": "c01",
+      "name": "leap-year rule: 1900 / 2100 not leap, 2000 / 2024 leap, 2023 not",
+      "pass": true,
+      "detail": {
+        "y1900": null,
+        "y2000": "2000-02-29",
+        "y2100": null,
+        "y2024": "2024-02-29",
+        "y2023": null
+      }
+    },
+    {
+      "id": "P05",
+      "card": "c01",
+      "name": "no business window: 00010101 and 99991231 convert; year 0000 is null; 0099-12-31 converts",
+      "pass": true,
+      "detail": {
+        "min": "0001-01-01",
+        "max": "9999-12-31",
+        "year0": null,
+        "y99": "0099-12-31"
+      }
+    },
+    {
+      "id": "P06",
+      "card": "c02",
+      "name": "isoNumToDate == DAT001 oracle on the calendar sweep (130000 values)",
+      "pass": true,
+      "detail": {
+        "checked": 130000,
+        "mismatches": 0,
+        "threw": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P07",
+      "card": "c02",
+      "name": "isoNumToDate == DAT001 oracle on 200000 random values",
+      "pass": true,
+      "detail": {
+        "checked": 200000,
+        "mismatches": 0,
+        "threw": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P08",
+      "card": "c02",
+      "name": "DAT001 and DAT002 differ on exactly the two sentinel inputs (0, 99999999) across the sweep",
+      "pass": true,
+      "detail": {
+        "differ": [
+          0,
+          99999999
+        ]
+      }
+    },
+    {
+      "id": "P09",
+      "card": "c04",
+      "name": "RETURNS NULL ON NULL INPUT: null in -> null out for isoNumToDate, isoToDate40, fromLegacyIsoNum, fromLegacySentinelDate",
+      "pass": true,
+      "detail": {
+        "d001": null,
+        "d002": null,
+        "lockIn": null,
+        "sentIn": null
+      }
+    },
+    {
+      "id": "P10",
+      "card": "c06",
+      "name": "stateless: 1341 values evaluated in order, shuffled, and again give identical results",
+      "pass": true,
+      "detail": {
+        "probed": 1341
+      }
+    },
+    {
+      "id": "P11",
+      "card": "c08",
+      "name": "absent, never stale: 5000 valid/invalid alternations, every invalid result is null",
+      "pass": true,
+      "detail": {
+        "stale": 0
+      }
+    },
+    {
+      "id": "P12",
+      "card": "c05",
+      "name": "non-DECIMAL(8,0) argument -> DatArgumentError { sqlstate 38I02, message <= 70 chars } from all four entry points (28 cases)",
+      "pass": true,
+      "detail": {
+        "failing": []
+      }
+    },
+    {
+      "id": "P13",
+      "card": "c05",
+      "name": "an invalid date is a null, not an error: 0 exceptions across 330002 in-range values",
+      "pass": true,
+      "detail": {
+        "threw": 0
+      }
+    },
+    {
+      "id": "P14",
+      "card": "c05",
+      "name": "message text cut to the 70-char VARYING parameter on the boundary-out error",
+      "pass": true,
+      "detail": {
+        "len": 70
+      }
+    },
+    {
+      "id": "P15",
+      "card": "lock",
+      "name": "fromLegacyIsoNum == DAT001 semantics on the sweep (0 -> null; no 2039 sentinel inside the boundary)",
+      "pass": true,
+      "detail": {
+        "checked": 130000,
+        "mismatches": 0,
+        "threw": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P16",
+      "card": "lock",
+      "name": "toLegacyIsoNum round-trips every valid sweep value (4384 dates) and null -> 0",
+      "pass": true,
+      "detail": {
+        "valid": 4384,
+        "failed": []
+      }
+    },
+    {
+      "id": "P17",
+      "card": "lock",
+      "name": "toLegacyIsoNum rejects malformed / impossible ISO strings with DatArgumentError",
+      "pass": true,
+      "detail": {
+        "notRejected": []
+      }
+    },
+    {
+      "id": "P18",
+      "card": "c07",
+      "name": "sentinel shape: 1940-01-01 -> null in, null -> 1940-01-01 out; 2039-12-31 NOT mapped (c01 known_risk kept)",
+      "pass": true,
+      "detail": {
+        "lovalIn": null,
+        "hivalIn": "2039-12-31",
+        "plain": "2024-03-15",
+        "nullOut": "1940-01-01",
+        "plainOut": "2024-03-15"
+      }
+    },
+    {
+      "id": "P19",
+      "card": "c07",
+      "name": "one sentinel rule: isoToDate40(n) === toLegacySentinelDate(fromLegacyIsoNum(n)) holds on exactly {0} U valid dates (4385 values); for every invalid n (125616 values incl. 99999999) DAT002 gives NULL / 2039-12-31 and the composition gives 1940-01-01 — the README states the identity unqualified (G-D1)",
+      "pass": true,
+      "detail": {
+        "holds": 4385,
+        "breaks": 125616,
+        "hival": {
+          "dat002": "2039-12-31",
+          "composed": "1940-01-01"
+        },
+        "sample": [
+          {
+            "n": 1,
+            "dat002": null,
+            "composed": "1940-01-01",
+            "valid": false
+          },
+          {
+            "n": 2,
+            "dat002": null,
+            "composed": "1940-01-01",
+            "valid": false
+          },
+          {
+            "n": 3,
+            "dat002": null,
+            "composed": "1940-01-01",
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "P20",
+      "card": "lock",
+      "name": "DAT002 presentation value for 0 does not leak into storage: fromLegacySentinelDate(isoToDate40(0)) is null and stores as 0",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "id": "P21",
+      "card": "CR-D3",
+      "name": "CUS lastOrderDateOf agrees with the DAT lock on the sweep except years 0001-0099, where CUS gives null and DAT a date (730 values, years 1,99)",
+      "pass": true,
+      "detail": {
+        "diffs": 730,
+        "years": [
+          1,
+          99
+        ],
+        "sample": [
+          {
+            "n": 10101,
+            "dat": "0001-01-01",
+            "cus": null
+          },
+          {
+            "n": 10102,
+            "dat": "0001-01-02",
+            "cus": null
+          },
+          {
+            "n": 10103,
+            "dat": "0001-01-03",
+            "cus": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "P22",
+      "card": "lock",
+      "name": "schema: ORD701 keeps its inline to_char(ordate,'YYYYMMDD')::integer; ORD date columns are `date`; DAT section creates no table, no 1940/2039 literal in code, no legacy-named function",
+      "pass": true,
+      "detail": {
+        "ord701": true,
+        "noTable": true,
+        "noSentinelLiteralInCode": true,
+        "noLegacyNames": true,
+        "orderDatesAreDate": true
+      }
+    },
+    {
+      "id": "P23",
+      "card": "lock/SQL",
+      "name": "dat_iso_num_to_date agrees with fromLegacyIsoNum on the sweep (130000 values)",
+      "pass": true,
+      "detail": {
+        "mismatches": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P24",
+      "card": "lock/SQL",
+      "name": "dat_iso_num_to_date agrees with fromLegacyIsoNum on 50000 random values incl. negatives",
+      "pass": true,
+      "detail": {
+        "mismatches": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P25",
+      "card": "lock/SQL",
+      "name": "SQL: NULL -> NULL, 0 -> NULL, 99999999 -> NULL (no 2039 sentinel in storage), NULL date -> 0",
+      "pass": true,
+      "detail": {
+        "a": null,
+        "b": null,
+        "c": null,
+        "d": 0
+      }
+    },
+    {
+      "id": "P26",
+      "card": "lock/SQL",
+      "name": "dat_date_to_iso_num == ORD701 inline to_char expression == toLegacyIsoNum, and round-trips, on 4384 dates",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "n": 4384
+      }
+    },
+    {
+      "id": "P27",
+      "card": "c04",
+      "name": "SQL twins are IMMUTABLE; dat_iso_num_to_date is STRICT (RETURNS NULL ON NULL INPUT), dat_date_to_iso_num is not (NULL must give 0)",
+      "pass": true,
+      "detail": [
+        {
+          "proname": "dat_date_to_iso_num",
+          "provolatile": "i",
+          "proisstrict": false,
+          "lanname": "sql"
+        },
+        {
+          "proname": "dat_iso_num_to_date",
+          "provolatile": "i",
+          "proisstrict": true,
+          "lanname": "plpgsql"
+        }
+      ]
+    },
+    {
+      "id": "P28",
+      "card": "CR-D1",
+      "name": "no SQL function named ISOTODATE40 / ISO_Num_To_Date (legacy names not created; documented delta)",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "id": "P29",
+      "card": "lock",
+      "name": "ORD date columns are `date`, delivery / close nullable, no sentinel default (lock matches ORD: NULL for never)",
+      "pass": true,
+      "detail": [
+        {
+          "table_name": "ordercus",
+          "column_name": "ordatclo",
+          "data_type": "date",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "table_name": "ordercus",
+          "column_name": "ordatdel",
+          "data_type": "date",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "table_name": "ordercus",
+          "column_name": "ordate",
+          "data_type": "date",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "table_name": "orders",
+          "column_name": "ordatclo",
+          "data_type": "date",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "table_name": "orders",
+          "column_name": "ordatdel",
+          "data_type": "date",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "table_name": "orders",
+          "column_name": "ordate",
+          "data_type": "date",
+          "is_nullable": "NO",
+          "column_default": null
+        }
+      ]
+    }
+  ]
+}

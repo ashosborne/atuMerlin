@@ -1,0 +1,160 @@
+slice_id: fam-maintain
+seed: "Article family service program FFAMILLY - FAM300 getters/predicates + FAM301 SltArtFam window; no family maintenance program exists (charter id kept)"
+seed_entrypoints:
+  - ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM
+  - ATU_SRC/QSRVSRC/FFAMILLY.BND
+  - ATU_SRC/QRPGLESRC/FAM300.RPGLE
+  - ATU_SRC/QRPGLESRC/FAM301.RPGLE
+  - ATU_SRC/QPROTOSRC/FAMILLY.RPGLEINC
+out_of_scope_hints:
+  - article screens (art-interactive) - callers only
+  - VAT rates (vat-module)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T19:10:00Z
+bind_status: unbound
+
+features:
+  - id: fam-maintain-c01
+    name: GetArtFamDesc getter
+    status: candidate
+    confidence: observed-in-code
+    summary: Returns FADESC from a cached FAMILLY chain by FAID; unknown id -> blanks.
+    entrypoints:
+      - kind: api
+        locator: FFAMILLY GetArtFamDesc (FAM300)
+        evidence: ["ATU_SRC/QRPGLESRC/FAM300.RPGLE:19-27", "ATU_SRC/QRPGLESRC/FAM300.RPGLE:50-63"]
+    dependencies: [FAMILLY.PF]
+    open_questions: []
+  - id: fam-maintain-c02
+    name: ExistArtFam ignores the delete flag (asymmetry)
+    status: candidate
+    confidence: observed-in-code
+    summary: Returns %found only; soft-deleted families still pass ART200 validation. ExistCus/ExistProvider/ExistVATRate exclude 'X' rows.
+    entrypoints:
+      - kind: api
+        locator: FFAMILLY ExistArtFam (FAM300)
+        evidence: ["ATU_SRC/QRPGLESRC/FAM300.RPGLE:29-37", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:286"]
+    dependencies: []
+    open_questions: ["Intended or defect?"]
+  - id: fam-maintain-c03
+    name: IsArtFamDeleted (no caller)
+    status: candidate
+    confidence: observed-in-code
+    summary: FADEL = 'X'; no caller in ATU_SRC.
+    entrypoints:
+      - kind: api
+        locator: FFAMILLY IsArtFamDeleted (FAM300)
+        evidence: ["ATU_SRC/QRPGLESRC/FAM300.RPGLE:40-48"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c04
+    name: Lazy open and last-key cache; closeFAMILLY not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: USROPN input-only, chain skipped on same FAID, clear *all before new chain; close procedure present but not exported.
+    entrypoints:
+      - kind: other
+        locator: FAM300 chainFAMILLY
+        evidence: ["ATU_SRC/QRPGLESRC/FAM300.RPGLE:6", "ATU_SRC/QRPGLESRC/FAM300.RPGLE:50-72", "ATU_SRC/QSRVSRC/FFAMILLY.BND:4-9"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c05
+    name: SltArtFam selection window (keyed read, by code or description)
+    status: candidate
+    confidence: observed-in-code
+    summary: Native keyed read over FAMILLY or FAMILL1 positioned at pcod, 20 rows per load into SFLSIZ 11/SFLPAG 10; option 1 returns FAID; F3/F12 return pcod.
+    entrypoints:
+      - kind: screen
+        locator: FFAMILLY SltArtFam (FAM301 / FAM301D window)
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:53-92", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:95-141", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:240-247", "ATU_SRC/QDDSSRC/FAM301D.DSPF:28-31"]
+    dependencies: [FAMILLY.PF, FAMILL1.LF, FAM301D.DSPF]
+    open_questions: []
+  - id: fam-maintain-c06
+    name: F8 toggles by-code / by-description; clears the key just left
+    status: candidate
+    confidence: observed-in-code
+    summary: bydesc indicator 40 switches POSCOD/POSDES and the F8 label; toggle clears KEYCOD when entering by-desc (opposite of COU301).
+    entrypoints:
+      - kind: screen
+        locator: FAM301 S01act IN08
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:148", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:225-232", "ATU_SRC/QDDSSRC/FAM301D.DSPF:60-68", "ATU_SRC/QDDSSRC/FAM301D.DSPF:76-78"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c07
+    name: Control-line option 8 position-to and its guards
+    status: candidate
+    confidence: observed-in-code
+    summary: OPTC1 = 8 repositions on POSCOD/POSDES; other values -> 41; position-to with selection pending -> 42; selection with F8 -> redisplay.
+    entrypoints:
+      - kind: screen
+        locator: FAM301 S01chk / S01act OPTC1
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:207-219", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:233-239", "ATU_SRC/QDDSSRC/FAM301D.DSPF:50-55"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c08
+    name: Row option rules (option 1 only, single selection)
+    status: candidate
+    confidence: observed-in-code
+    summary: Non-1 -> 35, second 1 -> 36, RI/PC, SFLNXTCHG re-mark.
+    entrypoints:
+      - kind: screen
+        locator: FAM301 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:166-206", "ATU_SRC/QDDSSRC/FAM301D.DSPF:39-40"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c09
+    name: Selector lists soft-deleted families; description key non-unique
+    status: candidate
+    confidence: observed-in-code
+    summary: No FADEL test in the read loop; FAMILL1 keyed on FADESC without UNIQUE.
+    entrypoints:
+      - kind: other
+        locator: FAM301 s01prp / S01lod
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:103-113", "ATU_SRC/QRPGLESRC/FAM301.RPGLE:125-135", "ATU_SRC/QDDSSRC/FAMILL1.LF:4-5"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c10
+    name: Window display file opened once, never closed
+    status: candidate
+    confidence: observed-in-code
+    summary: "%open guard; DUMMY record KEEP/ASSUME preserves the caller's screen."
+    entrypoints:
+      - kind: other
+        locator: FAM301 open / FAM301D DUMMY
+        evidence: ["ATU_SRC/QRPGLESRC/FAM301.RPGLE:70-72", "ATU_SRC/QDDSSRC/FAM301D.DSPF:12-17"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c11
+    name: No maintenance path for families (absence)
+    status: candidate
+    confidence: observed-in-code
+    summary: No FAM200, no menu option, no write/update/delete on FAMILLY in ATU_SRC; audit and delete columns have no writer.
+    entrypoints:
+      - kind: other
+        locator: grep FAMILLY writers
+        evidence: ["ATU_SRC/QPNLSRC/SAMMNU.MENU:82-119", "ATU_SRC/QDDSSRC/FAMILLY.PF:12-18"]
+    dependencies: []
+    open_questions: ["How are families maintained on the box?"]
+  - id: fam-maintain-c12
+    name: FAVATCD default VAT code never read
+    status: candidate
+    confidence: observed-in-code
+    summary: Family default VAT code exists in DDS only; articles carry ARVATCD.
+    entrypoints:
+      - kind: other
+        locator: FAMILLY.FAVATCD
+        evidence: ["ATU_SRC/QDDSSRC/FAMILLY.PF:9-11", "ATU_SRC/QDDSSRC/ARTICLE.PF:32"]
+    dependencies: []
+    open_questions: []
+  - id: fam-maintain-c13
+    name: Export surface, binding and callers
+    status: candidate
+    confidence: observed-in-code
+    summary: 4 exports SIGNATURE('V1'); bound into FARTICLE and listed in SAMPLE.BNDDIR; callers ART200, ART250, ART301.
+    entrypoints:
+      - kind: other
+        locator: FFAMILLY.ILESRVPGM / .BND
+        evidence: ["ATU_SRC/QSRVSRC/FFAMILLY.BND:4-9", "ATU_SRC/QILESRVSRC/FFAMILLY.ILESRVPGM:8-9", "ATU_SRC/QBNDSRC/SAMPLE.BNDDIR:12", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:253", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:153", "ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:164-165"]
+    dependencies: [FARTICLE.ILESRVPGM, SAMPLE.BNDDIR]
+    open_questions: []

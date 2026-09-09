@@ -1,0 +1,134 @@
+pack_id: atu-merlin-ts-ord-batch-v1
+version: 1
+status: BOUND
+migration_id: atu-merlin
+slice_ids:
+  - ord-batch-ord900
+
+target_stack:
+  language: typescript
+  runtime: node20
+  framework: fastify
+  data_access: postgres-sql
+  ui: simple-web
+  min_versions:
+    node: "20"
+
+style: modular-monolith
+
+layout:
+  modern_root: modern/
+  naming: features/order-batch/
+
+boundaries:
+  in_scope:
+    - ORD900 reset last-order-number utility
+    - ORD901 shift order dates to today utility
+  stay_legacy:
+    - ART
+    - ATU_SRC
+    - CUS pack atu-merlin-ts-cus-v1
+    - ORD pack atu-merlin-ts-ord-v1
+    - ART801 body except cite as related residual
+  anti_corruption: New pack only. Do not widen or edit atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1. Do not invent ART302.
+
+api_contract_policy:
+  mode: new-http-json
+  contract_paths:
+    - modern/openapi/order-batch.yaml
+  sourced_vs_inferred: inferred
+  notes: Operator utilities only if room decides c07 is real (not sample refresh). Otherwise leave unimplemented.
+
+data:
+  strategy: postgres-greenfield-from-pf
+  schema_changes: additive-only
+  migration_tool: null
+  notes: ORD already uses a sequence for order ids. ORD900 maps to an optional reset-sequence operator action only if c07 says the utility is real. Do not reshape CUS or ORD schema.
+
+authn_authz:
+  mode: pathfinder-open
+  notes: Pathfinder open/dev auth. Operator-only if utilities are in scope.
+
+interop:
+  modern_to_legacy: none
+  legacy_to_modern: none
+
+mapping_rules:
+  - from: ORD900 LASTORDNO data area
+    to: optional Postgres sequence reset to MAX(order id); empty file writes 0 only if c07 says convert
+  - from: ORD901 date shift and 10-day close
+    to: operator job in TypeScript only if c07 says real — do not invent the load rule
+  - from: PF
+    to: existing ORD Postgres tables (reuse, do not redefine)
+
+non_goals:
+  - No ART conversion
+  - No edits under ATU_SRC/**
+  - No widening or editing pack atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1
+  - No inventing whether ORD900/ORD901 run on real data (c07 needs-SME)
+  - No IBM i goldens / REPLAY_GREEN
+  - Convert is NOT authorized by Architecture BOUND alone — separate ROOM_OK required
+
+quality_gates:
+  characterization: WAIVED_PATHFINDER
+  waiver: No IBM i goldens; COMPARE at TypeScript API only if Convert proceeds
+  verification: DEFERRED
+  commands: []
+  review_skills:
+    - migration-correctness
+
+forbidden:
+  - Edit or rewrite ATU_SRC/**
+  - Widen or overwrite atu-merlin-ts-cus-v1 or atu-merlin-ts-ord-v1
+  - Invent c07 real-vs-sample load rule
+  - Convert without a separate Convert ROOM_OK
+  - Claim REPLAY_GREEN or invent fake replay_green_run_ids
+  - String-concat SQL in repositories
+  - Rewrite discovery cards during Convert
+
+edit_surface:
+  allow:
+    - modern/src/features/order-batch/**
+    - modern/openapi/order-batch.yaml
+    - modern/db/**  # additive / pack-scoped only; do not reshape CUS or ORD schema
+    - modern/test/**  # additive / pack-scoped only; do not rewrite CUS or ORD tests
+    - modern/src/app.ts
+    - modern/src/server.ts
+    - architecture/atu-merlin-ord-batch/**
+  deny:
+    - ATU_SRC/**
+    - discovery/**
+    - inventory/**
+    - overnight/**
+    - architecture/atu-merlin/**
+    - architecture/atu-merlin-ord/**
+    - architecture/atu-merlin-vat/**
+    - architecture/atu-merlin-dat/**
+    - architecture/atu-merlin-cou/**
+    - architecture/atu-merlin-par/**
+    - architecture/atu-merlin-log/**
+    - modern/src/features/customer/**
+    - modern/src/features/order/**
+    - modern/openapi/customer.yaml
+    - modern/openapi/order.yaml
+
+known_risks:
+  - "c07 needs-SME: are ORD900/ORD901 real utilities or sample refresh only? Do not invent the load rule. If sample-only, defer Convert and keep cards as record."
+  - "c04 10-day auto-close exists only in ORD901 — business rule or sample convenience? needs-SME"
+  - "c05 CULASTORD implemented twice (ORD901 and ART801); ODYEAR only written by ORD901 — needs-SME"
+  - "c06 commit/journaling unknown; if Convert proceeds, decide atomic-or-not explicitly"
+  - Pathfinder waiver: no IBM i goldens
+  - Architecture DRAFT/BOUND does not authorize Convert
+  - modern/db/** additive only — do not reshape CUS or ORD schema
+
+evidence:
+  discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
+  behaviour_cards:
+    - discovery/ord-batch-ord900/features/
+  replay_green_run_ids: []
+  waiver_record: architecture/atu-merlin-ord-batch/ADR/0001-ord-batch-ts-postgres.md
+
+bound_by: atuMerlin migration room (Field+CTO Architecture ROOM_OK 9/10; soft nit tip a792163; Agent Smith recorded)
+bound_at: 2026-09-09T23:28:16Z
+change_policy: BOUND is immutable; Convert requires separate ROOM_OK. To change architecture, bump version, SUPERSEDE prior pack, and re-bind — do not overwrite in place.
+reference_skeleton: null

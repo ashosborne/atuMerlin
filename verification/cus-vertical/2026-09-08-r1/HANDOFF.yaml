@@ -1,0 +1,49 @@
+run_id: 2026-09-08-r1
+slice_id: cus-vertical            # cus-interactive + cus-modules (pack slice_ids)
+station: Verification
+mode: COMPARE
+target: modern
+characterization: WAIVED_PATHFINDER
+authorisation: "Verification ROOM_OK carried in overnight/AGENT_JOB.md (Field + CTO room), separate from BIND and convert ROOM_OK"
+
+pack_id: atu-merlin-ts-cus-v1
+pack_version: 1
+pack_status_at_run: BOUND
+pack_path: architecture/atu-merlin/PACK.yaml
+waiver_record: architecture/atu-merlin/ADR/0001-cus-vertical-ts-postgres.md
+
+conversion_handoff:
+  record: architecture/atu-merlin/CONVERT_RECORD.md
+  parity_at_handoff: UNVERIFIED
+  branch: cursor/atu-merlin-estate-discovery
+  pr: https://github.com/ashosborne/atuMerlin/pull/1
+  commits:
+    - 677d682   # scaffold modern/
+    - 127303b   # FCUSTOMER + FCOUNTRY
+    - 75bb345   # CUS200/CUS250 -> HTTP JSON API
+    - 3f162e9   # web UI
+    - 8c768fc   # TS-boundary tests
+    - a63d416   # README + CONVERT_RECORD
+  head_at_verification: 2860e7c445549a6487e45c476f8b63733b5ccf8a
+
+feature_ids:
+  cus-interactive: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c11, c12]
+  cus-modules: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c11]
+
+oracle:
+  kind: discovery-cards-and-openapi   # NOT IBM i goldens
+  paths:
+    - discovery/cus-interactive/features/
+    - discovery/cus-modules/features/
+    - modern/openapi/customer.yaml
+    - modern/README.md                # card coverage + CONTRACT_RISK CR-1..CR-9
+  legacy_goldens: none                # tests/characterization/** does not exist for this pathfinder
+  replay_green_run_ids: []
+
+modern_boot:
+  runtime: "Node v22.14.0 (pack min node 20)"
+  database: "PostgreSQL 16.15 via modern/scripts/local-pg.sh, database atu_merlin_verify seeded with src/db/seed.ts fixtures"
+  server: "PORT=3100 npx tsx src/server.ts"
+
+forbid_record: true
+goldens: n/a-read-only

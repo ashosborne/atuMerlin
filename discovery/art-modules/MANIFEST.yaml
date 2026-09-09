@@ -1,0 +1,137 @@
+slice_id: art-modules
+seed: "Article ILE/SQL modules ART300/301/302 forming FARTICLE"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ART300.RPGLE
+  - ATU_SRC/QRPGLESRC/ART301.SQLRPGLE
+  - ATU_SRC/QRPGLESRC/ART302.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ART301D.DSPF
+out_of_scope_hints:
+  - ART200/201/202/250 screens (art-interactive)
+  - FARTICLE export/signature policy (srvpgm-farticle) — overlap flagged
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T12:49:00Z
+bind_status: unbound
+
+features:
+  - id: art-modules-c01
+    name: Article getter family (GetArt*)
+    status: candidate
+    confidence: observed-in-code
+    summary: Seven exported getters over one cached ARTICLE1 chain.
+    entrypoints:
+      - kind: api
+        locator: FARTICLE GetArtDesc..GetArtVatCode
+        evidence: ["ATU_SRC/QRPGLESRC/ART300.RPGLE:19-91", "ATU_SRC/QSRVSRC/FARTICLE.BND:5-14"]
+    dependencies: [ARTICLE1.LF, ARTICLE.RPGLEINC]
+    open_questions: []
+  - id: art-modules-c02
+    name: ExistArt / IsArtDeleted
+    status: candidate
+    confidence: observed-in-code
+    summary: ExistArt = found and ARDEL <> 'X'; IsArtDeleted = ARDEL = 'X'.
+    entrypoints:
+      - kind: api
+        locator: FARTICLE ExistArt, IsArtDeleted
+        evidence: ["ATU_SRC/QRPGLESRC/ART300.RPGLE:93-112"]
+    dependencies: [ARTICLE1.LF]
+    open_questions: []
+  - id: art-modules-c03
+    name: Lazy open and last-key cache in chainARTICLE1
+    status: candidate
+    confidence: observed-in-code
+    summary: Same pattern as CUS300; missing ids return cleared buffer values.
+    entrypoints:
+      - kind: other
+        locator: ART300 chainARTICLE1
+        evidence: ["ATU_SRC/QRPGLESRC/ART300.RPGLE:114-127"]
+    dependencies: []
+    open_questions: []
+  - id: art-modules-c04
+    name: SltArticle selection window
+    status: candidate
+    confidence: observed-in-code
+    summary: Dynamic SQL over ARTICLE by description LIKE and/or family; ORDER BY ARDESC; 14 rows/page; F4 prompts family via FFAMILLY; returns ARID or default.
+    entrypoints:
+      - kind: screen
+        locator: ART301D CTL01/SFL01 via SltArticle(pcod)
+        evidence: ["ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:54-124", "ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:163-167", "ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:216-232"]
+    dependencies: [ARTICLE.PF, ART301D.DSPF, FFAMILLY.ILESRVPGM]
+    open_questions: []
+  - id: art-modules-c05
+    name: Selection rules and criteria-change reload
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 1 only; one selection; changed criteria re-prepare the cursor.
+    entrypoints:
+      - kind: screen
+        locator: ART301 S01chk / S01act
+        evidence: ["ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:173-214", "ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:219-221"]
+    dependencies: []
+    open_questions: []
+  - id: art-modules-c06
+    name: Binding gap - ART302/GetArtInfo not bound into FARTICLE
+    status: candidate
+    confidence: observed-in-code
+    summary: FARTICLE.ILESRVPGM lists MODULE(ART300 ART301); FARTICLE.BND has no GETARTINFO; ART250 calls GetArtInfo.
+    entrypoints:
+      - kind: other
+        locator: FARTICLE build definition
+        evidence: ["ATU_SRC/QILESRVSRC/FARTICLE.ILESRVPGM:8", "ATU_SRC/QSRVSRC/FARTICLE.BND:4-15", "ATU_SRC/QRPGLESRC/ART302.SQLRPGLE:11-24", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:156"]
+    dependencies: []
+    open_questions: ["Is the compiled FARTICLE on the box built from a newer ARCAD definition that includes ART302? Source and build metadata may diverge."]
+  - id: art-modules-c07
+    name: GetArtInfo cached SQL read of ARTIINF
+    status: candidate
+    confidence: observed-in-code
+    summary: Selects ARTINF once per distinct ARID; returns cached text otherwise.
+    entrypoints:
+      - kind: api
+        locator: ART302 GetArtInfo
+        evidence: ["ATU_SRC/QRPGLESRC/ART302.SQLRPGLE:11-24"]
+    dependencies: [ARTIINF.TABLE]
+    open_questions: ["Cache never invalidates within the activation group — stale text after ART200 opt 3 update in same job?"]
+  - id: art-modules-c08
+    name: Dynamic SQL string concatenation of user input
+    status: candidate
+    confidence: observed-in-code
+    summary: Search description/family are concatenated into the statement text.
+    entrypoints:
+      - kind: other
+        locator: ART301 s01prp stm build
+        evidence: ["ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:104-121"]
+    dependencies: []
+    open_questions: []
+  - id: art-modules-c09
+    name: Selector does not filter soft-deleted articles
+    status: candidate
+    confidence: observed-in-code
+    summary: No ARDEL predicate in the dynamic statement.
+    entrypoints:
+      - kind: screen
+        locator: ART301 s01prp
+        evidence: ["ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:104-115"]
+    dependencies: []
+    open_questions: ["Intended? ORD100 can add a deleted article to an order via SltArticle."]
+  - id: art-modules-c10
+    name: CloseARTICLE1 prototyped but not exported
+    status: candidate
+    confidence: observed-in-code
+    summary: Procedure exists; not in FARTICLE.BND.
+    entrypoints:
+      - kind: api
+        locator: FARTICLE (missing export CLOSEARTICLE1)
+        evidence: ["ATU_SRC/QRPGLESRC/ART300.RPGLE:129-136", "ATU_SRC/QSRVSRC/FARTICLE.BND:4-15"]
+    dependencies: []
+    open_questions: []
+  - id: art-modules-c11
+    name: Family prompt help text default in selector
+    status: candidate
+    confidence: observed-in-code
+    summary: famdesc initialised to '<F4> to select.' until a family is chosen.
+    entrypoints:
+      - kind: screen
+        locator: ART301 entry
+        evidence: ["ATU_SRC/QRPGLESRC/ART301.SQLRPGLE:76"]
+    dependencies: []
+    open_questions: ["Fold into c04 at bind."]

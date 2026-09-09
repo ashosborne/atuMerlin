@@ -1,0 +1,516 @@
+{
+  "pack": "atu-merlin-ts-vat-v1@1",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "discovery/vat-module/features (c01 arithmetic evaluated literally as RPG: truncate to 11P 4, %dech to 9P 2; c02/c04/c05 buffer rules) + modern/README.md VAT section; NOT IBM i goldens",
+  "sweep": {
+    "centRange": [
+      -100000,
+      100000
+    ],
+    "ratesHundredths": [
+      0,
+      1,
+      550,
+      1000,
+      1250,
+      2000,
+      3333,
+      405,
+      9999
+    ],
+    "randomPairs": 200000
+  },
+  "ran_at": "2026-09-09T16:31:22.741Z",
+  "summary": {
+    "pass": 23,
+    "fail": 0,
+    "total": 23
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "card": "c01",
+      "name": "clcVatWithRate == literal RPG oracle (truncate 11P 4, then %dech 9 2) on the cent sweep: 1800009 pairs (-100000..100000 cents x 9 rates)",
+      "pass": true,
+      "detail": {
+        "checked": 1800009,
+        "mismatches": 0,
+        "negZero": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P02",
+      "card": "c01",
+      "name": "clcVatWithRate == literal RPG oracle on 200000 random (9P 2 net, 4P 2 rate) pairs across the full field ranges, negatives included; 11P 4 / 9P 2 never overflow",
+      "pass": true,
+      "detail": {
+        "checked": 200000,
+        "mismatches": 0,
+        "oracleOverflows": 0,
+        "maxTot4AsDecimal": "9962152.1332",
+        "sample": []
+      }
+    },
+    {
+      "id": "P03",
+      "card": "c01",
+      "name": "9 2 x 4 2 extremes: 9,999,999.99 at 99.99% and its negative agree with the oracle, no overflow path",
+      "pass": true,
+      "detail": {
+        "max": 9998999.99,
+        "min": -9998999.99,
+        "wantMax": 9998999.99
+      }
+    },
+    {
+      "id": "P04",
+      "card": "c01",
+      "name": "third-decimal ties and six-decimal quotients: module == oracle == the card's worked values; symmetric about zero",
+      "pass": true,
+      "detail": [
+        {
+          "c": 5,
+          "rH": 550,
+          "got": 0,
+          "want": 0,
+          "oracle": 0
+        },
+        {
+          "c": 10,
+          "rH": 550,
+          "got": 0.01,
+          "want": 0.01,
+          "oracle": 0.01
+        },
+        {
+          "c": 2,
+          "rH": 1250,
+          "got": 0,
+          "want": 0,
+          "oracle": 0
+        },
+        {
+          "c": 6,
+          "rH": 1250,
+          "got": 0.01,
+          "want": 0.01,
+          "oracle": 0.01
+        },
+        {
+          "c": 1235,
+          "rH": 405,
+          "got": 0.5,
+          "want": 0.5,
+          "oracle": 0.5
+        },
+        {
+          "c": -6,
+          "rH": 1250,
+          "got": -0.01,
+          "want": -0.01,
+          "oracle": -0.01
+        },
+        {
+          "c": -5,
+          "rH": 550,
+          "got": 0,
+          "want": 0,
+          "oracle": 0
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "card": "c01",
+      "name": "returns the VAT amount, not the gross: 100.00 at 20% -> 20.00 (not 120.00); 0 at any rate -> 0; any net at 0% -> 0",
+      "pass": true,
+      "detail": {
+        "at20": 20
+      }
+    },
+    {
+      "id": "P06",
+      "card": "c10/G-V1",
+      "name": "OBSERVATION (not a card check): `net` is not normalised to decimal(9,2) — sub-cent nets are rounded (RPG by-value would truncate) and |net| > 9,999,999.99 computes with no guard; no modern caller passes either (ORD passes round2(qty x price) and checks TOTPRICE_MAX)",
+      "pass": true,
+      "detail": {
+        "subCentCasesWhereRoundingChangesTheResult": [
+          {
+            "net": 0.075,
+            "rate": 20,
+            "module": 0.02,
+            "rpgTruncNet": 0.07,
+            "oracleFromTruncNet": 0.01
+          }
+        ],
+        "beyondNineTwo": {
+          "net": 10000000,
+          "rate": 20,
+          "module": 2000000,
+          "threw": false
+        }
+      }
+    },
+    {
+      "id": "P07",
+      "card": "c01",
+      "name": "ClcVAT through vatdef (codes 1/2/3 = 5.5/20/10 %) == oracle on 4500 random nets",
+      "pass": true,
+      "detail": {
+        "checked": 4500,
+        "mismatches": 0,
+        "sample": []
+      }
+    },
+    {
+      "id": "P08",
+      "card": "c02",
+      "name": "unknown code -> rate 0, description blank, VAT 0, exists false, no exception: 94 codes (printable ASCII not in the table + 3 non-ASCII)",
+      "pass": true,
+      "detail": {
+        "codes": 94,
+        "bad": [],
+        "threw": []
+      }
+    },
+    {
+      "id": "P09",
+      "card": "c02",
+      "name": "zero-rated (row with rate 0) and unknown code give identical amounts and rates (planted defect preserved: nothing downstream can tell them apart)",
+      "pass": true,
+      "detail": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "P10",
+      "card": "c03",
+      "name": "GetVATRate / GetVATDesc return the raw row fields (rate as a number, 20-char description intact); a 21-char description is rejected by varchar(20) (22001)",
+      "pass": true,
+      "detail": {
+        "rate": 7.25,
+        "desc": "ABCDEFGHIJKLMNOPQRST",
+        "rateType": "number",
+        "tooLongCode": "22001"
+      }
+    },
+    {
+      "id": "P11",
+      "card": "c03",
+      "name": "ClcVAT followed by GetVATRate for the same code: the displayed rate is the rate the amount was computed with (600 line prepares)",
+      "pass": true,
+      "detail": {
+        "bad": []
+      }
+    },
+    {
+      "id": "P12",
+      "card": "c04",
+      "name": "ExistVATRate truth table: row present and VATDEL <> 'X' -> true; 'X' -> false; lower-case x and any other flag -> true; missing -> false",
+      "pass": true,
+      "detail": [
+        {
+          "code": "A",
+          "vatdel": "X",
+          "exists": false
+        },
+        {
+          "code": "B",
+          "vatdel": "x",
+          "exists": true
+        },
+        {
+          "code": "C",
+          "vatdel": " ",
+          "exists": true
+        },
+        {
+          "code": "D",
+          "vatdel": "D",
+          "exists": true
+        },
+        {
+          "code": "E",
+          "vatdel": "Y",
+          "exists": true
+        },
+        {
+          "code": "F",
+          "vatdel": "1",
+          "exists": true
+        },
+        {
+          "code": "G",
+          "vatdel": "*",
+          "exists": true
+        },
+        {
+          "code": "9",
+          "vatdel": "(no row)",
+          "exists": false
+        },
+        {
+          "code": "2",
+          "vatdel": "(seed, blank)",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "id": "P13",
+      "card": "c04",
+      "name": "soft-deleted row (VATDEL = 'X'): ClcVAT applies 7% -> 7.00, GetVATRate 7, GetVATDesc 'Retired rate', ExistVATRate false (inconsistency preserved, not fixed)",
+      "pass": true,
+      "detail": {
+        "clc": 7,
+        "rate": 7,
+        "desc": "Retired rate",
+        "exists": false
+      }
+    },
+    {
+      "id": "P14",
+      "card": "c05",
+      "name": "blank / empty code: cleared buffer from all four exports and 0 SQL statements issued, although a row keyed ' ' (rate 99) exists",
+      "pass": true,
+      "detail": {
+        "rateSp": 0,
+        "rateEmpty": 0,
+        "desc": "",
+        "clc": 0,
+        "clcEmpty": 0,
+        "exists": false,
+        "sqlStatements": 0,
+        "blankRowRate": 99
+      }
+    },
+    {
+      "id": "P15",
+      "card": "c05/c06 CR-V1",
+      "name": "no cache (deliberate delta): 7 non-blank calls (5 repeats of code 2, 2 repeats of unknown 9) issue exactly 7 keyed reads; each read is a parameterised SELECT ... WHERE vatcode = $1",
+      "pass": true,
+      "detail": {
+        "sqlStatements": 7,
+        "lastSql": "SELECT vatrate, vatdesc, vatdel FROM vatdef WHERE vatcode = $1"
+      }
+    },
+    {
+      "id": "P16",
+      "card": "c06",
+      "name": "changed row seen on the very next call (10 -> 12, CR-V1: legacy would hold 10 for the session); code added after a miss seen on the next call (matches legacy)",
+      "pass": true,
+      "detail": {
+        "before": 10,
+        "after": 12,
+        "clcAfter": 12,
+        "missFirst": 0,
+        "hitNext": 7.7
+      }
+    },
+    {
+      "id": "P17",
+      "card": "c07",
+      "name": "no maintenance path built: no /vat or /api/vat route in src, no OpenAPI file for VAT, the only vatdef writer in src is the ORD dev seed (order.seed.ts, CR-V4)",
+      "pass": true,
+      "detail": {
+        "routes": [],
+        "writers": [
+          "src/features/order/order.seed.ts"
+        ],
+        "openapi": [
+          "customer.yaml",
+          "order.yaml"
+        ]
+      }
+    },
+    {
+      "id": "P18",
+      "card": "c08",
+      "name": "FARTICLE -> FVAT: unknown article gives blank code -> VAT 0 with 0 vatdef reads; article A00001 (code 2) -> 29.98 on 149.90; order.service.ts (read-only) still goes getArtVatCode -> clcVat -> getVatRate",
+      "pass": true,
+      "detail": {
+        "unknownArticleCode": "\"\"",
+        "vat": 0,
+        "vatdefReads": 0,
+        "knownCode": "2",
+        "knownVat": 29.98,
+        "ordSequence": true
+      }
+    },
+    {
+      "id": "P19",
+      "card": "c09",
+      "name": "FVat has exactly the four binder exports (clcVat, existVatRate, getVatDesc, getVatRate) and nothing named close*; the module also exports clcVatWithRate, createFVat, normaliseVatCode only",
+      "pass": true,
+      "detail": {
+        "methods": [
+          "clcVat",
+          "existVatRate",
+          "getVatDesc",
+          "getVatRate"
+        ],
+        "modExports": [
+          "clcVatWithRate",
+          "createFVat",
+          "normaliseVatCode"
+        ]
+      }
+    },
+    {
+      "id": "P20",
+      "card": "c10 CR-V3",
+      "name": "normaliseVatCode: first character kept ('2X' -> '2'), '' -> ' ', 'x2' -> 'x'; through the table 'q' (3%) != 'Q' (unknown, 0); ' 2' is the blank code (0, no read)",
+      "pass": true,
+      "detail": {
+        "norm": {
+          "2": "2",
+          "2X": "2",
+          "": " ",
+          " ": " ",
+          "  ": " ",
+          "x2": "x"
+        },
+        "viaDb": {
+          "2X": 20,
+          "q": 3,
+          "Q": 0,
+          " 2": 0
+        },
+        "blankFirstReads": 0
+      }
+    },
+    {
+      "id": "P21",
+      "card": "schema",
+      "name": "vatdef: VATCODE char(1) PK, VATRATE numeric(4,2), VATDESC varchar(20), VATCREA date, VATMOD timestamp, VATMODID varchar(10), VATDEL char(1); the PK is the only index (no LF over VATDEF); table / rate / del comments cite c07 / c02 / c04",
+      "pass": true,
+      "detail": {
+        "shape": [
+          [
+            "vatcode",
+            "character",
+            1,
+            null,
+            null
+          ],
+          [
+            "vatrate",
+            "numeric",
+            null,
+            4,
+            2
+          ],
+          [
+            "vatdesc",
+            "character varying",
+            20,
+            null,
+            null
+          ],
+          [
+            "vatcrea",
+            "date",
+            null,
+            null,
+            null
+          ],
+          [
+            "vatmod",
+            "timestamp without time zone",
+            null,
+            null,
+            null
+          ],
+          [
+            "vatmodid",
+            "character varying",
+            10,
+            null,
+            null
+          ],
+          [
+            "vatdel",
+            "character",
+            1,
+            null,
+            null
+          ]
+        ],
+        "idx": [
+          "vatdef_pkey"
+        ],
+        "comments": {
+          "tbl": "VATDEF.PF — VAT code and rate. Read by shared FVAT (GetVATRate, GetVATDesc, ClcVAT, ExistVATRate); no maintenance path (vat-module-c07, needs-SME).",
+          "rate": "VATRATE 4P 2 \"VAT RATE %\"; 0 after a miss is indistinguishable from a zero rate (vat-module-c02).",
+          "del": "DLCODE: 'X' = soft-deleted. Only ExistVATRate reads it; ClcVAT still applies the rate (vat-module-c04)."
+        }
+      }
+    },
+    {
+      "id": "P22",
+      "card": "schema/c01",
+      "name": "VATRATE 4P 2 bound: 99.99 stored and read back; 100.00 rejected by numeric(4,2) (22003) — the c01 'no overflow' argument rests on this bound",
+      "pass": true,
+      "detail": {
+        "maxRate": 99.99,
+        "tooBigCode": "22003"
+      }
+    },
+    {
+      "id": "P23",
+      "card": "c07 CR-V4",
+      "name": "after reset only the ORD dev fixture rows remain (1 = 5.5 Reduced, 2 = 20 Standard, 3 = 10 Intermediate, vatmodid SEED): VATDEF content arrives through the ORD seed, not a VAT surface",
+      "pass": true,
+      "detail": [
+        {
+          "vatcode": "1",
+          "vatrate": 5.5,
+          "vatdesc": "Reduced",
+          "vatmodid": "SEED"
+        },
+        {
+          "vatcode": "2",
+          "vatrate": 20,
+          "vatdesc": "Standard",
+          "vatmodid": "SEED"
+        },
+        {
+          "vatcode": "3",
+          "vatrate": 10,
+          "vatdesc": "Intermediate",
+          "vatmodid": "SEED"
+        }
+      ]
+    }
+  ]
+}

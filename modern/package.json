@@ -1,0 +1,33 @@
+{
+  "name": "atu-merlin-modern",
+  "version": "0.1.0",
+  "private": true,
+  "description": "atuMerlin pathfinder — CUS vertical (pack atu-merlin-ts-cus-v1@1) + ORD vertical (pack atu-merlin-ts-ord-v1@1) + VAT vertical (pack atu-merlin-ts-vat-v1@1) + DAT utilities (pack atu-merlin-ts-dat-v1@1) + COU FCOUNTRY half (pack atu-merlin-ts-cou-v1@1) + PAR parameter store (pack atu-merlin-ts-par-v1@1) + LOG samlog alignment (pack atu-merlin-ts-log-v1@1)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "db:migrate": "tsx src/db/cli.ts migrate",
+    "db:seed": "tsx src/db/cli.ts seed",
+    "db:seed:order": "tsx src/features/order/order.seed.cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fastify/formbody": "^8.0.2",
+    "fastify": "^5.6.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/pg": "^8.15.5",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

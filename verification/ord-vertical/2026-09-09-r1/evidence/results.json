@@ -1,0 +1,817 @@
+{
+  "run_id": "2026-09-09-r1",
+  "pack": "atu-merlin-ts-ord-v1@1",
+  "mode": "COMPARE (TypeScript HTTP boundary only)",
+  "characterization": "WAIVED_PATHFINDER",
+  "oracle": "Discovery cards + modern/openapi/order.yaml + modern/README.md ORD section — not IBM i goldens",
+  "base_url": "http://127.0.0.1:3100",
+  "ran_at": "2026-09-09T03:36:54.874Z",
+  "totals": {
+    "pass": 48,
+    "fail": 0,
+    "observed": 0
+  },
+  "cases": [
+    {
+      "id": "P00",
+      "card": "boot",
+      "description": "GET /health -> 200 {status: ok}; database has no orders and lastordno is unconsumed",
+      "verdict": "PASS",
+      "observed": {
+        "health": {
+          "status": "ok"
+        },
+        "orders": 0,
+        "lastordno": {
+          "last_value": 60720,
+          "is_called": false
+        }
+      }
+    },
+    {
+      "id": "P01",
+      "card": "ord-entry-ord100-c03",
+      "description": "POST /api/orders/lines/quote {odarid} -> qty 1, price GetArtRefSalPrice, VAT CLCVat, description, rate; QuotedLine shape",
+      "verdict": "PASS",
+      "observed": {
+        "odline": 1,
+        "odarid": "A00001",
+        "odqty": 1,
+        "odprice": 149.9,
+        "ardesc": "Anvil, cast iron, 25 kg",
+        "odtot": 149.9,
+        "vat": 29.98,
+        "odtotvat": 179.88,
+        "vatRate": 20
+      }
+    },
+    {
+      "id": "P02",
+      "card": "ord-entry-ord100-c04",
+      "description": "quote with typed qty/price recomputes; %dech half-adjust on the VAT (3 x 6.40 @ 5.5% -> 1.06)",
+      "verdict": "PASS",
+      "observed": {
+        "odline": 0,
+        "odarid": "B00010",
+        "odqty": 3,
+        "odprice": 6.4,
+        "ardesc": "Safety gloves, pair",
+        "odtot": 19.2,
+        "vat": 1.06,
+        "odtotvat": 20.26,
+        "vatRate": 5.5
+      }
+    },
+    {
+      "id": "P03",
+      "card": "ord-entry-ord100-c03 (planted defect)",
+      "description": "unknown VAT code (article X9, code 9) -> vatRate 0, VAT 0, no error — VAT silent zero preserved",
+      "verdict": "PASS",
+      "observed": {
+        "odline": 0,
+        "odarid": "X9",
+        "odqty": 2,
+        "odprice": 10,
+        "ardesc": "Legacy part, VAT code retired",
+        "odtot": 20,
+        "vat": 0,
+        "odtotvat": 20,
+        "vatRate": 0
+      },
+      "note": "planted defect asserted, not fixed"
+    },
+    {
+      "id": "P04",
+      "card": "ord-entry-ord100-c14",
+      "description": "unknown article -> price 0, blank description, 200 (no ExistArt check)",
+      "verdict": "PASS",
+      "observed": {
+        "odline": 0,
+        "odarid": "NOPE99",
+        "odqty": 1,
+        "odprice": 0,
+        "ardesc": "",
+        "odtot": 0,
+        "vat": 0,
+        "odtotvat": 0,
+        "vatRate": 0
+      }
+    },
+    {
+      "id": "P05",
+      "card": "CR-O10",
+      "description": "qty x price beyond ODTOT 9P 2 -> 400 VALIDATION TOTAL_OVERFLOW (legacy: unmonitored size exception)",
+      "verdict": "PASS",
+      "observed": {
+        "code": "VALIDATION",
+        "errors": [
+          {
+            "code": "TOTAL_OVERFLOW",
+            "field": "odqty",
+            "message": "Quantity x unit price exceeds the line total field (9,2)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P06",
+      "card": "ord-entry-ord100-c13",
+      "description": "quoting wrote nothing: orders 0, detord 0, lastordno still unconsumed",
+      "verdict": "PASS",
+      "observed": {
+        "orders": 0,
+        "lines": 0,
+        "lastordno": {
+          "last_value": 60720,
+          "is_called": false
+        }
+      }
+    },
+    {
+      "id": "P07",
+      "card": "ord-entry-ord100-c07 / c12",
+      "description": "POST /api/orders (3 staged lines with gaps 1,3,7) -> 201, orid 60720, lines renumbered 1..3, ODYEAR 0, ODQTYLIV 0, dates null, document link",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60720,
+        "lines": [
+          [
+            1,
+            "A00001",
+            2,
+            299.8,
+            359.76
+          ],
+          [
+            2,
+            "A00002",
+            1,
+            89.5,
+            107.4
+          ],
+          [
+            3,
+            "B00010",
+            3,
+            19.2,
+            20.26
+          ]
+        ],
+        "tot": 408.5,
+        "totvat": 487.42,
+        "document": "/api/orders/60720/document"
+      }
+    },
+    {
+      "id": "P08",
+      "card": "ord-trigger-ord700-c07 / c02",
+      "description": "DB after confirm: ORD701 stamped customer.culastord = today yyyymmdd; ORD700 insert added the FULL odqty to article.arcusqty",
+      "verdict": "PASS",
+      "observed": {
+        "culastord": 20260909,
+        "cumodid": "SEED",
+        "arcusqty": {
+          "A00001": 2,
+          "A00002": 1,
+          "B00010": 3
+        },
+        "armodNull": false
+      },
+      "note": "armod stamped by fixture seed"
+    },
+    {
+      "id": "P09",
+      "card": "ord-entry-ord100-c07 (zero-line)",
+      "description": "zero-line order is confirmed (no line-count check): 201, orid 60721, lines [], tot 0",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60721,
+        "lines": 0
+      }
+    },
+    {
+      "id": "P10",
+      "card": "ord-entry-ord100-c01 / c14",
+      "description": "missing customer 99999 -> 201 (no ExistCus), orphan order 60722; ORD701 updates 0 rows silently",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60722,
+        "custnm": ""
+      }
+    },
+    {
+      "id": "P11",
+      "card": "ord-entry-ord100-c01 (soft-deleted)",
+      "description": "soft-deleted customer 1005 (CUDEL = 'X') -> 201, orid 60723 (no IsCusDeleted)",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60723,
+        "custnm": "Elektro Meyer",
+        "culastord": 20260909,
+        "cudel": "X"
+      }
+    },
+    {
+      "id": "P12",
+      "card": "ord-entry-ord100-c01 (cancelled prompt)",
+      "description": "orcuid 0 (SltCustomer cancelled) -> 400 VALIDATION FIELD_INVALID orcuid; nothing written",
+      "verdict": "PASS",
+      "observed": {
+        "code": "VALIDATION",
+        "errors": [
+          {
+            "code": "FIELD_INVALID",
+            "field": "orcuid",
+            "message": "orcuid must be a customer id (1-99999)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P13",
+      "card": "CR-O10",
+      "description": "over-long odarid / non-integer odqty -> 400 VALIDATION with per-line field paths, all rules in one pass",
+      "verdict": "PASS",
+      "observed": [
+        {
+          "code": "FIELD_TOO_LONG",
+          "field": "lines[0].odarid",
+          "message": "odarid is longer than 6 characters"
+        },
+        {
+          "code": "FIELD_INVALID",
+          "field": "lines[0].odqty",
+          "message": "odqty must be an integer with at most 5 digits"
+        }
+      ]
+    },
+    {
+      "id": "P14",
+      "card": "ord-maintain-ord201-c01 (planted defect)",
+      "description": "GET /api/orders -> ORDERCUS rows only: orphan 60722 hidden (inner join); order date desc, id desc; TOTVAL VAT-inclusive; OrderListPage shape",
+      "verdict": "PASS",
+      "observed": {
+        "order": [
+          60723,
+          60721,
+          60720
+        ],
+        "hiddenOrphan": 60722,
+        "totval": [
+          320.4,
+          0,
+          487.42
+        ]
+      },
+      "note": "planted defect asserted, not fixed"
+    },
+    {
+      "id": "P15",
+      "card": "ord-maintain-ord200-c01 / c11",
+      "description": "GET /api/orders?cuid=1002 -> one customer's orders; cuid=1001 (no orders) -> empty rows, no message",
+      "verdict": "PASS",
+      "observed": {
+        "1001": {
+          "rows": [],
+          "more": false,
+          "nextOffset": null
+        },
+        "1002": [
+          60720
+        ]
+      }
+    },
+    {
+      "id": "P16",
+      "card": "openapi BadRequest",
+      "description": "GET /api/orders?cuid=abc / ?offset=-1 -> 400 BAD_REQUEST",
+      "verdict": "PASS",
+      "observed": {
+        "cuid": {
+          "code": "BAD_REQUEST",
+          "message": "cuid must be a customer id (5 digits)"
+        },
+        "offset": {
+          "code": "BAD_REQUEST",
+          "message": "offset must be a non-negative integer"
+        }
+      }
+    },
+    {
+      "id": "P17",
+      "card": "ord-maintain-ord201-c01 (paging) / CR-O5",
+      "description": "16 orders for one customer page 14 + 2: more=true nextOffset=14, then more=false; cuid list paged too",
+      "verdict": "PASS",
+      "observed": {
+        "page1": [
+          60738,
+          60737,
+          60736,
+          60735,
+          60734,
+          60733,
+          60732,
+          60731,
+          60730,
+          60729,
+          60728,
+          60727,
+          60726,
+          60725
+        ],
+        "page2": [
+          60724,
+          60721
+        ],
+        "nextOffset": 14
+      }
+    },
+    {
+      "id": "P18",
+      "card": "ord-maintain-ord202-c01 / c02",
+      "description": "GET /api/orders/60720 -> header with GetCusName, null dates, every line with ardesc, tot/totvat = stored sums; OrderDetail shape",
+      "verdict": "PASS",
+      "observed": {
+        "custnm": "Baker Street Books",
+        "lines": [
+          [
+            1,
+            "A00001",
+            "Anvil, cast iron, 25 kg"
+          ],
+          [
+            2,
+            "A00002",
+            "Bench vice 125 mm"
+          ],
+          [
+            3,
+            "B00010",
+            "Safety gloves, pair"
+          ]
+        ],
+        "tot": 408.5,
+        "totvat": 487.42
+      }
+    },
+    {
+      "id": "P19",
+      "card": "ord-maintain-ord202-c01 / CR-O2",
+      "description": "orphan order 60722 is reachable by id with a blank customer name; unknown article gives a blank description",
+      "verdict": "PASS",
+      "observed": {
+        "orphanCustnm": "",
+        "ghostDescriptions": [
+          "Anvil, cast iron, 25 kg",
+          ""
+        ]
+      },
+      "note": "blank, not the previous line's text (ORD202 repeated it — CR-O2)"
+    },
+    {
+      "id": "P20",
+      "card": "ord-maintain-ord202-c01 / CR-O1",
+      "description": "unknown order -> 404 ORDER_NOT_FOUND {code, message, orid}; non-numeric / 7-digit id also 404 (see gap G-O2)",
+      "verdict": "PASS",
+      "observed": {
+        "999": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 999 not found",
+          "orid": 999
+        },
+        "1234567": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 1234567 not found",
+          "orid": 1234567
+        },
+        "abc": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 0 not found",
+          "orid": 0
+        }
+      }
+    },
+    {
+      "id": "P21",
+      "card": "ord-entry-ord101-c03 / ord-trigger-ord700-c04",
+      "description": "PUT line 1 of 60720 {5, 2, 100} -> 200 LineDetail, odtot 500, odtotvat 600; ORD700 update applies the OUTSTANDING delta (+3 -2 = +1 on top of 2)",
+      "verdict": "PASS",
+      "observed": {
+        "line": {
+          "odorid": 60720,
+          "odyear": 0,
+          "odline": 1,
+          "odarid": "A00001",
+          "odqty": 5,
+          "odqtyliv": 2,
+          "odprice": 100,
+          "odtot": 500,
+          "odtotvat": 600,
+          "ardesc": "Anvil, cast iron, 25 kg"
+        },
+        "arcusqty": [
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "id": "P22",
+      "card": "ord-entry-ord101-c04",
+      "description": "ERR1001 when typed delivered > STORED ordered (20/15 on stored 5/2) — consistent typed pair still refused",
+      "verdict": "PASS",
+      "observed": {
+        "code": "VALIDATION",
+        "errors": [
+          {
+            "code": "ERR1001",
+            "field": "odqtyliv",
+            "message": "Delivered quantity must be lower or equal to ordered quantity."
+          }
+        ]
+      }
+    },
+    {
+      "id": "P23",
+      "card": "ord-entry-ord101-c04",
+      "description": "ERR1002 when typed ordered < STORED delivered; both rules can be on together (1/6 on stored 5/2)",
+      "verdict": "PASS",
+      "observed": {
+        "code": "VALIDATION",
+        "errors": [
+          {
+            "code": "ERR1001",
+            "field": "odqtyliv",
+            "message": "Delivered quantity must be lower or equal to ordered quantity."
+          },
+          {
+            "code": "ERR1002",
+            "field": "odqty",
+            "message": "Ordered quantity can not be lower that the quantity already delivered."
+          }
+        ]
+      }
+    },
+    {
+      "id": "P24",
+      "card": "ord-entry-ord101-c04 (as-is, needs-SME)",
+      "description": "both lowered but inconsistent (odqty 3, odqtyliv 4 on stored 5/2) is ACCEPTED and stored with delivered > ordered",
+      "verdict": "PASS",
+      "observed": {
+        "accepted": [
+          3,
+          4
+        ]
+      },
+      "note": "quirk asserted as-is; SME question open"
+    },
+    {
+      "id": "P25",
+      "card": "ord-entry-ord101-c03 (silent re-rate) / CR-O11",
+      "description": "PUT with nothing changed rewrites ODTOTVAT at TODAY's rate: after VATDEF '2' 20 -> 21, the same save yields 605 (then rate restored)",
+      "verdict": "PASS",
+      "observed": {
+        "at20": 600,
+        "at21": 605,
+        "restored": 600
+      }
+    },
+    {
+      "id": "P26",
+      "card": "ord-entry-ord101-c02 / CR-O1",
+      "description": "PUT / DELETE on an unknown line -> 404 ORDER_NOT_FOUND with odline; unknown order -> 404 without odline",
+      "verdict": "PASS",
+      "observed": {
+        "put": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 60720 line 99 not found",
+          "orid": 60720,
+          "odline": 99
+        },
+        "del": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 60720 line 99 not found",
+          "orid": 60720,
+          "odline": 99
+        },
+        "order999": {
+          "code": "ORDER_NOT_FOUND",
+          "message": "Order 999 line 1 not found",
+          "orid": 999,
+          "odline": 1
+        }
+      }
+    },
+    {
+      "id": "P27",
+      "card": "ord-entry-ord101-c05 / CR-O6",
+      "description": "DELETE line with ODQTYLIV > 0 -> 400 LINE_HAS_DELIVERY 'Line with delivery can not be deleted.' (guard reads the table)",
+      "verdict": "PASS",
+      "observed": {
+        "code": "LINE_HAS_DELIVERY",
+        "message": "Line with delivery can not be deleted."
+      }
+    },
+    {
+      "id": "P28",
+      "card": "ord-entry-ord101-c06 / ord-trigger-ord700-c03",
+      "description": "DELETE line 3 (B00010 x3, undelivered) with a 12-char X-User-Id -> 204; SAMLOG gets the ORD700 text with user cut to 10; arcusqty -= outstanding",
+      "verdict": "PASS",
+      "observed": {
+        "samlog": {
+          "user_id": "VERIFIER01",
+          "msg": "ORD700:Order Line deleted 60720 3 article : B00010 quantity : 3"
+        },
+        "arcusqty": [
+          3,
+          0
+        ],
+        "linesLeft": 2
+      }
+    },
+    {
+      "id": "P29",
+      "card": "ord-entry-ord101-c10",
+      "description": "no add-line route for an existing order: POST /api/orders/60720/lines -> 404",
+      "verdict": "PASS",
+      "observed": {
+        "status": 404,
+        "body": {
+          "message": "Route POST:/api/orders/60720/lines not found",
+          "error": "Not Found",
+          "statusCode": 404
+        }
+      }
+    },
+    {
+      "id": "P30",
+      "card": "ord-entry-ord101-c06 (last line)",
+      "description": "deleting the last line leaves a header with zero lines; the order still lists with TOTVAL 0",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60740,
+        "lines": 0,
+        "totval": 0
+      }
+    },
+    {
+      "id": "P31",
+      "card": "ord-maintain-ord200-c06",
+      "description": "POST close on 60721 -> 200 Order shape, ordatclo = today, ordatdel = today (was null); again -> 400 INVALID_OPTION 'Invalid Option'",
+      "verdict": "PASS",
+      "observed": {
+        "first": {
+          "orid": 60721,
+          "oryear": 2026,
+          "orcuid": 1004,
+          "ordate": "2026-09-09",
+          "ordatdel": "2026-09-09",
+          "ordatclo": "2026-09-09"
+        },
+        "again": {
+          "code": "INVALID_OPTION",
+          "message": "Invalid Option"
+        }
+      }
+    },
+    {
+      "id": "P32",
+      "card": "ord-maintain-ord200-c06 (lines untouched)",
+      "description": "close on 60720 (open lines) keeps ODQTYLIV 0 on line 2 and does not reduce arcusqty; ordatdel stamped because it was null",
+      "verdict": "PASS",
+      "observed": {
+        "order": {
+          "orid": 60720,
+          "oryear": 2026,
+          "orcuid": 1002,
+          "ordate": "2026-09-09",
+          "ordatdel": "2026-09-09",
+          "ordatclo": "2026-09-09"
+        },
+        "line2Odqtyliv": 0,
+        "arcusqtyA00002": 3
+      }
+    },
+    {
+      "id": "P33",
+      "card": "ord-maintain-ord200-c07",
+      "description": "POST deliver on 60723 (line 2 partially delivered first) -> 200 {order, linesDelivered: 1}; partial line skipped; not closed; arcusqty A00002 -= 2",
+      "verdict": "PASS",
+      "observed": {
+        "result": {
+          "order": {
+            "orid": 60723,
+            "oryear": 2026,
+            "orcuid": 1005,
+            "ordate": "2026-09-09",
+            "ordatdel": "2026-09-09",
+            "ordatclo": null
+          },
+          "linesDelivered": 1
+        },
+        "lines": [
+          {
+            "odline": 1,
+            "odqty": 2,
+            "odqtyliv": 2
+          },
+          {
+            "odline": 2,
+            "odqty": 4,
+            "odqtyliv": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "P34",
+      "card": "ord-maintain-ord200-c07 (as-is)",
+      "description": "deliver again -> 400 INVALID_OPTION; deliver a closed order (60721) -> 400 INVALID_OPTION (close stamps ORDATDEL)",
+      "verdict": "PASS",
+      "observed": {
+        "again": {
+          "code": "INVALID_OPTION",
+          "message": "Invalid Option"
+        },
+        "closed": {
+          "code": "INVALID_OPTION",
+          "message": "Invalid Option"
+        }
+      }
+    },
+    {
+      "id": "P35",
+      "card": "ord-maintain-ord200-c08",
+      "description": "DELETE closed 60721 -> 400 CLOSED_ORDER; DELETE 60723 (deliveries) -> 400 ORDER_HAS_DELIVERIES with the DDS typo 'whith'",
+      "verdict": "PASS",
+      "observed": {
+        "closed": {
+          "code": "CLOSED_ORDER",
+          "message": "Closed order can not be edited or deleted"
+        },
+        "deliveries": {
+          "code": "ORDER_HAS_DELIVERIES",
+          "message": "Order whith deliveries can not be deleted"
+        }
+      }
+    },
+    {
+      "id": "P36",
+      "card": "ord-maintain-ord200-c04 / c13 / CR-O3",
+      "description": "DELETE an open order with 2 lines -> 204; lines and header gone together; 2 SAMLOG rows; arcusqty restored; CULASTORD NOT maintained (c12)",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60741,
+        "samlogAdded": 2,
+        "culastord": 20260909
+      },
+      "note": "CULASTORD still points at the deleted order's date (as-is, needs-SME)"
+    },
+    {
+      "id": "P37",
+      "card": "CR-O1",
+      "description": "close / deliver / delete on an unknown order -> 404 ORDER_NOT_FOUND",
+      "verdict": "PASS",
+      "observed": {
+        "POST /api/orders/999/close": 404,
+        "POST /api/orders/999/deliver": 404,
+        "DELETE /api/orders/999": 404
+      }
+    },
+    {
+      "id": "P38",
+      "card": "ord-print-ord500-c01 / CR-O7",
+      "description": "GET /api/orders/60720/document -> 200 text/plain, 90-column lines, customer block, 'Order Number yyyy/ nnn', ISO order date, Net / VAT / Total",
+      "verdict": "PASS",
+      "observed": {
+        "bytes": 1244,
+        "lines": 61,
+        "maxWidth": 90
+      }
+    },
+    {
+      "id": "P39",
+      "card": "ord-print-ord500-c01 (planted defect)",
+      "description": "silent-zero order (X9 line) prints a blank VAT amount: VAT = Total - Net = 0 -> EDTCDE(2) blank",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60742,
+        "vatLine": "                                                                 VAT",
+        "netLine": "                                                                 Net           20.00"
+      },
+      "note": "planted defect asserted, not fixed"
+    },
+    {
+      "id": "P40",
+      "card": "ord-print-ord500-c01 (paging)",
+      "description": "16 details -> 2 pages separated by a form feed; page 2 repeats the company block and Order Number but not the customer block",
+      "verdict": "PASS",
+      "observed": {
+        "orid": 60743,
+        "pages": 2,
+        "page1Lines": 61,
+        "page2Lines": 62
+      }
+    },
+    {
+      "id": "P41",
+      "card": "ord-print-ord500-c08 / CR-O1",
+      "description": "document for an unknown order -> 404 ORDER_NOT_FOUND (legacy: exception before the first write)",
+      "verdict": "PASS",
+      "observed": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "Order 999 not found",
+        "orid": 999
+      }
+    },
+    {
+      "id": "P42",
+      "card": "CR-O9 / ord-entry-ord100-c14",
+      "description": "GET /api/articles -> 6 fixture rows ordered by id, soft-deleted Z00001 included; Article shape",
+      "verdict": "PASS",
+      "observed": [
+        "A00001",
+        "A00002",
+        "B00010",
+        "C00100",
+        "X9",
+        "Z00001"
+      ]
+    },
+    {
+      "id": "P43",
+      "card": "pack date lock",
+      "description": "no sentinel dates stored: ordatdel / ordatclo are NULL for never; nothing equals 1940-01-01; culastord stays yyyymmdd integer",
+      "verdict": "PASS",
+      "observed": {
+        "sentinelRows": 0,
+        "del_null": 20,
+        "clo_null": 21,
+        "total": 23,
+        "culastord": {
+          "t": "integer",
+          "culastord": 20260909
+        }
+      }
+    },
+    {
+      "id": "P44",
+      "card": "DSPF->web",
+      "description": "web pages answer 200 text/html: /orders, /orders?cuid=, /orders/new, /orders/new?cuid=, /orders/:id, ?detail=1, /lines, /document, /confirmed",
+      "verdict": "PASS",
+      "observed": {
+        "/orders": "200 text/html",
+        "/orders?cuid=1002": "200 text/html",
+        "/orders/new?cuid=1002": "200 text/html",
+        "/orders/60720": "200 text/html",
+        "/orders/60720?detail=1": "200 text/html",
+        "/orders/60720/lines": "200 text/html",
+        "/orders/60720/document": "200 text/plain",
+        "/orders/60720/confirmed": "200 text/html",
+        "/orders/new": "303 -> /customers/select?returnTo=%2Forders%2Fnew&param=cuid"
+      }
+    },
+    {
+      "id": "P45",
+      "card": "ord-maintain-ord200-c09 (planted defect)",
+      "description": "ORD200 twin (/orders?cuid=1002) refuses EVERY 2=Edit with the closed-order text; ORD201 twin (/orders) links 2=Edit on open rows only",
+      "verdict": "PASS",
+      "observed": {
+        "ord200": {
+          "rows": 2,
+          "openRows": 1,
+          "refused": 2,
+          "linked": 0
+        },
+        "ord201": {
+          "pages": 2,
+          "linked": 20,
+          "refused": 2,
+          "open": 20,
+          "closed": 2
+        }
+      },
+      "note": "planted defect asserted, not fixed"
+    },
+    {
+      "id": "P46",
+      "card": "ord-maintain-ord202-c02",
+      "description": "web ORD202: description hidden by default, shown with ?detail=1 (F11=Detail)",
+      "verdict": "PASS",
+      "observed": {
+        "hiddenByDefault": true,
+        "shownWithDetail": true
+      }
+    },
+    {
+      "id": "P47",
+      "card": "scope guard",
+      "description": "CUS API still answers as under its own pack (GET /api/customers/1002 200) and the CUS list still shows 5=Orders as a non-link (not re-scoped)",
+      "verdict": "PASS",
+      "observed": {
+        "customer1002": 200,
+        "cusListLinksToOrd": false
+      }
+    }
+  ]
+}

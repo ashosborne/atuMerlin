@@ -1,0 +1,29 @@
+$ npm run typecheck
+
+> atu-merlin-modern@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+$ npm test
+
+> atu-merlin-modern@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/modern
+
+ ✓ test/dat.test.ts (63 tests) 104ms
+ ✓ test/order.web.test.ts (9 tests) 1411ms
+ ✓ test/customer.web.test.ts (10 tests) 1522ms
+ ✓ test/fcustomer.test.ts (16 tests) 2077ms
+ ✓ test/fvat.test.ts (27 tests) 2934ms
+ ✓ test/customer.api.test.ts (29 tests) 3269ms
+ ✓ test/order.api.test.ts (47 tests) 5147ms
+
+ Test Files  7 passed (7)
+      Tests  201 passed (201)
+   Start at  16:25:42
+   Duration  5.64s (transform 666ms, setup 0ms, collect 1.77s, tests 16.46s, environment 1ms, prepare 626ms)
+
+exit=0

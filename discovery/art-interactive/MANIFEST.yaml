@@ -1,0 +1,200 @@
+slice_id: art-interactive
+seed: "Article interactive inquiry/maintain ART200/201/202/250"
+seed_entrypoints:
+  - ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE
+  - ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE
+  - ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE
+  - ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE
+  - ATU_SRC/QDDSSRC/ART200D.DSPF
+  - ATU_SRC/QDDSSRC/ART201D.DSPF
+  - ATU_SRC/QDDSSRC/ART202D.DSPF
+  - ATU_SRC/QDDSSRC/ART250D.DSPF
+out_of_scope_hints:
+  - FARTICLE internals (art-modules)
+  - PRO200/PRO250 provider screens (pro-interactive)
+  - conversion / test generation / bind
+phase: A
+updated_at: 2026-09-08T12:49:00Z
+bind_status: unbound
+
+features:
+  - id: art-interactive-c01
+    name: List articles by description with position-to and paging
+    status: candidate
+    confidence: observed-in-code
+    summary: Subfile over ARTICLE2 (ARDESC, ARID), 14 rows per load, position-to by description.
+    entrypoints:
+      - kind: screen
+        locator: ART200 CTL01/SFL01
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:94-132"]
+    dependencies: [ARTICLE2.LF]
+    open_questions: []
+  - id: art-interactive-c02
+    name: Create article with max+1 id and duplicate retry
+    status: candidate
+    confidence: observed-in-code
+    summary: New id = highest ARID + 1 (edited 'X'); on duplicate-key write error increments and retries.
+    entrypoints:
+      - kind: screen
+        locator: ART200 F6 -> FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:245-250", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:300-306"]
+    dependencies: [ARTICLE1.LF]
+    open_questions: ["Non-numeric ARID values would break %dec(arid) — are all ids numeric in data?"]
+  - id: art-interactive-c03
+    name: Update article (option 2)
+    status: candidate
+    confidence: observed-in-code
+    summary: Option 2 loads FMT02 with family description; Enter updates FARTI.
+    entrypoints:
+      - kind: screen
+        locator: ART200 opt 2
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:197-202", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:297-298"]
+    dependencies: [ARTICLE1.LF, FFAMILLY.ILESRVPGM]
+    open_questions: []
+  - id: art-interactive-c04
+    name: Article info free text via ARTIINF SQL table (option 3)
+    status: candidate
+    confidence: observed-in-code
+    summary: Reads ARTICLE_INFORMATION; insert if absent, update if present; text trimmed.
+    entrypoints:
+      - kind: screen
+        locator: ART200 opt 3 -> FMT03
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:331-343", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:367-377", "ATU_SRC/QSQLSRC/ARTIINF.TABLE:5-12"]
+    dependencies: [ARTIINF.TABLE]
+    open_questions: ["commit = *none set inline — any commitment-control expectation elsewhere?"]
+  - id: art-interactive-c05
+    name: Soft delete article (option 4)
+    status: candidate
+    confidence: observed-in-code
+    summary: Sets ARDEL = 'X', ARMOD, ARMODID and updates; row stays in file.
+    entrypoints:
+      - kind: screen
+        locator: ART200 opt 4
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:208-216"]
+    dependencies: [ARTICLE1.LF]
+    open_questions: ["Deleted articles still appear in list and can still be selected by SltArticle — intended?"]
+  - id: art-interactive-c06
+    name: Navigate to providers of article (option 6 -> ART201)
+    status: candidate
+    confidence: observed-in-code
+    summary: Calls ART201(arid).
+    entrypoints:
+      - kind: other
+        locator: ART200 opt 6 -> extpgm ART201
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:16-17", "ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:217-220"]
+    dependencies: [ART201.PGM.RPGLE]
+    open_questions: []
+  - id: art-interactive-c07
+    name: Article validation (description mandatory, family exists, F4 family prompt)
+    status: candidate
+    confidence: observed-in-code
+    summary: errDesc when ARDESC blank; errFamilly when not ExistArtFam(ARTIFA); F4 -> SltArtFam.
+    entrypoints:
+      - kind: screen
+        locator: ART200 FMT02 S02chk / S02key
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:271-289"]
+    dependencies: [FFAMILLY.ILESRVPGM]
+    open_questions: []
+  - id: art-interactive-c08
+    name: List option validation (2,3,4,6 allowed)
+    status: candidate
+    confidence: observed-in-code
+    summary: Options >6, 1 and 5 flagged invalid with SFLMSG.
+    entrypoints:
+      - kind: screen
+        locator: ART200 S01chk
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:166-186"]
+    dependencies: []
+    open_questions: []
+  - id: art-interactive-c09
+    name: ART201 providers of an article with link edit
+    status: candidate
+    confidence: observed-in-code
+    summary: Lists ARTIPRO1 rows for ARID with GetProName; option 2 edits APPRICE/APREF and stamps APMOD/APMODID.
+    entrypoints:
+      - kind: screen
+        locator: ART201(arid)
+        evidence: ["ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE:101-114", "ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE:227-233"]
+    dependencies: [ARTIPRO1.LF, FPROVIDER.ILESRVPGM, FARTICLE.ILESRVPGM]
+    open_questions: ["No create/delete of links here — where are ARTIPROV rows created?"]
+  - id: art-interactive-c10
+    name: ART202 articles of a provider with link edit
+    status: candidate
+    confidence: observed-in-code
+    summary: Lists ARTIPROV rows for PRID with GetArtDesc; option 2 edits link row.
+    entrypoints:
+      - kind: screen
+        locator: ART202(prid)
+        evidence: ["ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE:101-113", "ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE:224-232", "ATU_SRC/QRPGLESRC/PRO200.RPGLE:13", "ATU_SRC/QRPGLESRC/PRO250.PGM.RPGLE:12"]
+    dependencies: [ARTIPROV.PF, FARTICLE.ILESRVPGM, FPROVIDER.ILESRVPGM]
+    open_questions: ["Move to pro-interactive at bind? Only provider screens call it."]
+  - id: art-interactive-c11
+    name: ART250 article by id with derived detail
+    status: candidate
+    confidence: observed-in-code
+    summary: F4 SltArticle; detail computes VATINCL = CLCVat(ARVATCD, ARSALEPR), STOPRICE = ARSTOCK*ARWHSPR, info = GetArtInfo(arid).
+    entrypoints:
+      - kind: screen
+        locator: ART250 FMT01/FMT02
+        evidence: ["ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:107-125", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:151-157"]
+    dependencies: [FARTICLE.ILESRVPGM, FFAMILLY.ILESRVPGM, FVAT.ILESRVPGM, ARTICLE1.LF]
+    open_questions: ["GetArtInfo lives in ART302 which is not bound into FARTICLE (see art-modules-c06) — how does ART250 resolve it?"]
+  - id: art-interactive-c12
+    name: ART250 not-found LIKE search fallback
+    status: candidate
+    confidence: observed-in-code
+    summary: "Unknown id opens panel 3: SQL cursor ARID LIKE '%id%', 16 rows per page, option 1 opens detail; zero rows -> NotFound."
+    entrypoints:
+      - kind: screen
+        locator: ART250 CTL03/SFL03
+        evidence: ["ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:120-125", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:209-254", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:309-320"]
+    dependencies: [ARTICLE.PF]
+    open_questions: []
+  - id: art-interactive-c13
+    name: ART250 F7 show providers
+    status: candidate
+    confidence: observed-in-code
+    summary: DspProvider indicator calls ART201(arid) from detail.
+    entrypoints:
+      - kind: other
+        locator: ART250 F7 -> extpgm ART201
+        evidence: ["ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:26", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:172-174"]
+    dependencies: [ART201.PGM.RPGLE]
+    open_questions: []
+  - id: art-interactive-c14
+    name: Audit stamping on article and link saves
+    status: candidate
+    confidence: observed-in-code
+    summary: ARMOD/ARMODID always, ARCREA on create; APMOD/APMODID on ARTIPROV update.
+    entrypoints:
+      - kind: other
+        locator: ART200 S02act, ART201/ART202 S02act
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:295-300", "ATU_SRC/QRPGLESRC/ART201.PGM.RPGLE:230-231", "ATU_SRC/QRPGLESRC/ART202.PGM.RPGLE:227-228"]
+    dependencies: []
+    open_questions: []
+  - id: art-interactive-c15
+    name: Quirk - sflend uses %eof(article1) while reading article2
+    status: candidate
+    confidence: observed-in-code
+    summary: End-of-subfile indicator is taken from a file not read in the loop; likely always off.
+    entrypoints:
+      - kind: screen
+        locator: ART200 s01lod
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:111-118"]
+    dependencies: []
+    open_questions: ["Preserve as-is or treat as defect? SME."]
+  - id: art-interactive-c16
+    name: Call-graph fact - ART201 invoked from ART200 and ART250
+    status: candidate
+    confidence: observed-in-code
+    summary: Two callers pass ARID; ART201 has no menu entry.
+    entrypoints:
+      - kind: other
+        locator: extpgm ART201
+        evidence: ["ATU_SRC/QRPGLESRC/ART200.PGM.SQLRPGLE:16", "ATU_SRC/QRPGLESRC/ART250.PGM.SQLRPGLE:17-19"]
+    dependencies: []
+    open_questions: ["Fold into c06/c13 at bind if a separate card is noise."]
+
+unknown_surfaces:
+  - locator: ATU_SRC/QDDSSRC/ARTIPRO2.LF
+    note: Declared in ART250 but never read in the observed code.

@@ -1,0 +1,42 @@
+# PASTE — Verify CUS vertical (atuMerlin)
+
+Use only after CUS convert is DONE under modern/ and the room posts Verification ROOM_OK in overnight/AGENT_JOB.md.
+
+## Hard gate
+1. Read architecture/atu-merlin/PACK.yaml. Refuse if status is not BOUND.
+2. Refuse if the job body does not contain ROOM_OK for verification.
+3. Cite pack_id@version atu-merlin-ts-cus-v1@1 in every commit and PR description.
+4. Never edit ATU_SRC/**. Never push master directly. Open or update PR to master.
+5. Mode is COMPARE at the TypeScript API only. Characterization is WAIVED_PATHFINDER.
+6. Do not invent IBM i / COBOL / RPG goldens. Do not claim REPLAY_GREEN against legacy.
+7. Do not claim PARITY=GREEN against IBM i. At most claim TS-boundary evidence under the waiver.
+8. ORD and ART stay out of scope. CUS only.
+9. Honour Smith gate: if another Cloud Agent job is still RUN, stop and do not stamp a new job.
+
+## Inputs (read-only)
+- architecture/atu-merlin/PACK.yaml (BOUND)
+- architecture/atu-merlin/CONVERT_RECORD.md
+- modern/README.md (card coverage + CONTRACT_RISK CR-1 to CR-9)
+- modern/openapi/customer.yaml
+- modern/test/**
+- discovery/cus-interactive/features/ and discovery/cus-modules/features/ (read-only)
+
+## Work
+1. Run cd modern && npm run typecheck && npm test against live Postgres. Record output summary.
+2. COMPARE converted/as-is cards in README against OpenAPI routes and tests. List gaps.
+3. For each CONTRACT_RISK CR-1 to CR-9: mark accept-for-demo or defer with one sentence. Do not claim IBM i match.
+4. Write verification/cus-vertical/<RUN_ID>/PARITY.yaml and REPORT.md with characterization WAIVED_PATHFINDER; parity UNVERIFIED or TS_BOUNDARY_GREEN only if typecheck+tests pass and no unexplained card gaps; never parity GREEN against IBM i.
+5. Do not rewrite Discovery cards except clear harness bug that blocks COMPARE.
+
+## Done
+- PARITY.yaml + REPORT.md on branch
+- Explicit CR-1..CR-9 accept/defer table
+- PR updated; talk-track CUS pathfinder verified at TS API under waiver — not Merlin migrated
+- AGENT_JOB line 1 DONE
+
+## Refuse
+- Verification while convert incomplete
+- IBM i parity claims
+- Whole-estate verification
+- Editing ATU_SRC
+- Starting while AGENT_JOB is still RUN

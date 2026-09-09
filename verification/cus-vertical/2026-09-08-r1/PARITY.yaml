@@ -1,0 +1,64 @@
+# Verification COMPARE — CUS vertical, pack atu-merlin-ts-cus-v1@1
+# Characterization WAIVED_PATHFINDER: no IBM i / COBOL / RPG goldens exist and none were invented.
+# The verdict below is evidence at the TypeScript HTTP boundary only. It is NOT parity against IBM i.
+run_id: 2026-09-08-r1
+pack_id: atu-merlin-ts-cus-v1
+pack_version: 1
+characterization: WAIVED_PATHFINDER
+mode: COMPARE
+target: modern
+oracle: discovery-cards-and-openapi   # not legacy goldens
+legacy_replay: SKIPPED                # no IBM i harness; REPLAY_GREEN not claimed
+ibm_i_parity: NOT_CLAIMED
+
+rollup:
+  parity: TS_BOUNDARY_GREEN           # never GREEN against IBM i under this waiver
+  parity_green: false                 # APP_MANIFEST flag stays false (schema: WAIVED max = converted + parity WAIVED)
+  legacy_green: false
+  basis:
+    - "npm run typecheck: clean"
+    - "npm test: 55/55 in 3 files against live PostgreSQL 16.15 (evidence/typecheck-and-vitest.log)"
+    - "live probe of every OpenAPI operation + web smoke: 31 PASS / 0 FAIL (evidence/results.json, evidence/probe.mjs)"
+    - "card COMPARE: every converted/as-is card has a route, a test and a probe case; every residual is explained (REPORT.md §3)"
+    - "contract gaps G-1..G-3 are documentation-level, not behaviour drift (REPORT.md §4)"
+  contract_risks: "CR-1..CR-9 dispositioned in REPORT.md §5 — 7 accept-for-demo, 2 defer"
+
+# per-feature: status is the TS-boundary outcome. codes: TS_BOUNDARY_GREEN | RESIDUAL_EXPLAINED | NOT_IMPLEMENTED | BLOCKED_BY_PACK
+features:
+  cus-interactive:
+    c01: { status: TS_BOUNDARY_GREEN, evidence: [P01, P02, P03, P28, "customer.api.test.ts c01"], contract_risk: [CR-1] }
+    c02: { status: TS_BOUNDARY_GREEN, evidence: [P05, P06, "customer.api.test.ts c02/c08"], contract_risk: [CR-2, CR-3] }
+    c03: { status: TS_BOUNDARY_GREEN, evidence: [P11, P13, P14, "customer.api.test.ts c03/c08"], contract_risk: [CR-4, CR-8] }
+    c04: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "UPD duplicate rule dup > 1", evidence: [P07, P08, P09, P10, P12, "customer.api.test.ts c04"], contract_risk: [CR-5] }
+    c05: { status: TS_BOUNDARY_GREEN, evidence: [P04, "customer.api.test.ts c05"], contract_risk: [CR-9] }
+    c06: { status: BLOCKED_BY_PACK, code: SCOPE_VIOLATION, note: "ORD200 stay_legacy, interop none; option 5 rendered disabled, no orders route", evidence: [P23, P30, "customer.api.test.ts c06"] }
+    c07: { status: TS_BOUNDARY_GREEN, evidence: [P15, P16, P17, "customer.api.test.ts c07"], contract_risk: [CR-6] }
+    c08: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "CUMODID create-only", evidence: [P05, P11, "customer.api.test.ts c02/c08, c03/c08"] }
+    c09: { status: TS_BOUNDARY_GREEN, evidence: [P20, P21, "customer.api.test.ts c09/c10"] }
+    c10: { status: TS_BOUNDARY_GREEN, evidence: [P15, P18, "customer.api.test.ts c09/c10", "customer.web.test.ts detail"] }
+    c11: { status: TS_BOUNDARY_GREEN, as_is: true, needs_sme: "no writer of CUDEL", evidence: [P19, P22, P24, "customer.api.test.ts c11"] }
+    c12: { status: RESIDUAL_EXPLAINED, note: "5250 subfile option validation replaced by per-row links; nothing to compare over HTTP", evidence: [P29, P30, "customer.web.test.ts list"] }
+  cus-modules:
+    c01: { status: TS_BOUNDARY_GREEN, note: "TS module, not exposed over HTTP", evidence: ["fcustomer.test.ts c01"] }
+    c02: { status: TS_BOUNDARY_GREEN, evidence: ["fcustomer.test.ts c02/c03"] }
+    c03: { status: TS_BOUNDARY_GREEN, evidence: ["fcustomer.test.ts c02/c03"] }
+    c04: { status: RESIDUAL_EXPLAINED, note: "miss semantics kept (blanks/zeros); last-key cache not reproduced (stateless) — CR-8", evidence: ["fcustomer.test.ts c01 miss + no-cache"], contract_risk: [CR-8] }
+    c05: { status: RESIDUAL_EXPLAINED, note: "CloseCUSTOME1 not exported; nothing to close in a pooled-connection server" }
+    c06: { status: TS_BOUNDARY_GREEN, evidence: [P24, P25, P27, P28, "fcustomer.test.ts c06/c11"] }
+    c07: { status: RESIDUAL_EXPLAINED, note: "single selection via one link per row; option column has no 5250 equivalent", evidence: ["customer.web.test.ts selector"] }
+    c08: { status: RESIDUAL_EXPLAINED, note: "stateless form; criteria re-submitted per request; cancel link returns to caller", evidence: ["customer.web.test.ts selector"] }
+    c09: { status: TS_BOUNDARY_GREEN, changed_by_pack: true, note: "pack forbids string-concat SQL; bound parameters — CR-7", evidence: [P26, "fcustomer.test.ts c09"], contract_risk: [CR-7] }
+    c10: { status: NOT_IMPLEMENTED, note: "dormant GetCusLastOrdDate; needs-SME; no Discovery card exists — nothing to compare" }
+    c11: { status: TS_BOUNDARY_GREEN, evidence: [P24, "fcustomer.test.ts c11"] }
+
+evidence:
+  typecheck_and_tests: evidence/typecheck-and-vitest.log
+  probe_script: evidence/probe.mjs
+  probe_results: evidence/results.json
+  report: REPORT.md
+  narrative: narrative/HOW_IT_WORKS.md
+
+verified_by: "atuMerlin factory job runner (Cloud Agent), Verification station"
+verified_at: "2026-09-08T18:30:00Z"
+head_sha: 2860e7c445549a6487e45c476f8b63733b5ccf8a
+talk_track: "CUS pathfinder verified at TS API under waiver — not Merlin migrated"

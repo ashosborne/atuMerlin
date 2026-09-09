@@ -1,0 +1,22 @@
+# How the modern ORD vertical works — plain English
+
+Pack `atu-merlin-ts-ord-v1@1` · Conversion commits `afbd752` … `2684902` on PR [#1](https://github.com/ashosborne/atuMerlin/pull/1) · Verification run `2026-09-09-r1`
+
+## What moved
+
+Seven Discovery slices — order entry (`ORD100`), line maintenance (`ORD101`), the two work-with lists (`ORD200` per customer, `ORD201` all orders), the read-only display (`ORD202`), the printed order (`ORD500`) and the two file triggers (`ORD700` on order lines, `ORD701` on order headers) — were rebuilt as a second feature inside the same small TypeScript service that already holds CUS. Nothing else moved. Articles (ART), VAT and article maintenance, the `ORD900`/`ORD901` batches, the `ART801` reconciliation and the PDF conversion step stay on the IBM i, and CUS was not touched (it keeps its own pack and its own verification).
+
+## How the new path works
+
+- **Storage.** `ORDER` and `DETORD` become Postgres tables `orders` and `detord` with the same field names; the logical files become indexes; the `LASTORDNO` data area becomes a sequence that starts at 60720. Two read-only dependency tables, `article` and `vatdef`, stand in for the parts of ART and VAT that ORD reads; `samlog` stands in for the SAMLOG user space. The `ORDERCUS` view is recreated exactly as it was — an inner join, so an order whose customer is missing is listed nowhere (kept on purpose). Dates that were "never" on the IBM i (`0` / `1940-01-01`) are simply `NULL`; the only place the old shape survives is `customer.culastord`, which the ORD701 trigger still writes as a `yyyymmdd` number because that column belongs to the CUS pack.
+- **Business rules.** `order.service.ts` carries the RPG logic as the cards describe it: a new line defaults to quantity 1 and the article's reference price, VAT is computed with the article's VAT code (an unknown code silently gives 0 — kept), confirm draws the next number, writes the header and renumbers the staged lines 1..n with `ODYEAR` 0, and the ORD101 quantity rules compare what was typed with what is stored (so an inconsistent lowered pair is still accepted — kept, SME question open). Options 4 / 7 / 8 refuse with the original screen texts, typo included.
+- **Triggers.** ORD700 and ORD701 are Postgres triggers, so any writer of `detord` / `orders` produces the same side effects as on the IBM i: insert adds the full ordered quantity to `article.arcusqty`, delete logs a line to `samlog` and subtracts the outstanding quantity, update applies the outstanding delta, header insert stamps the customer's last-order date unconditionally.
+- **HTTP API.** Ten operations in `modern/openapi/order.yaml`: list (with or without a customer), quote a line, confirm, display, delete, close, deliver, edit / delete a line, print as text, and the article list. There is deliberately no "add a line to an existing order" and no PDF. Unknown ids answer 404 — the legacy programs had no not-found path at all, so this is recorded as a delta, not decided.
+- **Web.** Server-rendered pages under `/orders/**` mirror the 5250 screens: the two list twins, create with staged lines, display with F11 toggling the description, line maintenance, the printed document. The per-customer list refuses every `2=Edit`, exactly as `ORD200`'s precedence bug did.
+- **Auth.** Pathfinder-open: the caller sends `X-User-Id` (default `WEB`); the first ten characters land in the SAMLOG entry. Not production identity.
+
+## What Verification checked, and what it did not
+
+Verification ran the type checker and the 111 TS-boundary tests against a live Postgres, then booted the server and drove every API operation with a probe that asserts the response shape from the OpenAPI contract, the behaviour from the Discovery cards, and — because the interesting ORD behaviour is in side effects — the resulting rows in `orders`, `detord`, `article`, `customer`, `samlog` and the sequence (48 cases, all passed). It then walked every card and confirmed each is either matched at the boundary or has a documented reason for not being carried, confirmed the three planted defects are still there, and dispositioned the eleven deliberate deltas (CR-O1..CR-O11: eight acceptable for the demo, three deferred to the room or an SME).
+
+It did **not** compare against the IBM i. There are no legacy goldens for this pathfinder, so the result is `TS_BOUNDARY_GREEN` under the `WAIVED_PATHFINDER` waiver, never `PARITY=GREEN`. The honest one-liner is: **ORD pathfinder verified at TS API under waiver — not Merlin migrated.**

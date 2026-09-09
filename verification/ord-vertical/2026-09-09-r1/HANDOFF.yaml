@@ -1,0 +1,61 @@
+run_id: 2026-09-09-r1
+slice_id: ord-vertical            # seven ORD slices (pack slice_ids)
+station: Verification
+mode: COMPARE
+target: modern
+characterization: WAIVED_PATHFINDER
+authorisation: "Verification ROOM_OK carried in overnight/AGENT_JOB.md (Field + CTO Verify ROOM_OK 2026-09-09), separate from BIND and from the convert ROOM_OK"
+
+pack_id: atu-merlin-ts-ord-v1
+pack_version: 1
+pack_status_at_run: BOUND
+pack_path: architecture/atu-merlin-ord/PACK.yaml
+waiver_record: architecture/atu-merlin-ord/ADR/0001-ord-vertical-ts-postgres.md
+
+conversion_handoff:
+  record: architecture/atu-merlin-ord/CONVERT_RECORD.md
+  parity_at_handoff: UNVERIFIED
+  branch: cursor/atu-merlin-estate-discovery
+  pr: https://github.com/ashosborne/atuMerlin/pull/1
+  commits:
+    - afbd752   # additive ORD schema + FARTICLE/FVAT dependency surfaces
+    - 500bc9b   # order feature — ORD100/101/200/201/202/500 as TS service, HTTP JSON API, web
+    - c0eb4dd   # README ORD section + CONVERT_RECORD
+    - 2684902   # AGENT_JOB convert DONE
+  head_at_verification: 3c4fb766d5b31f5e12588d9d5541b7b7733d7403
+
+feature_ids:
+  ord-entry-ord100: [c01, c02, c03, c04, c05, c06, c07, c08, c10, c12, c13, c14]
+  ord-entry-ord101: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c12]
+  ord-maintain-ord200: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c11, c13]
+  ord-maintain-ord201: [c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c11]
+  ord-maintain-ord202: [c01, c02, c03, c04, c05, c06]
+  ord-print-ord500: [c01, c02, c03, c05, c06, c07, c08]
+  ord-trigger-ord700: [c02, c03, c04, c05, c06, c07, c09, c10]
+
+oracle:
+  kind: discovery-cards-and-openapi   # NOT IBM i goldens
+  paths:
+    - discovery/ord-entry-ord100/features/
+    - discovery/ord-entry-ord101/features/
+    - discovery/ord-maintain-ord200/features/
+    - discovery/ord-maintain-ord201/features/
+    - discovery/ord-maintain-ord202/features/
+    - discovery/ord-print-ord500/features/
+    - discovery/ord-trigger-ord700/features/
+    - modern/openapi/order.yaml
+    - modern/README.md                # ORD card coverage + CONTRACT_RISK CR-O1..CR-O11
+  legacy_goldens: none                # tests/characterization/** does not exist for this pathfinder
+  replay_green_run_ids: []
+
+modern_boot:
+  runtime: "Node v22.14.0 (pack min node 20)"
+  database: "PostgreSQL 16.15 via modern/scripts/local-pg.sh, database atu_merlin_verify_ord seeded with src/db/seed.ts + features/order/order.seed.ts fixtures, no orders"
+  server: "PORT=3100 npx tsx src/server.ts"
+
+scope_guards:
+  cus_pack_untouched: "git diff 2860e7c..HEAD -- modern/src/features/customer modern/openapi/customer.yaml modern/src/db architecture/atu-merlin is empty; schema.sql CUS part byte-identical"
+  atu_src_untouched: "git diff origin/master..HEAD -- ATU_SRC is empty"
+
+forbid_record: true
+goldens: n/a-read-only
