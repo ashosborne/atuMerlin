@@ -25,4 +25,5 @@ Pathfinder modernisation for ATU Merlin ORD. Discovery covers seven ORD slices: 
 - Conversion must refuse while pack status is DRAFT.
 - Empty `replay_green_run_ids` is intentional under the waiver; do not invent run IDs.
 - Accidental re-scope of CUS modern under this ORD pack is a fail.
+- ORD Convert must not rewrite CUS modern paths (`modern/src/features/customer/**`, `modern/openapi/customer.yaml`).
 - Expanding scope to ART, editing `ATU_SRC`, or changing bound architecture requires a new pack version, SUPERSEDE, and re-bind — do not overwrite in place.

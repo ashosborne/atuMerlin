@@ -96,6 +96,7 @@ forbidden:
   - "Edit or rewrite ATU_SRC/**"
   - "Pull ART into modern ORD scope"
   - "Widen or overwrite atu-merlin-ts-cus-v1"
+  - "Rewrite or re-convert CUS under modern/src/features/customer/** or modern/openapi/customer.yaml"
   - "Overwrite BOUND in place; use SUPERSEDE + re-bind for changes"
   - "Convert consuming status DRAFT"
   - "Claim REPLAY_GREEN or invent fake replay_green_run_ids"
@@ -106,7 +107,20 @@ forbidden:
 
 edit_surface:
   allow:
-    - modern/**
+    - modern/src/features/order/**
+    - modern/src/shared/**
+    - modern/openapi/order.yaml
+    - modern/db/**
+    - modern/test/**
+    - modern/src/app.ts
+    - modern/src/server.ts
+    - modern/package.json
+    - modern/package-lock.json
+    - modern/tsconfig.json
+    - modern/vitest.config.ts
+    - modern/README.md
+    - modern/.gitignore
+    - modern/scripts/**
     - architecture/atu-merlin-ord/**
   deny:
     - ATU_SRC/**
@@ -114,6 +128,8 @@ edit_surface:
     - inventory/**
     - overnight/**
     - architecture/atu-merlin/**   # CUS pack — do not edit from ORD convert
+    - modern/src/features/customer/**
+    - modern/openapi/customer.yaml
 
 known_risks:
   - "Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API"
@@ -124,6 +140,7 @@ known_risks:
   - "Planted defects stay as-is/residual: ORD200 option-2 unreachable, ORDERCUS inner-join, VAT silent zero — do not “fix” in Architecture"
   - "Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required"
   - "CUS modern already exists under atu-merlin-ts-cus-v1; accidental re-scope of CUS is a fail"
+  - "ORD700/ORD701 side-effect shape (application-level vs Postgres DB trigger) undecided until Convert; document the choice at convert time"
 
 evidence:
   discovery_manifest: inventory/atu-merlin/APP_MANIFEST.yaml
