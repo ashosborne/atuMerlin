@@ -1,4 +1,4 @@
-RUN
+DONE
 
 # PACK B — Document-slices conveyor (atuMerlin) — ORD wave run 12
 # Prefer: ord-print-ord500
