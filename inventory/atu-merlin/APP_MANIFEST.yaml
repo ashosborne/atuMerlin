@@ -21,7 +21,9 @@ notes: 'estate_scan: partial (see overnight/METHOD_COVERAGE.md). Pack A radar ou
   documented (7/7 accepted cards; c04 needs-SME inferred, no card); CHARACTERIZATION deferred-waived; ORD-wave queue EMPTY - all five ORD slices carded; next: ME drafts the new ORD Architecture pack (ROOM_OK
   then) | Pack B run 13 (2026-09-09): par-maintain 13/13 accepted behaviours documented (cards discovery/par-maintain/features/); c08 inferred carded (bind accepted it); surfaces pgm:PAR200 / cl:PAR201
   / srvpgm:FPARAMETER / mod:PAR300 candidate -> accepted. Night residual-wave queue left: log-programs, menu-cmd-shell, srvpgm-supporting, sql-objects, ord-batch-ord900, cou-maintain COU200 half, pro-interactive,
-  pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
+  pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests. | Pack B run 14 (2026-09-09): log-programs 10/10 accepted behaviours documented (cards discovery/log-programs/features/);
+  c04, c06, c09, c10 inferred carded (bind accepted them); surfaces pgm:LOG100 / srvpgm:LOG / mod:LOG300 candidate -> accepted. Night residual-wave queue left: menu-cmd-shell, srvpgm-supporting, sql-objects,
+  ord-batch-ord900, cou-maintain COU200 half, pro-interactive, pro-modules, pro-cobol-pro201. CHARACTERIZATION: deferred-waived. No conversion, no tests.'
 scanned_seeds:
 - art-interactive
 - art-modules
@@ -465,7 +467,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
   repo_path: ATU_SRC/QILESRVSRC/LOG.ILESRVPGM
-  status: candidate
+  status: accepted
   slice_id: log-programs
   notes: '*SRVPGM MODULE(LOG300) EXPORT(*ALL) - AddLogEntry to SAMLOG user space; not in SAMPLE.BNDDIR'
   discovery_evidence:
@@ -474,7 +476,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/LOG300.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/LOG300.RPGLE
-  status: candidate
+  status: accepted
   slice_id: log-programs
   notes: '*MODULE nomain - AddLogEntry appends User/Date/Msg at pos; no capacity check'
   discovery_evidence:
@@ -483,7 +485,7 @@ surfaces:
   kind: other
   locator: ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
   repo_path: ATU_SRC/QRPGLESRC/LOG100.PGM.RPGLE
-  status: candidate
+  status: accepted
   slice_id: log-programs
   notes: '*PGM RPGLE - create SAMLOG user space (5000 bytes) in PARAMETER''s library; no caller, no menu entry (install step)'
   discovery_evidence:
@@ -3519,10 +3521,10 @@ behaviours:
   notes: 'confidence: observed-in-code; 4 exports SIGNATURE(''V1''); bound into FARTICLE and listed in SAMPLE.BNDDIR; callers ART200, ART250, ART301.'
 - behaviour_id: log-programs-c01
   surface_id: pgm:LOG100
-  name: LOG100 creates SAMLOG user space (5000 bytes) in PARAMETER's library
-  status: candidate
+  name: LOG100 creates the SAMLOG user space (5000 bytes, replace *YES) in PARAMETER's library
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c01.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3531,13 +3533,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; QUSCRTUS attribute LOG, 5000 bytes, X''00'', *ALL, replace *YES; library from the INFDS of the opened PARAMETER file.'
+  notes: 'confidence: observed-in-code; LOG100 (27 lines, dftactgrp(*no), no parameters, no screen, no message) opens PARAMETER only to take the opened file''s library from INFDS 93-102 (par-maintain-c13),
+    builds ''SAMLOG    '' + Lib and calls QUSCRTUS: attribute LOG, initial size 5000, X''00'', *ALL, text ''Sample Application Log'', replace *YES; then QUSPTRUS and the 7-byte header (pos = 7, ''***'').
+    No auto-extend (QUSCUSAT never called anywhere) - the size is a hard capacity (c04). Re-running LOG100 replaces the space: the log is reset, and a job that already holds p1 keeps writing to the replaced
+    copy (inference). Created beside PARAMETER (INFDS at install), found later via *LIBL (LOG300:41) - two resolution rules. No caller (c06); errors not inspected (c05).'
 - behaviour_id: log-programs-c02
   surface_id: pgm:LOG100
-  name: SAMLOG header layout (pos at offset 0 = 7, '***' at offset 4)
-  status: candidate
+  name: SAMLOG layout - binary write cursor at offset 0, '***' at offset 4, entries from offset 7
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c02.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3546,13 +3551,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; LOG100 writes the header; LOG300 reads pos from offset 0 and appends at p1 + pos.'
+  notes: 'confidence: observed-in-code; Bytes 0-3 = 10i 0 pos (the next-write offset, big-endian), bytes 4-6 = ''***'', first entry at 7. LOG100 writes the header once; LOG300 reads pos from offset 0 on
+    every call, writes at p1 + pos and adds the logical line length back into offset 0 - the cursor lives inside the space, so it is persistent across jobs and shared by every writer (c10). No record separator:
+    '' ***'' at the end of each line is the only delimiter (c03); after the last line up to 600 - len bytes of blanks (padded write), then X''00''. The layout is defined twice (LOG100 based DS; LOG300 standalone
+    based fields) with no shared copybook - byte-compatible by construction. No lower/upper bound on pos, ''***'' never read back.'
 - behaviour_id: log-programs-c03
   surface_id: srvpgm:LOG
-  name: AddLogEntry line format and append
-  status: candidate
+  name: 'AddLogEntry - resolve SAMLOG *LIBL once per activation group, append ''User: … * Date: … * Msg: … ***'' (600-byte padded write)'
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c03.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3561,14 +3569,17 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Resolves SAMLOG *LIBL once per activation group; writes ''User: <*USER> * Date: <timestamp> * Msg: <entry> ***'' at pos and advances pos; User captured at module
-    load.'
+  notes: 'confidence: observed-in-code; Only export of LOG (LOG300 nomain). First call per activation group runs init (inz = *on, then QUSPTRUS ''SAMLOG    *LIBL''). Each call builds ''User: '' + User(10,
+    blank-padded, not trimmed) + '' * Date: '' + %char(%timestamp()) (26 chars) + '' * Msg: '' + %trim(entry) + '' ***'' in a 500-varying field, assigns it to the 600-byte fixed field at p1 + pos (600 bytes
+    written, blank-padded), then pos += logical length. Fixed part 63 bytes; ORD700 lines ~122-131 bytes. User is a module static inz(*USER) - stamped at service-program activation in the caller''s AG (ACTGRP(*CALLER);
+    QILE for ORD700, inference), not per call. A trimmed message > 437 chars truncates at 500 and loses '' ***'' (not reachable in-tree). No monitor, no %error, QUSPTRUS without error code -> failures escape
+    to the caller, who swallows them (callp(e)). A failed init is never retried in the AG (inz set first): later calls fail on the null p1 (c06).'
 - behaviour_id: log-programs-c04
   surface_id: mod:LOG300
-  name: No capacity check - logging stops silently after ~4400 bytes
-  status: candidate
+  name: No capacity check - logging stops silently, permanently, once the 600-byte write crosses the end of SAMLOG (~35 ORD700 lines at 5000 bytes)
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c04.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3577,13 +3588,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; 5000-byte space without auto-extend; 600-byte fixed write per entry; overflow raises an exception that ORD700''s callp(e) swallows.'
+  notes: 'confidence: inferred; 5000-byte initial size, no auto-extend (QUSCUSAT never called), 600-byte fixed write per call, pos never compared with the size -> space-addressing exception (MCH0601, inference)
+    as soon as pos + 600 > allocated size: from pos ~4400 if the allocation is exactly 5000 = ~35 ORD700 lines of ~125 bytes (Phase A said 40-60); a page-rounded allocation (e.g. 8192) would move it to
+    ~60 lines - runtime fact. The failing assignment (line 31) raises before pos is advanced (line 32), so pos stays put and every later call in every job fails at the same offset: permanent and silent
+    (ORD700 callp(e), %error unread; the log writes nothing to any queue). Deletes keep working. Only reset: re-run LOG100 (c01). Recorded as-is; target has an unbounded samlog table.'
 - behaviour_id: log-programs-c05
   surface_id: pgm:LOG100
-  name: LOG100 API errors swallowed
-  status: candidate
+  name: LOG100 QUSCRTUS errors swallowed; QUSPTRUS (no error code) surfaces them one line later - or silently resets an old log
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c05.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3592,13 +3606,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; errcod DS passed with bytes-provided set, never inspected.'
+  notes: 'confidence: observed-in-code; errcod DS passed to QUSCRTUS with bytes-provided = 256 -> failures returned in the DS, never inspected. The next call, QUSPTRUS, is prototyped without an error code:
+    create failed + no SAMLOG -> escape (CPF9801, inference) unmonitored in LOG100 -> RNQ0202 inquiry; create failed + an OLD SAMLOG present -> QUSPTRUS succeeds on the old object and lines 24-25 reset
+    its header (pos = 7, ''***'') - the old log is logically emptied although create failed (inference). Phase A ''errors swallowed'' sharpened: swallowed at the API, reported indirectly by the next one,
+    fully silent only in the old-object case. Mirror image in LOG300: the same QUSPTRUS prototype escapes into ORD700''s callp(e) (c06).'
 - behaviour_id: log-programs-c06
   surface_id: pgm:LOG100
-  name: LOG100 has no caller and no menu entry (install step)
-  status: candidate
+  name: LOG100 has no caller and no menu entry (install step); if never run, every AddLogEntry in the job fails silently and is never retried
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c06.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3607,13 +3624,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Run manually once; if never run, AddLogEntry fails on QUSPTRUS (swallowed by callers).'
+  notes: 'confidence: inferred; grep LOG100 = self only; SAMMNU options 1-90 name every other utility; no CL, no .ILEPGM. One-off install step run by hand (inference). If SAMLOG does not exist on the writer''s
+    *LIBL: first AddLogEntry -> init sets inz = *on BEFORE rtvusrspcptr, which escapes (CPF9801, inference) into ORD700''s callp(e); p1 stays *null and init is never retried in the activation group, so
+    every later call fails at p2 = p1 + pos (MCH3601, inference) - also swallowed. The application works, nothing is logged, nobody is told, until the job ends. SAMLOG in a library not on *LIBL behaves
+    identically. A rebuild from ATU_SRC alone does not recreate SAMLOG - LOG100 belongs in the install runbook.'
 - behaviour_id: log-programs-c07
   surface_id: srvpgm:LOG
-  name: Only log event is ORD700 line delete (pointer)
-  status: candidate
+  name: Only log event in the tree is ORD700 on order-line delete (pointer to ord-trigger-ord700-c03)
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c07.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3622,13 +3642,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; Documented as ord-trigger-ord700-c03; no other caller of AddLogEntry.'
+  notes: 'confidence: observed-in-code; grep AddLogEntry (i) = prototype, procedure and ONE call: ORD700 event ''2'' (DETORD *AFTER *DELETE), callp(e), %error never tested. Message ''ORD700:Order Line deleted
+    <ODORID> <ODLINE> article : <ODARID 6, untrimmed> quantity : <ODQTY>'' - the ORDERED quantity, not the outstanding quantity subtracted next. No other program, CL, trigger or SQL logs anything (inserts/updates
+    of DETORD, ORD701, screens, batch). In-tree deleter: ORD101 option 4 (undelivered lines only). Mass external deletes log one line per row -> ~35 rows fill the space (c04). Trigger behaviour documented
+    at ord-trigger-ord700-c03; not re-derived. Target: the ORD vertical writes the same Msg text to samlog per delete (as-is, PARITY c03).'
 - behaviour_id: log-programs-c08
   surface_id: srvpgm:LOG
-  name: LOG srvpgm binding not in source
-  status: candidate
+  name: LOG srvpgm - EXPORT(*ALL) exports one procedure (AddLogEntry); ORD700's binding to it is not in source
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c08.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3637,13 +3660,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: observed-in-code; EXPORT(*ALL), absent from SAMPLE.BNDDIR, ORD700 has no bnddir / ILEPGM.'
+  notes: 'confidence: observed-in-code; LOG.ILESRVPGM = CRTSRVPGM MODULE(LOG300) ACTGRP(*CALLER) EXPORT(*ALL); no LOG.BND in QSRVSRC (six .BND members, none for LOG or FPARAMETER) -> generated signature,
+    no *PRV. Only AddLogEntry has export on its P-spec (init does not; no exported D-spec), so EXPORT(*ALL) exports exactly one symbol - module statics stay private. Consumer side: LOG absent from SAMPLE.BNDDIR
+    (11 srvpgms), ORD700 H-spec dftactgrp(*no) with no bnddir, no ORD700.ILEPGM in QILESRC -> the only caller cannot be bound from the tree; the BNDDIR/BNDSRVPGM lives in ARCAD build metadata. ACTGRP(*CALLER)
+    is what makes init once-per-job and User stamped-at-activation (c03). Same blind spot as ord-trigger-ord700-c03 and srvpgm-supporting.'
 - behaviour_id: log-programs-c09
   surface_id: srvpgm:LOG
-  name: Log reader ADSPUSRSPC not in tree
-  status: candidate
+  name: Log reader - menu option 84 runs ADSPUSRSPC (not in tree); no in-tree reader of SAMLOG
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c09.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3652,13 +3678,16 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Menu opt 84 runs a command that is not in ATU_SRC; no in-tree reader of SAMLOG.'
+  notes: 'confidence: inferred; SAMMNU option 84 ''Display Application log'' = cmd adspusrspc samlog (unqualified, *LIBL, help=nohelp). ADSPUSRSPC has no source in ATU_SRC (grep = the menu line only; QCMDSRC
+    has no member) - probably an ARCAD utility (inference); what it renders is unknown. No other reader: SAMLOG is referenced only by LOG100, LOG300 and the menu. The log is write-only from the application''s
+    point of view. A reader written from these cards would decode offset 0 as bytes used, take bytes 7..pos-1 and split on '' ***'' (c02, c03). A stopped (c04) or never-started (c06) log is indistinguishable
+    from ''nothing happened''. menu-cmd-shell lists option 84 among the options reaching absent objects (with 12/13).'
 - behaviour_id: log-programs-c10
   surface_id: mod:LOG300
-  name: Unsynchronised shared append (concurrent writers overwrite)
-  status: candidate
+  name: Unsynchronised shared append - concurrent writers read the same cursor and overwrite one another's line
+  status: documented
   slice_id: log-programs
-  discovery_card: null
+  discovery_card: discovery/log-programs/features/log-programs-c10.md
   traceability: null
   pack_id: null
   pack_version: null
@@ -3667,7 +3696,11 @@ behaviours:
   legacy_green: false
   parity_green: false
   waiver: null
-  notes: 'confidence: inferred; Two jobs read the same pos and write to the same offset; no lock or atomic update.'
+  notes: 'confidence: inferred; pos lives in the shared object; AddLogEntry does read pos (27) / write 600 bytes at pos (31) / pos += len (32, re-reads the shared pos) with no ALCOBJ, LOCK, CMPSWP or data-area
+    indirection; a user space has no implicit lock. Two jobs deleting lines at the same instant (ORD700 runs in the deleting job) both read pos = P and both write at P: the second write overwrites the first
+    line entirely (600-byte pad); the += increments are relative so the cursor over-advances by the lost line''s length, leaving a blank run. Lost lines leave no trace. Cursor corruption possible if two
+    load/add/store sequences interleave (narrower window). Window microseconds, in-tree rate a few deletes a day; realistic for a two-job cleanup. Disappears once the space is full (c04). Recorded as-is;
+    target insert is transactional.'
 - behaviour_id: menu-cmd-shell-c01
   surface_id: menu:SAMMNU
   name: SAMMNU entry map (20 options, all parameterless CALLs)
@@ -5090,5 +5123,5 @@ behaviours:
   notes: 'confidence: observed-in-code; ClcVAT''s code parameter is ''1'' (no A) and its return / net ''9 2'' (no P) in BOTH the copybook PR and the module PI - correction to Phase A (the module also omits
     the A). The other three exports write 1A / 4P 2. Untyped length-only resolves to character, length-with-decimals to packed, so PR and PI match and the effective contract is ClcVAT(char(1), decimal(9,2))
     -> decimal(9,2). Cosmetic; no runtime effect.'
-last_updated: '2026-09-09T08:49:41Z'
+last_updated: '2026-09-09T09:27:25Z'
 updated_by: document-slices-conveyor
