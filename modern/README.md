@@ -1,6 +1,6 @@
-# atuMerlin — modern CUS + ORD + VAT + DAT + COU + PAR verticals (pathfinder)
+# atuMerlin — modern CUS + ORD + VAT + DAT + COU + PAR + LOG verticals (pathfinder)
 
-TypeScript modular monolith holding six converted verticals, each under its own BOUND
+TypeScript modular monolith holding seven converted verticals, each under its own BOUND
 Architecture pack with a separate convert `ROOM_OK`:
 
 - **CUS** (`cus-interactive` + `cus-modules`) — pack **`atu-merlin-ts-cus-v1@1`**
@@ -17,12 +17,15 @@ Architecture pack with a separate convert `ROOM_OK`:
   (`architecture/atu-merlin-cou/PACK.yaml`). See
   [COU vertical](#cou-vertical-fcountry-half-pack-atu-merlin-ts-cou-v11).
 - **PAR** (`par-maintain`) — pack **`atu-merlin-ts-par-v1@1`** (`architecture/atu-merlin-par/PACK.yaml`).
-  See [PAR vertical](#par-vertical-pack-atu-merlin-ts-par-v11) at the end of this file.
+  See [PAR vertical](#par-vertical-pack-atu-merlin-ts-par-v11).
+- **LOG** (`log-programs`) — pack **`atu-merlin-ts-log-v1@1`** (`architecture/atu-merlin-log/PACK.yaml`).
+  See [LOG vertical](#log-vertical-samlog-alignment-pack-atu-merlin-ts-log-v11) at the end of this file.
 
 This is a **pathfinder**, not "Merlin migrated": CUS, ORD, the VAT rule, the DAT date rule, the
-FCOUNTRY half of COU and the PAR parameter store live in TypeScript under the waiver; ART, country
-(COU200) / VAT / article maintenance, PAR201's IFS panel, the ORD9xx batches and everything else
-stay on IBM i. Characterization is
+FCOUNTRY half of COU, the PAR parameter store and the LOG line contract live in TypeScript under the
+waiver; ART, country (COU200) / VAT / article maintenance, PAR201's IFS panel, the SAMLOG user space
+itself (LOG100 and its reader), the ORD9xx batches and everything else stay on IBM i.
+Characterization is
 `WAIVED_PATHFINDER`: there are no IBM i goldens and no `REPLAY_GREEN`; behaviour is compared at the
 TypeScript API only. CUS: **parity: TS_BOUNDARY_GREEN** under the waiver
 (`verification/cus-vertical/2026-09-08-r1/PARITY.yaml`); ORD: **parity: TS_BOUNDARY_GREEN** under
@@ -30,7 +33,7 @@ the waiver (`verification/ord-vertical/2026-09-09-r1/PARITY.yaml`); DAT: **parit
 TS_BOUNDARY_GREEN** under the waiver (`verification/dat-vertical/2026-09-09-r1/PARITY.yaml`); VAT:
 **parity: TS_BOUNDARY_GREEN** under the waiver (`verification/vat-vertical/2026-09-09-r1/PARITY.yaml`);
 COU: **PARITY=UNVERIFIED** (Verification deferred); PAR: **PARITY=UNVERIFIED** (Verification
-deferred). None is parity against IBM i.
+deferred); LOG: **PARITY=UNVERIFIED** (Verification deferred). None is parity against IBM i.
 
 ## Stack (from the pack)
 
@@ -52,7 +55,8 @@ modern/
                                    mapping note + comments, nothing altered); DAT section appended (date-lock
                                    functions dat_iso_num_to_date / dat_date_to_iso_num, no table); COU section
                                    appended (COUNTR1 LF -> countr1 index + comments on country, nothing altered);
-                                   PAR section appended (PARAMETER.PF -> parameter table, no seed row)
+                                   PAR section appended (PARAMETER.PF -> parameter table, no seed row);
+                                   LOG section appended (comments on the ORD samlog table only, nothing altered)
   openapi/customer.yaml            HTTP contract (CUS)
   openapi/order.yaml               HTTP contract (ORD)
   src/app.ts, src/server.ts        Fastify app / entry
@@ -64,6 +68,8 @@ modern/
   src/shared/fvat/                 FVAT (VAT300 GetVATRate, GetVATDesc, ClcVAT, ExistVATRate) — VAT vertical, shared by ORD
   src/shared/dat/                  DAT (ISO_Num_To_Date / DAT001, ISOTODATE40 / DAT002, the date lock) — DAT utilities
   src/shared/parm/                 FPARAMETER (PAR300 GetPARM1..5, getPath = GetParm2('PATH':' '), PAR201 pattern) — PAR vertical
+  src/shared/samlog/               LOG (LOG300 AddLogEntry over the ORD samlog table; legacy line formatter; SAMLOG layout
+                                   decoder) — LOG vertical, aligned with the ORD700 trigger, ORD pack not widened
   src/features/customer/           CUS200 / CUS250: types, repository, service (validation), routes, web
   src/features/order/              ORD100 / ORD101 / ORD200 / ORD201 / ORD202 / ORD500: types, repository,
                                    service, document (ORD500O), routes, web, seed (ORD fixtures)
@@ -895,4 +901,146 @@ card id). Nothing below is a target decision.
 - IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
 - Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`,
   `atu-merlin-ts-dat-v1`, `atu-merlin-ts-cou-v1` or the `log` DRAFT pack; edits under `ATU_SRC/**`,
+  `discovery/**`, `inventory/**`, `src/db/**`.
+
+---
+
+# LOG vertical (samlog alignment, pack `atu-merlin-ts-log-v1@1`)
+
+Converted under Architecture pack **`atu-merlin-ts-log-v1@1`** (`architecture/atu-merlin-log/PACK.yaml`,
+`status: BOUND`, bound 2026-09-09T11:12:14Z) with a separate convert `ROOM_OK` carried in
+`overnight/AGENT_JOB.md` (Field + CTO, batch of five, 2026-09-09). Waiver record:
+`architecture/atu-merlin-log/ADR/0001-log-programs-ts-postgres.md`.
+**WAIVED_PATHFINDER — COMPARE at the TypeScript API only. No IBM i goldens. No REPLAY_GREEN.
+PARITY=UNVERIFIED** — Verification is deferred (`verification: DEFERRED` in the pack); nothing here
+is parity against IBM i.
+
+**Talk-track:** the LOG line contract lives in TypeScript under the waiver, on the `samlog` table the
+ORD vertical already writes — the repo is not fully migrated, and LOG is not "fully migrated" either:
+the ten accepted `log-programs` cards are present at the TS boundary or listed as residual below; the
+`SAMLOG` user space itself (`LOG100`, its 5000-byte capacity, its header and cursor, its reader
+`ADSPUSRSPC`) and every needs-SME item stay on IBM i or open. The whole slice may be a non-functional
+side effect (pack `known_risks`): no business value is claimed for it.
+
+## Edit surface honoured
+
+Written: `src/shared/samlog/index.ts` (new), `db/schema.sql` (LOG section **appended** — `COMMENT ON`
+the existing `samlog` table and its three columns; **no** `CREATE`, `ALTER` or new object; the CUS,
+ORD, VAT, DAT, COU and PAR objects above it are byte-identical), `test/samlog.test.ts` (new,
+pack-scoped; `test/helpers/db.ts` not touched), `package.json` (description), this README,
+`architecture/atu-merlin-log/CONVERT_RECORD.md`. Untouched: `ATU_SRC/**`, `discovery/**`,
+`inventory/**`, `src/features/customer/**`, `src/features/order/**`, `openapi/customer.yaml`,
+`openapi/order.yaml`, `src/db/**`, `src/app.ts`, `src/server.ts` (no HTTP surface: the pack says
+"HTTP only if Convert needs it" and a log with no in-tree reader does not), `architecture/atu-merlin/**`,
+`architecture/atu-merlin-ord/**`, the sibling packs (`vat`, `dat`, `cou`, `par`). `shared/logging/`
+(the pack's alternative name) is not created — one module, named after the object it aligns with.
+
+## Mapping rules applied
+
+| Rule | Where |
+| --- | --- |
+| RPGLE log programs -> TS shared logging module | `src/shared/samlog/index.ts`: `createSamlog(db)` returns the one binder export `addLogEntry(entry, user?)` (LOG300, c03 / c08); `normaliseLogEntry` is the `entry 500A value` parameter through `%trim`; `formatLegacyLine` / `toRpgTimestamp` rebuild the legacy line string from a row; `decodeSamlogUserSpace` is the c02 byte layout as a decoder. `LOG100` (c01, c05, c06) has no module: see residual |
+| PF / samlog -> reuse or align with existing ORD samlog table; additive shared helpers; document residual vs reuse | **Reuse.** `addLogEntry` inserts into the ORD pack's `samlog` (`user_id`, `msg`) and defaults the actor to the ORD trigger's own rule, `ord700_user()` (`atu.user` on the transaction, else the database role) — so a line written by this module inside an ORD transaction and a line written by `ord700_detord_delete` are the same shape from the same actor (tested, c07). Nothing in `features/order/**`, no trigger, no ORD function and no ORD table definition is changed; the LOG section of `db/schema.sql` adds comments only. **Residual vs reuse** is the table at the end of this section |
+| anti_corruption: prefer aligning with the ORD samlog without widening `atu-merlin-ts-ord-v1` | The ORD delete trigger keeps writing the log by itself — the LOG module is *not* called from ORD (that would be an ORD edit). The two writers meet in the table. If the room later wants ORD to log through `shared/samlog`, that is an ORD pack version bump, not a LOG edit |
+| HTTP only if Convert needs it | Not needed: no route, no page, no OpenAPI (`contract_paths: []`). The one in-tree reader (`ADSPUSRSPC`, c09) has no source; inventing a viewer would answer a needs-SME question |
+
+## Card coverage
+
+`converted` = behaviour present at the TS boundary with a test; `as-is` = converted with a known
+legacy quirk deliberately preserved; `residual` = not carried, with the reason; `needs-SME` = left
+open on purpose (no answer invented).
+
+### log-programs
+
+| Card | Behaviour | Status | Notes |
+| --- | --- | --- | --- |
+| c01 | LOG100 creates `SAMLOG` (5000 bytes, `replace *YES`, beside `PARAMETER`), writes the 7-byte header | **residual** | the table is created by `applySchema` (`CREATE TABLE IF NOT EXISTS` in the ORD section) — idempotent, never "replaced", never reset. No reset path is offered (CR-L1). The library anchor (`par-maintain-c13`) has no meaning in one Postgres schema |
+| c02 | Layout: 4-byte big-endian cursor at 0, `'***'` at 4, entries from 7, `' ***'` the only delimiter, 600-byte pad after the last line | converted (decoder) / **residual** (storage) | `decodeSamlogUserSpace(buffer)` reads `pos`, checks the marker, splits `7 .. pos-1` on the terminator, reports a cut line as `tail`; text decoding and terminator bytes are injectable (an EBCDIC copy needs the box's CCSID — runtime fact). Tested with synthetic spaces built the way LOG100 + AddLogEntry leave them. **No migration of existing content is performed** (c02 recommendation: no); storage is rows, not bytes (CR-L2) |
+| c03 | AddLogEntry: init once per activation group, `'User: ' + User(10) + ' * Date: ' + %char(%timestamp()) + ' * Msg: ' + %trim(entry) + ' ***'` in a 500-varying buffer, 600-byte write, `pos += len`; User stamped at activation, blank-padded; `entry` 500 by value; > 437 chars loses the terminator | converted (**as-is**) / needs-SME | `addLogEntry`: `msg` = cut to 500 then `%trim` (both ends, blanks only), `user_id` = named user cut to 10 or `ord700_user()`, `logged_at` = the Date. `formatLegacyLine(row)` rebuilds the exact string incl. the 63-byte fixed part, the 10-char padded User, the 26-char timestamp and the 500-byte cut that drops `' ***'` (tested at 437 / 438). **Per-event actor** replaces the activation-time `User` (CR-L4, needs-SME item 7); the stored `msg` is not cut at 437 (CR-L3). No init: nothing to resolve (c06) |
+| c04 | No capacity check: silent, permanent stop once `pos + 600 > size` (~35 ORD700 lines at 5000) | **residual** (`inferred` kept) | `samlog` is unbounded; 40 ORD700-sized lines are all kept (tested as the delta, CR-L5). `TODO(log-programs-c04)` in the module: the allocated size and what operators saw are box facts — nothing here caps or rotates the log |
+| c05 | LOG100: `QUSCRTUS` error swallowed; `QUSPTRUS` without error code escapes one line later or silently resets an old log's header | **residual** | no create step, no header, nothing to swallow or reset. Runtime confirmation of the two paths stays needs-SME (SME_BRIEF item 8) |
+| c06 | LOG100 has no caller (install step); if never run, every AddLogEntry in the job fails silently and init is never retried | **residual** (`inferred` kept) | the table exists after `db:migrate` / `applySchema`; there is no "never created" state and no per-job resolution (tested: first call succeeds, CR-L6). `TODO(log-programs-c06)`: who runs LOG100 / the install runbook is an ops question outside this repo |
+| c07 | ORD700 event `'2'` is the only writer; message `'ORD700:Order Line deleted <orid> <line> article : <arid 6> quantity : <odqty>'` (ordered qty, `ODARID` untrimmed) | converted (reuse) | the ORD trigger `ord700_detord_delete` writes it (ORD pack, verified `as_is` in `verification/ord-vertical`); tested here that a trigger row and an `addLogEntry` row of the same text share table, actor and `formatLegacyLine` output, and that `addLogEntry` fires no ORD side effect. No second writer is invented |
+| c08 | `EXPORT(*ALL)` exports exactly `AddLogEntry`; `ORD700`'s binding to `LOG` is not in the tree | converted / n/a | `Samlog` has exactly one method (test asserts the surface); the layout / line helpers are module-level functions, not the service-program surface. Binding, `ACTGRP(*CALLER)`, signature: no TS equivalent (CR-L7) |
+| c09 | Reader = menu option 84 `ADSPUSRSPC` (no source); no in-tree reader; a reader would decode offset 0, take `7 .. pos-1`, split on `' ***'` | **residual** / needs-SME (`inferred` kept) | no viewer, route or page invented (`TODO(log-programs-c09)`). `formatLegacyLine` is the one string a reader could depend on, offered for the room's decision; `decodeSamlogUserSpace` is the rule c09 spells out, over a *copy*, not over the box |
+| c10 | Unsynchronised shared cursor: concurrent writers overwrite one another's line, blank runs, lost lines | **residual** (`inferred` kept) | the insert is transactional; 25 concurrent `addLogEntry` calls are all kept, distinct, in id order (tested as the delta, CR-L8). Acceptable-loss question stays with the room (SME_BRIEF item 6) |
+
+## SME open questions — kept visible, not answered here
+
+From `discovery/log-programs/SME_BRIEF.md` (unsigned); preserved as-is in the code (comments cite the
+card id). Nothing below is a target decision.
+
+- **Room (whole slice)** — is the user-space log behaviour to preserve at all? This pack *aligns*
+  with the table the ORD vertical already writes; if the answer is "no", the shared module is a
+  helper nothing calls, and that is fine — no business value is claimed for it (pack `known_risks`).
+- **c03 / c09 (contract)** — is the legacy line *string* (`User:` / `Date:` / `Msg:` prefixes,
+  `' ***'`) a contract for some reader, or only the `Msg` text (as the ORD vertical assumed)?
+  `formatLegacyLine` makes the string reproducible from a row either way; nothing stores it.
+- **c03 (actor)** — `User` stamped once per activation group vs the target's per-event actor
+  (`ord700_user()` / the named user): confirm per-event is the intended contract (CR-L4).
+- **c04** — actual allocated size of `SAMLOG` on the box; has it ever filled; what did operators
+  see? Recorded as a legacy defect, not reproduced (CR-L5).
+- **c06** — who runs `LOG100`, when, in which library list; is it in an ARCAD deployment script?
+  Install runbook, not application behaviour; nothing coded.
+- **c08** — build owner: how is `LOG` bound into `ORD700` (not in `SAMPLE.BNDDIR`, no `bnddir`, no
+  `.ILEPGM`); which library's `LOG`. No TS counterpart (CR-L7).
+- **c09** — which product supplies `ADSPUSRSPC`; does anyone use option 84; is `SAMLOG` content ever
+  needed after the fact? If never, there is nothing for a reader to carry.
+- **c10** — acceptable loss for a diagnostic log? The target loses nothing (CR-L8); the question is
+  whether the legacy loss ever mattered.
+- **c05** — runtime-confirm the two `LOG100` failure paths (inquiry after a failed create; silent
+  header reset of an old log). As-is, residual.
+- **c01 / c02** — migration of existing `SAMLOG` content? Recommendation: no. `decodeSamlogUserSpace`
+  is the decoding rule if the answer changes; it is not run against anything.
+
+## Deliberate deltas (CONTRACT_RISK — left open for Verification)
+
+| Id | Delta | Why |
+| --- | --- | --- |
+| CR-L1 | No `LOG100`: the log is created by `applySchema`, is never "replaced", and has no reset path; `db:migrate` is the install step | `replace *YES` and the 7-byte header are properties of the user space (c01). A `TRUNCATE samlog` helper would be a mass delete on a table the ORD pack owns, with no in-tree caller — not invented |
+| CR-L2 | Storage is one row per line (`id`, `logged_at`, `user_id`, `msg`), not a byte buffer with an in-band cursor | Reuse of the ORD pack's `samlog` (pack mapping rule). The byte layout survives only as `decodeSamlogUserSpace` over a copy (c02) |
+| CR-L3 | `msg` is stored in full (cut to 500 then trimmed); the 437-character cut that drops `' ***'` applies only when the legacy string is rebuilt with `formatLegacyLine` | The cut is a property of the `500 varying` line buffer, not of the message (c03). Storing a cut message would lose data the legacy never had a reader for; the string contract is still reproducible exactly. Not reachable from ORD700 (≈ 64-char messages) |
+| CR-L4 | Actor per event: `user_id` = `atu.user` on the transaction (ORD writers), the database role, or the user named by `addLogEntry`; case kept, cut to 10 | Legacy `User` is a module static `inz(*USER)` stamped at service-program activation (c03, inference on timing). A process-wide "first user" in a request-serving Node process would be wrong; the ORD pack already chose per-event (`ord700_user()`), and this module aligns with it rather than adding a second rule. Needs-SME |
+| CR-L5 | No capacity: the log grows without bound; nothing stops silently | c04 is a legacy defect (`inferred`); reproducing a silent permanent stop would be reproducing a bug with no reader to notice. Tested as the delta |
+| CR-L6 | No per-activation-group `init`, no resolution failure, no never-retried state: every call writes or throws | c06: the failure mode exists only because `SAMLOG` is a separately created object on `*LIBL`. Here the table is part of the schema. A failing insert throws to the caller (Postgres error) instead of being silently swallowed — ORD's trigger path has no `callp(e)` equivalent either |
+| CR-L7 | No binder signature, no `BNDDIR`, no `ACTGRP(*CALLER)`, no `*LIBL`; the export surface is a TypeScript interface with one method | Build metadata with no TS equivalent (c08). Same stance as CR-P7 |
+| CR-L8 | Concurrent appends never lose a line or corrupt a cursor | The insert is transactional and `id` is a sequence (c10). Tested as the delta |
+
+## known_risks (from the BOUND pack) — where each lives
+
+| Risk | Status here |
+| --- | --- |
+| Pathfinder waiver: no IBM i goldens; COMPARE only at TypeScript API | `test/samlog.test.ts` expected values derived from the cards (the c03 example line, the 63-byte fixed part, the 437 / 438 boundary), not recorded on the box |
+| Whole-slice may be non-functional side effect — do not invent business value claims | none claimed: the module is an alignment helper; the ORD trigger keeps writing the log without it; no reader, page or route |
+| Capacity silent fail (c04) | recorded (CR-L5, `TODO(log-programs-c04)` in the module); not reproduced, not "fixed" — the table simply has no capacity |
+| ORD already has samlog table — prefer align without widening `atu-merlin-ts-ord-v1`; extend shared logging or document residual vs reuse | **reuse**: same table, same actor function; ORD feature, triggers, functions and table definition untouched (ORD suites unchanged and green); residual vs reuse table below |
+| Never widen ORD pack | `architecture/atu-merlin-ord/**`, `features/order/**`, `openapi/order.yaml` untouched; the LOG module is not wired into ORD |
+| Architecture DRAFT/BOUND does not authorize Convert; separate ROOM_OK required | ROOM_OK carried in `overnight/AGENT_JOB.md` body (line 4) |
+| CUS and ORD modern already exist; accidental re-scope is a fail | `features/customer/**`, `features/order/**`, both OpenAPI files, both packs untouched; all prior suites unchanged and green |
+| `modern/db/**` additive / shared reuse only — do not reshape CUS or ORD schema non-additively | LOG section = four `COMMENT ON` statements on the existing `samlog`; the `CREATE TABLE` and every column stay as the ORD pack wrote them (tested: `information_schema` shape) |
+
+## Residual vs reuse
+
+| Legacy piece | Disposition |
+| --- | --- |
+| `SAMLOG` user space (object, 5000 bytes, header, cursor) | **residual** — replaced by the ORD pack's `samlog` table (reuse); layout kept only as a decoder (c02) |
+| `LOG100` (create / replace, header, install step) | **residual** — `applySchema`; no reset path (CR-L1) |
+| `LOG300.AddLogEntry` (the one export) | **converted** — `shared/samlog` `addLogEntry` over the same table and actor rule as the ORD trigger |
+| The line string `User: … * Date: … * Msg: … ***` | **converted as a formatter** — `formatLegacyLine`; not stored (CR-L3); contract status open (c03 / c09) |
+| `ORD700` → `AddLogEntry` call site | **reuse** — `ord700_detord_delete` (ORD pack) already writes the row; not rewired |
+| `ADSPUSRSPC` / menu option 84 | **residual** — no source, no reader invented (c09) |
+| Binding (`LOG.ILESRVPGM`, `SAMPLE.BNDDIR`, `ACTGRP(*CALLER)`) | **residual** — no TS equivalent (CR-L7) |
+
+## Not done in this pack
+
+- Any reader: no route, page, OpenAPI or CLI over `samlog` (c09 needs-SME; `contract_paths: []`).
+- Any reset / truncate / rotate / retention of the log (c01 `replace *YES`, c04 capacity).
+- Wiring the ORD trigger or `features/order/**` through `shared/samlog` — the ORD pack keeps its own
+  insert; a version bump of `atu-merlin-ts-ord-v1` if the room wants one writer.
+- Migration of existing `SAMLOG` content from the box (c02 recommendation: no); an EBCDIC CCSID table.
+- `shared/logging/` as a second module name; a generic application logger (Fastify's own logger is
+  unrelated to SAMLOG and untouched).
+- IBM i goldens, RECORD/REPLAY, `REPLAY_GREEN`, or any parity claim; Verification is deferred.
+- Widening or editing packs `atu-merlin-ts-cus-v1`, `atu-merlin-ts-ord-v1`, `atu-merlin-ts-vat-v1`,
+  `atu-merlin-ts-dat-v1`, `atu-merlin-ts-cou-v1`, `atu-merlin-ts-par-v1`; edits under `ATU_SRC/**`,
   `discovery/**`, `inventory/**`, `src/db/**`.
